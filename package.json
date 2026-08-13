@@ -15,7 +15,15 @@
     "lab": "node scripts/labctl.mjs start",
     "lab:stop": "node scripts/labctl.mjs stop",
     "lab:status": "node scripts/labctl.mjs status",
-    "lab:controller": "node controller/server.mjs"
+    "lab:controller": "node controller/server.mjs",
+    "labs:list": "node scripts/standalone-labctl.mjs list",
+    "labs:start": "node scripts/standalone-labctl.mjs start",
+    "labs:stop": "node scripts/standalone-labctl.mjs stop",
+    "labs:reset": "node scripts/standalone-labctl.mjs reset",
+    "labs:status": "node scripts/standalone-labctl.mjs status",
+    "labs:smoke": "node scripts/standalone-labctl.mjs smoke",
+    "labs:shell": "node scripts/standalone-labctl.mjs shell",
+    "labs:verify": "node scripts/standalone-labctl.mjs verify"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",
@@ -38,6 +46,7 @@
     "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "16.4.0",
+    "js-yaml": "4.1.1",
     "react-server-dom-webpack": "19.2.6",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
