@@ -34,6 +34,21 @@ class HttpHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(payload)
 
+    def do_HEAD(self):
+        parsed = urlparse(self.path)
+        if parsed.path != "/" or self.server.server_port not in (8000, 8443):
+            self.send_response(404)
+            self.end_headers()
+            return
+        self.send_response(200)
+        if self.server.server_port == 8000:
+            self.send_header("X-Lab-Inventory", "complete")
+        else:
+            self.send_header("X-Lab-Metadata-Token", HTTP_TOKEN)
+            self.send_header("X-Objective-Flag", flag("FLAG_L02_HTTP_METADATA"))
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.end_headers()
+
     def do_GET(self):
         parsed = urlparse(self.path)
         if parsed.path == "/health":
