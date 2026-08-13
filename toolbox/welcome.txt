@@ -1,0 +1,8 @@
+RECON//LAB TOOLBOX
+==================
+Authorized targets: gateway:8080 and recon-node:9090.
+The internal service is intentionally unreachable from this network.
+Use TCP connect scans (-sT). Public targets are always out of scope.
+
+Suggested first command:
+  curl http://gateway:8080/.well-known/security.txt

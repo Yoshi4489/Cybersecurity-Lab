@@ -1,0 +1,67 @@
+name: reconlab
+
+x-hardened: &hardened
+  read_only: true
+  cap_drop: ["ALL"]
+  security_opt: ["no-new-privileges:true"]
+  pids_limit: 80
+  mem_limit: 192m
+  cpus: 0.50
+  restart: "no"
+
+services:
+  gateway:
+    <<: *hardened
+    build: ./lab-target
+    command: ["node", "gateway.mjs"]
+    environment:
+      LAB_FLAGS_FILE: /run/reconlab/flags.json
+    volumes:
+      - ./.lab/flags.json:/run/reconlab/flags.json:ro
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks: [attacker_net, internal_net]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/health').then(r=>{if(!r.ok)process.exit(1)})"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  recon-node:
+    <<: *hardened
+    build: ./lab-target
+    command: ["node", "recon.mjs"]
+    environment:
+      LAB_FLAGS_FILE: /run/reconlab/flags.json
+    volumes:
+      - ./.lab/flags.json:/run/reconlab/flags.json:ro
+    networks: [attacker_net]
+
+  internal:
+    <<: *hardened
+    build: ./lab-target
+    command: ["node", "internal.mjs"]
+    environment:
+      LAB_FLAGS_FILE: /run/reconlab/flags.json
+    volumes:
+      - ./.lab/flags.json:/run/reconlab/flags.json:ro
+    networks: [internal_net]
+
+  toolbox:
+    <<: *hardened
+    build: ./toolbox
+    ports:
+      - "127.0.0.1:7681:7681"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+      - /home/student:rw,nosuid,size=64m,uid=10001,gid=10001
+    networks: [attacker_net]
+    depends_on:
+      gateway:
+        condition: service_healthy
+
+networks:
+  attacker_net:
+    internal: true
+  internal_net:
+    internal: true

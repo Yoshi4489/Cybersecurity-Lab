@@ -1,0 +1,128 @@
+[
+  {
+    "id": "roe-lab-ops", "number": "00", "title": "Rules of Engagement", "subtitle": "ตั้งขอบเขตและบันทึกหลักฐาน", "track": "FOUNDATION", "difficulty": "CORE", "minutes": 20,
+    "description": "เตรียม methodology, scope และหลักฐานก่อนแตะเป้าหมายจำลอง", "skills": ["Scope", "Evidence", "Reset workflow"], "prerequisites": [], "target": "gateway:8080",
+    "objectives": [{"id":"scope-proof","label":"ค้นหา scope token จาก security.txt","points":100,"flagKey":"roe_scope"}],
+    "hints": [{"id":"h1","title":"Discovery path","penalty":10,"body":"มาตรฐาน security.txt มักอยู่ใต้เส้นทาง .well-known"},{"id":"h2","title":"Command","penalty":25,"body":"ลอง curl http://gateway:8080/.well-known/security.txt"}],
+    "solution": "เปิด /.well-known/security.txt บน gateway และส่งค่า RLAB{...} ที่อยู่ในฟิลด์ Scope-Proof"
+  },
+  {
+    "id": "passive-footprint", "number": "01", "title": "Passive Footprint", "subtitle": "ต่อภาพองค์กรจากข้อมูลสาธารณะจำลอง", "track": "RECON", "difficulty": "CORE", "minutes": 30,
+    "description": "วิเคราะห์หน้า landing, metadata และ contact naming convention โดยไม่ยิงสแกน", "skills": ["OSINT", "Metadata", "Correlation"], "prerequisites": ["roe-lab-ops"], "target": "gateway:8080",
+    "objectives": [{"id":"metadata-proof","label":"ระบุ build codename ที่ซ่อนใน metadata","points":100,"flagKey":"passive_metadata"}],
+    "hints": [{"id":"h1","title":"Inspect source","penalty":10,"body":"ข้อมูลที่เบราว์เซอร์ไม่แสดงอาจยังอยู่ใน HTML comments และ meta tags"},{"id":"h2","title":"Command","penalty":25,"body":"curl -s http://gateway:8080 | grep -i build"}],
+    "solution": "ดึง source ของหน้าแรกแล้วค้นหา build-codename; flag อยู่ใน HTML comment เดียวกัน"
+  },
+  {
+    "id": "dns-certificate-trail", "number": "02", "title": "DNS & Certificate Trail", "subtitle": "ไล่ service aliases ในเครือข่ายจำลอง", "track": "RECON", "difficulty": "CORE", "minutes": 35,
+    "description": "ใช้ DNS resolution และ TLS-style metadata จำลองเพื่อหา host ที่ไม่อยู่ใน navigation", "skills": ["DNS", "Hostnames", "Service map"], "prerequisites": ["passive-footprint"], "target": "recon-node:9090",
+    "objectives": [{"id":"dns-proof","label":"ค้นหา service alias ที่เผย admin banner","points":100,"flagKey":"dns_alias"}],
+    "hints": [{"id":"h1","title":"Container DNS","penalty":10,"body":"ชื่อ recon-node ถูก resolve ได้จาก toolbox โดยตรง"},{"id":"h2","title":"Command","penalty":25,"body":"curl -i http://recon-node:9090/banner"}],
+    "solution": "ร้องขอ /banner ที่ recon-node:9090 แล้วอ่าน X-Recon-Proof header"
+  },
+  {
+    "id": "active-service-mapping", "number": "03", "title": "Active Service Mapping", "subtitle": "สแกนเท่าที่จำเป็นและตีความผล", "track": "RECON", "difficulty": "CORE", "minutes": 40,
+    "description": "ฝึก TCP connect scan ภายใน lab network และแยก service จริงออกจาก noise", "skills": ["Nmap", "TCP connect", "Banner grab"], "prerequisites": ["dns-certificate-trail"], "target": "recon-node",
+    "objectives": [{"id":"service-proof","label":"ระบุพอร์ตและ service token","points":100,"flagKey":"active_service"}],
+    "hints": [{"id":"h1","title":"No raw socket needed","penalty":10,"body":"ใช้ TCP connect scan (-sT) ใน toolbox"},{"id":"h2","title":"Command","penalty":25,"body":"nmap -sT -sV -p 9090 recon-node"}],
+    "solution": "สแกน recon-node:9090 แล้ว curl /service-proof เพื่อรับ flag"
+  },
+  {
+    "id": "http-fingerprinting", "number": "04", "title": "HTTP Fingerprinting", "subtitle": "อ่าน headers, cookies และ behavior", "track": "RECON", "difficulty": "CORE", "minutes": 30,
+    "description": "หา framework hints และ trust boundaries จาก response โดยไม่พึ่ง scanner อัตโนมัติ", "skills": ["HTTP", "Headers", "Cookies"], "prerequisites": ["active-service-mapping"], "target": "gateway:8080",
+    "objectives": [{"id":"header-proof","label":"พบ diagnostic header ที่ไม่ควรเปิดเผย","points":100,"flagKey":"http_header"}],
+    "hints": [{"id":"h1","title":"Headers first","penalty":10,"body":"เริ่มจาก HEAD/GET และเก็บ response headers ทั้งหมด"},{"id":"h2","title":"Command","penalty":25,"body":"curl -i http://gateway:8080/diagnostics"}],
+    "solution": "เปิด /diagnostics พร้อมดู headers; X-Debug-Proof คือคำตอบ"
+  },
+  {
+    "id": "content-discovery", "number": "05", "title": "Content Discovery", "subtitle": "หา backup และ route ที่หลุดจาก index", "track": "RECON", "difficulty": "CORE", "minutes": 40,
+    "description": "ใช้ robots.txt และ wordlist ขนาดเล็กเพื่อค้นหาไฟล์สำรองอย่างมีขอบเขต", "skills": ["Robots", "Fuzzing", "Backups"], "prerequisites": ["http-fingerprinting"], "target": "gateway:8080",
+    "objectives": [{"id":"backup-proof","label":"กู้ configuration backup ที่ถูกเผยแพร่","points":100,"flagKey":"content_backup"}],
+    "hints": [{"id":"h1","title":"Start polite","penalty":10,"body":"อ่าน robots.txt ก่อน brute-force"},{"id":"h2","title":"Path","penalty":25,"body":"เส้นทาง /backup/config.old ตอบกลับเฉพาะใน lab"}],
+    "solution": "robots.txt ชี้ไป /backup/; ดาวน์โหลด config.old และส่งค่า backup_proof"
+  },
+  {
+    "id": "auth-enumeration", "number": "06", "title": "Authentication Enumeration", "subtitle": "อ่านความต่างของ error และ timing", "track": "WEB", "difficulty": "INTERMEDIATE", "minutes": 45,
+    "description": "ตรวจว่าหน้า login เปิดเผยการมีอยู่ของบัญชีผ่านข้อความตอบกลับอย่างไร", "skills": ["Auth", "Enumeration", "Error analysis"], "prerequisites": ["content-discovery"], "target": "gateway:8080/login",
+    "objectives": [{"id":"auth-proof","label":"ยืนยัน username ที่มีอยู่โดยไม่เดารหัสผ่าน","points":100,"flagKey":"auth_enum"}],
+    "hints": [{"id":"h1","title":"Compare responses","penalty":10,"body":"เปรียบเทียบ username สุ่มกับ username ที่พบใน metadata"},{"id":"h2","title":"Candidate","penalty":25,"body":"ลองบัญชี ops.admin กับรหัสผ่านที่ผิด"}],
+    "solution": "POST username=ops.admin&password=wrong ไป /login; response ที่แยกประเภทบัญชีจะคืน proof"
+  },
+  {
+    "id": "idor-bola", "number": "07", "title": "IDOR / BOLA", "subtitle": "เปลี่ยน object reference ข้ามผู้ใช้", "track": "WEB", "difficulty": "INTERMEDIATE", "minutes": 50,
+    "description": "ทดสอบ object-level authorization ใน API จำลองโดยเปลี่ยน identifier เท่านั้น", "skills": ["IDOR", "BOLA", "Authorization"], "prerequisites": ["auth-enumeration"], "target": "gateway:8080/api/users",
+    "objectives": [{"id":"idor-proof","label":"อ่าน record ของ user อื่นผ่าน numeric ID","points":100,"flagKey":"idor_user"}],
+    "hints": [{"id":"h1","title":"Predictable IDs","penalty":10,"body":"เริ่มจาก id=1 แล้วดู schema ก่อนเปลี่ยนค่า"},{"id":"h2","title":"Command","penalty":25,"body":"curl http://gateway:8080/api/users?id=2"}],
+    "solution": "ร้องขอ id=2 โดยไม่มี authorization check; field proof ใน JSON คือ flag"
+  },
+  {
+    "id": "sql-injection", "number": "08", "title": "SQL Injection", "subtitle": "พิสูจน์ auth bypass บน query จำลอง", "track": "WEB", "difficulty": "INTERMEDIATE", "minutes": 55,
+    "description": "สังเกต query behavior และทำ boolean auth bypass โดยไม่มีฐานข้อมูลภายนอก", "skills": ["SQLi", "Boolean logic", "Request crafting"], "prerequisites": ["idor-bola"], "target": "gateway:8080/login",
+    "objectives": [{"id":"sqli-proof","label":"ข้าม login ด้วย boolean expression","points":100,"flagKey":"sqli_login"}],
+    "hints": [{"id":"h1","title":"Boolean condition","penalty":10,"body":"ช่อง username ถูกประกอบเข้า query จำลองโดยไม่ parameterize"},{"id":"h2","title":"Payload shape","penalty":25,"body":"username=' OR '1'='1 และ password ค่าใดก็ได้"}],
+    "solution": "ส่ง URL-encoded username ที่มี tautology ไป /login; authenticated response จะคืน proof"
+  },
+  {
+    "id": "command-injection", "number": "09", "title": "Command Injection", "subtitle": "ตรวจ shell metacharacters แบบ sandboxed", "track": "WEB", "difficulty": "INTERMEDIATE", "minutes": 45,
+    "description": "endpoint จำลองการต่อคำสั่งโดยไม่รัน OS command จริง เพื่อฝึก detection อย่างปลอดภัย", "skills": ["Command injection", "Metacharacters", "Safe simulation"], "prerequisites": ["sql-injection"], "target": "gateway:8080/exec",
+    "objectives": [{"id":"cmd-proof","label":"ทำให้ parser ยอมรับคำสั่งที่สอง","points":100,"flagKey":"cmd_injection"}],
+    "hints": [{"id":"h1","title":"Separators","penalty":10,"body":"สังเกตความหมายของ ; และ && ใน shell"},{"id":"h2","title":"Request","penalty":25,"body":"ลอง /exec?host=127.0.0.1%3Bid"}],
+    "solution": "ใส่ semicolon ที่ parameter host; simulator จะคืนผล id และ proof โดยไม่ execute บน OS"
+  },
+  {
+    "id": "cross-site-scripting", "number": "10", "title": "Cross-site Scripting", "subtitle": "แยก reflection ออกจาก execution sink", "track": "WEB", "difficulty": "INTERMEDIATE", "minutes": 55,
+    "description": "ทดสอบ reflected XSS ในหน้า search และพิสูจน์ sink ด้วย payload ที่ไม่ส่งข้อมูลออกนอก lab", "skills": ["XSS", "Context", "Encoding"], "prerequisites": ["command-injection"], "target": "127.0.0.1:8080/search",
+    "objectives": [{"id":"xss-proof","label":"ทำให้ script context ถูกสร้างใน response","points":100,"flagKey":"xss_reflected"}],
+    "hints": [{"id":"h1","title":"Inspect context","penalty":10,"body":"query ถูกแทรกกลับใน HTML โดยไม่ encode"},{"id":"h2","title":"Payload","penalty":25,"body":"ใช้ payload <script>document.body.dataset.pwned=1</script> ภายใน lab"}],
+    "solution": "ส่ง payload ผ่าน q; response จะเพิ่ม data-proof เมื่อพบ executable script context"
+  },
+  {
+    "id": "csrf-session", "number": "11", "title": "CSRF & Session", "subtitle": "แยก authentication ออกจาก intent", "track": "WEB", "difficulty": "INTERMEDIATE", "minutes": 50,
+    "description": "ตรวจ state-changing GET ที่ยอมรับ session แต่ไม่มี anti-CSRF control", "skills": ["CSRF", "Cookies", "SameSite"], "prerequisites": ["cross-site-scripting"], "target": "gateway:8080/transfer",
+    "objectives": [{"id":"csrf-proof","label":"เรียก state change โดยไม่มี CSRF token","points":100,"flagKey":"csrf_transfer"}],
+    "hints": [{"id":"h1","title":"Unsafe method","penalty":10,"body":"ตรวจว่า GET route ใดเปลี่ยนยอดคงเหลือ"},{"id":"h2","title":"Command","penalty":25,"body":"curl -i 'http://gateway:8080/transfer?to=lab&amount=1'"}],
+    "solution": "เรียก /transfer ด้วย GET; response จำลองการเปลี่ยน state และคืน proof"
+  },
+  {
+    "id": "ssrf-pivot", "number": "12", "title": "SSRF Pivot", "subtitle": "เข้าถึง service ที่ toolbox มองไม่เห็น", "track": "WEB", "difficulty": "ADVANCED", "minutes": 65,
+    "description": "ใช้ fetch endpoint บน gateway เป็นตัวกลางเข้าถึง internal service ที่อยู่คนละ network", "skills": ["SSRF", "Network boundary", "URL parsing"], "prerequisites": ["csrf-session"], "target": "gateway:8080/fetch",
+    "objectives": [{"id":"ssrf-proof","label":"อ่าน /admin/proof จาก internal service","points":100,"flagKey":"ssrf_internal"}],
+    "hints": [{"id":"h1","title":"Trust boundary","penalty":10,"body":"toolbox ต่อ internal:8081 ไม่ได้ แต่ gateway ต่อได้"},{"id":"h2","title":"URL","penalty":25,"body":"/fetch?url=http://internal:8081/admin/proof"}],
+    "solution": "ให้ gateway fetch URL ภายใน; body จาก internal service จะมี proof"
+  },
+  {
+    "id": "path-traversal-lfi", "number": "13", "title": "Path Traversal / LFI", "subtitle": "หนีจาก intended directory แบบจำลอง", "track": "WEB", "difficulty": "INTERMEDIATE", "minutes": 50,
+    "description": "ฝึก normalize path และอ่านไฟล์จำลองนอกโฟลเดอร์ public โดยไม่สัมผัส host filesystem", "skills": ["Traversal", "LFI", "Normalization"], "prerequisites": ["ssrf-pivot"], "target": "gateway:8080/files",
+    "objectives": [{"id":"traversal-proof","label":"อ่านไฟล์ secrets จำลองด้วย ../","points":100,"flagKey":"traversal_file"}],
+    "hints": [{"id":"h1","title":"Path normalization","penalty":10,"body":"parameter name ถูกต่อท้าย /public/files โดยตรง"},{"id":"h2","title":"Request","penalty":25,"body":"/files?name=../../etc/lab-secrets"}],
+    "solution": "ส่ง traversal sequence ที่ name; simulator จะคืนเนื้อหาไฟล์จำลองและ proof"
+  },
+  {
+    "id": "insecure-file-upload", "number": "14", "title": "Insecure File Upload", "subtitle": "หลบ extension-only validation", "track": "WEB", "difficulty": "ADVANCED", "minutes": 60,
+    "description": "วิเคราะห์การตรวจ filename/content-type ที่ไม่สอดคล้องกันโดยไม่เก็บหรือรันไฟล์จริง", "skills": ["Upload", "MIME", "Validation"], "prerequisites": ["path-traversal-lfi"], "target": "gateway:8080/upload",
+    "objectives": [{"id":"upload-proof","label":"ผ่าน validation ด้วย double extension","points":100,"flagKey":"upload_bypass"}],
+    "hints": [{"id":"h1","title":"Filename policy","penalty":10,"body":"validator เช็กว่ามี .jpg อยู่ในชื่อ ไม่ได้เช็ก suffix สุดท้าย"},{"id":"h2","title":"Request","penalty":25,"body":"POST filename=avatar.jpg.php&content_type=image/jpeg ไป /upload"}],
+    "solution": "ส่งชื่อไฟล์ double extension กับ image MIME; simulator จะยอมรับและคืน proof โดยไม่เขียนไฟล์"
+  },
+  {
+    "id": "jwt-mass-assignment", "number": "15", "title": "JWT & Mass Assignment", "subtitle": "ทดสอบ trust ใน client-controlled claims", "track": "API", "difficulty": "ADVANCED", "minutes": 65,
+    "description": "พิสูจน์ alg=none acceptance และการ bind ฟิลด์ role โดยไม่มี allowlist", "skills": ["JWT", "Mass assignment", "Claims"], "prerequisites": ["insecure-file-upload"], "target": "gateway:8080/api/profile",
+    "objectives": [{"id":"jwt-proof","label":"ยกระดับ role ผ่าน unsigned token หรือ body field","points":100,"flagKey":"jwt_mass"}],
+    "hints": [{"id":"h1","title":"Two trust failures","penalty":10,"body":"API เชื่อทั้ง token header และ field role จาก JSON"},{"id":"h2","title":"Request","penalty":25,"body":"POST JSON {\"role\":\"admin\",\"token\":\"alg:none\"} ไป /api/profile"}],
+    "solution": "ส่ง role=admin และ token=alg:none; API จำลองจะคืน proof ของ privilege escalation"
+  },
+  {
+    "id": "business-logic", "number": "16", "title": "Business Logic", "subtitle": "ทำลาย invariant โดยไม่ใช้ payload พิเศษ", "track": "API", "difficulty": "ADVANCED", "minutes": 60,
+    "description": "ตรวจ cart invariant และทำให้ยอดรวมติดลบผ่าน quantity ที่ระบบไม่ validate", "skills": ["Business logic", "Invariants", "Negative values"], "prerequisites": ["jwt-mass-assignment"], "target": "gateway:8080/api/checkout",
+    "objectives": [{"id":"logic-proof","label":"สร้าง checkout ที่ยอดรวมติดลบ","points":100,"flagKey":"logic_total"}],
+    "hints": [{"id":"h1","title":"Think in invariants","penalty":10,"body":"quantity ควรมีขอบเขตอะไรบ้าง"},{"id":"h2","title":"Request","penalty":25,"body":"POST JSON {\"sku\":\"LAB-1\",\"quantity\":-5} ไป /api/checkout"}],
+    "solution": "ส่ง quantity ติดลบ; response จะคำนวณ negative total และคืน proof"
+  },
+  {
+    "id": "capstone-chain", "number": "17", "title": "Capstone: The Quiet Route", "subtitle": "chain recon → IDOR → SSRF", "track": "CAPSTONE", "difficulty": "ADVANCED", "minutes": 90,
+    "description": "โจทย์ black-box ที่ต้องนำ service map, leaked object และ internal route มาต่อเป็น attack path เดียว", "skills": ["Attack chaining", "Evidence", "Reporting"], "prerequisites": ["business-logic"], "target": "gateway:8080/capstone",
+    "objectives": [{"id":"chain-proof","label":"ประกอบสาม artifact เพื่อเปิด final proof","points":80,"flagKey":"capstone_chain"},{"id":"report-proof","label":"ค้นหา remediation receipt หลังจบ chain","points":20,"flagKey":"capstone_report"}],
+    "hints": [{"id":"h1","title":"Artifact trail","penalty":10,"body":"เริ่มที่ /capstone/brief แล้วบันทึกค่าจากทุก hop"},{"id":"h2","title":"Three hops","penalty":25,"body":"service banner → user id=3 → fetch internal /capstone/final"}],
+    "solution": "อ่าน token จาก recon-node /capstone, ใช้เป็น key ขอ user id=3 แล้วส่ง route ที่ได้ผ่าน /fetch; final response ให้สอง proofs"
+  }
+]
