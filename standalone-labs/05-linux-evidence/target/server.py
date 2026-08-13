@@ -65,6 +65,10 @@ def make_archive():
 
 ARCHIVE = make_archive()
 ARCHIVE_SHA256 = hashlib.sha256(ARCHIVE).hexdigest()
+ARCHIVE_PATH = "/run/evidence/case-55.tar"
+with open(ARCHIVE_PATH, "wb") as archive_file:
+    archive_file.write(ARCHIVE)
+os.chmod(ARCHIVE_PATH, 0o400)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -81,7 +85,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/case-55.tar":
-            self.reply(200, ARCHIVE, "application/x-tar")
+            with open(ARCHIVE_PATH, "rb") as archive_file:
+                self.reply(200, archive_file.read(), "application/x-tar")
         elif self.path == "/manifest":
             self.reply(200, "case=EV-55\nsource=read-only-runtime-generated\nartifact=/case-55.tar\n")
         else:
