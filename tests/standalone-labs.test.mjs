@@ -253,6 +253,17 @@ test("shared toolbox has the required tools and non-root identity", async () => 
   assert.ok(existsSync(join(labsRoot, "_shared", "toolbox", "welcome.txt")));
 });
 
+test("zone-transfer startup waits for both DNS and the virtual host", async () => {
+  const directory = join(labsRoot, "04-zone-transfer");
+  const compose = loadYaml(await readFile(join(directory, "docker-compose.yml"), "utf8"));
+  assert.ok(compose.services.vhost.healthcheck, "the vhost needs a Compose healthcheck");
+
+  const smoke = await readFile(join(directory, "smoke.sh"), "utf8");
+  const readiness = smoke.slice(0, smoke.indexOf("nslookup"));
+  assert.match(readiness, /until dig/u);
+  assert.match(readiness, /curl -fsS -H 'Host: ops-archive\.range\.test'/u);
+});
+
 test("controller lists only discovered labs and rejects path/argument injection", () => {
   const listed = spawnSync(process.execPath, [controller, "list"], {
     cwd: root,

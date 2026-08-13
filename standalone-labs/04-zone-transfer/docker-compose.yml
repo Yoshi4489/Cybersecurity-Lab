@@ -36,6 +36,16 @@ services:
       LAB04_FINAL_FLAG: ${LAB04_FINAL_FLAG:?run via standalone-labctl}
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=4m,uid=10001,gid=10001
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request; request = urllib.request.Request('http://127.0.0.1:8080/', headers={'Host': 'ops-archive.range.test'}); urllib.request.urlopen(request, timeout=2)
+      interval: 2s
+      timeout: 2s
+      retries: 15
     networks:
       lab04:
         ipv4_address: 172.30.44.80

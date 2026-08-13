@@ -10,9 +10,11 @@ dns_server="172.30.44.53"
 zone="range.test"
 
 attempt=0
-until dig +time=1 +tries=1 "@$dns_server" "$zone" SOA +short >/tmp/lab04-soa 2>/dev/null && test -s /tmp/lab04-soa; do
+until dig +time=1 +tries=1 "@$dns_server" "$zone" SOA +short >/tmp/lab04-soa 2>/dev/null \
+  && test -s /tmp/lab04-soa \
+  && curl -fsS -H 'Host: ops-archive.range.test' http://172.30.44.80:8080/ >/dev/null 2>&1; do
   attempt=$((attempt + 1))
-  test "$attempt" -lt 30 || { echo "DNS did not become ready" >&2; exit 1; }
+  test "$attempt" -lt 30 || { echo "DNS and virtual host did not become ready" >&2; exit 1; }
   sleep 1
 done
 
