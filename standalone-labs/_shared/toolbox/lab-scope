@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cat <<'SCOPE'
+
+SCOPE
+  Authorized: services attached to this lab's internal Docker network.
+  Forbidden:   the Docker host, public IPs, and every external system.
+  Scanning:    use TCP connect scans (`nmap -sT`); raw-socket capabilities
+               are intentionally unavailable.
+  Data:        all names, addresses, records, credentials, and logs are
+               synthetic training artifacts.
+
+Stop and return to the lab README if a hostname or address is not clearly
+identified as part of the selected lab.
+SCOPE
