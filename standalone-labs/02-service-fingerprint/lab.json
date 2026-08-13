@@ -1,0 +1,54 @@
+{
+  "id": "02-service-fingerprint",
+  "title": "Service Fingerprint: Ports Tell Stories",
+  "summary": "Enumerate a synthetic service farm with full-port scanning, version detection, durable output, and safe NSE scripts.",
+  "description": "Enumerate a synthetic service farm with full-port scanning, version detection, durable output, and safe NSE scripts.",
+  "difficulty": "intermediate",
+  "minutes": 45,
+  "subnet": "172.28.2.0/24",
+  "composeFile": "docker-compose.yml",
+  "toolboxService": "toolbox",
+  "commandFamilies": ["nmap", "curl", "grep", "awk"],
+  "services": [
+    {
+      "name": "service-farm",
+      "hostname": "service-farm",
+      "ports": [2222, 8000, 8443, 31337],
+      "purpose": "Synthetic multiport host with HTTP metadata and protocol banners"
+    }
+  ],
+  "objectives": [
+    {
+      "id": "full-port-map",
+      "title": "Find every TCP listener and save an -oA evidence set",
+      "label": "Find every TCP listener and save an -oA evidence set",
+      "points": 25,
+      "flagEnv": "FLAG_L02_FULL_PORT_MAP",
+      "dependsOn": []
+    },
+    {
+      "id": "version-ledger",
+      "title": "Fingerprint the versioned protocol banner",
+      "label": "Fingerprint the versioned protocol banner",
+      "points": 25,
+      "flagEnv": "FLAG_L02_VERSION_LEDGER",
+      "dependsOn": ["full-port-map"]
+    },
+    {
+      "id": "http-metadata",
+      "title": "Collect title, headers, and banner metadata with safe NSE",
+      "label": "Collect title, headers, and banner metadata with safe NSE",
+      "points": 25,
+      "flagEnv": "FLAG_L02_HTTP_METADATA",
+      "dependsOn": ["version-ledger"]
+    },
+    {
+      "id": "fingerprint-proof",
+      "title": "Submit the correlated service fingerprint",
+      "label": "Submit the correlated service fingerprint",
+      "points": 25,
+      "flagEnv": "FLAG_L02_FINGERPRINT_PROOF",
+      "dependsOn": ["full-port-map", "version-ledger", "http-metadata"]
+    }
+  ]
+}
