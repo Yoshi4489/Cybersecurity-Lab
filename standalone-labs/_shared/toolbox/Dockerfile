@@ -25,6 +25,7 @@ RUN apt-get update \
         tar \
     && rm -rf /var/lib/apt/lists/* \
     && setcap -r /usr/lib/nmap/nmap \
+    && rm -f /etc/profile.d/nmap.sh /etc/X11/Xsession.d/90nmap \
     && groupadd --gid 10001 student \
     && useradd --create-home --uid 10001 --gid 10001 --shell /bin/bash student
 

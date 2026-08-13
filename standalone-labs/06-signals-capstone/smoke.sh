@@ -27,6 +27,7 @@ relay_ip="$(printf '%s\n' "$transfer" | awk '$1 ~ /^relay\./ && $4 == "A" {print
 test "$dns_proof" = "$LAB06_DNS_FLAG"
 test "$relay_ip" = "$relay"
 
+bash -l -c 'test -z "${NMAP_PRIVILEGED+x}"'
 nmap -sT -Pn -p 1-10000 "$relay_ip" -oN "$work/nmap.txt" >/dev/null
 grep -Eq '^8080/tcp +open' "$work/nmap.txt"
 grep -Eq '^9090/tcp +open' "$work/nmap.txt"

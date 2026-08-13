@@ -246,6 +246,7 @@ test("shared toolbox has the required tools and non-root identity", async () => 
   assert.doesNotMatch(dockerfile, /\bttyd\b/u, "standalone toolbox must not depend on unavailable ttyd");
   assert.match(dockerfile, /CMD \["sleep", "infinity"\]/u);
   assert.match(dockerfile, /setcap -r \/usr\/lib\/nmap\/nmap/u);
+  assert.match(dockerfile, /rm -f \/etc\/profile\.d\/nmap\.sh \/etc\/X11\/Xsession\.d\/90nmap/u);
   assert.match(dockerfile, /useradd[^\n]*--uid 10001/u);
   assert.match(dockerfile, /USER 10001:10001/u);
   assert.ok(existsSync(join(labsRoot, "_shared", "toolbox", "lab-scope")));
