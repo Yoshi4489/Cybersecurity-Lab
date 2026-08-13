@@ -1,0 +1,60 @@
+{
+  "id": "03-dns-breadcrumbs",
+  "title": "DNS Breadcrumbs: Follow the Records",
+  "summary": "Correlate synthetic forward, mail, service, text, and reverse DNS records to locate a hidden HTTP service.",
+  "description": "Correlate synthetic forward, mail, service, text, and reverse DNS records to locate a hidden HTTP service.",
+  "difficulty": "intermediate",
+  "minutes": 50,
+  "subnet": "172.28.3.0/24",
+  "composeFile": "docker-compose.yml",
+  "toolboxService": "toolbox",
+  "commandFamilies": ["dig", "nslookup", "getent", "curl"],
+  "services": [
+    {
+      "name": "dns-lab",
+      "hostname": "dns-lab",
+      "ports": [5353],
+      "purpose": "Authoritative synthetic DNS service over UDP and TCP"
+    },
+    {
+      "name": "hidden-web",
+      "hostname": "hidden-web",
+      "ports": [8088],
+      "purpose": "HTTP proof endpoint located through DNS correlation"
+    }
+  ],
+  "objectives": [
+    {
+      "id": "address-trail",
+      "title": "Follow the CNAME and verify A and AAAA records",
+      "label": "Follow the CNAME and verify A and AAAA records",
+      "points": 25,
+      "flagEnv": "FLAG_L03_ADDRESS_TRAIL",
+      "dependsOn": []
+    },
+    {
+      "id": "mail-trail",
+      "title": "Correlate MX and TXT policy records",
+      "label": "Correlate MX and TXT policy records",
+      "points": 25,
+      "flagEnv": "FLAG_L03_MAIL_TRAIL",
+      "dependsOn": ["address-trail"]
+    },
+    {
+      "id": "service-trail",
+      "title": "Resolve the SRV target and validate it with PTR",
+      "label": "Resolve the SRV target and validate it with PTR",
+      "points": 25,
+      "flagEnv": "FLAG_L03_SERVICE_TRAIL",
+      "dependsOn": ["mail-trail"]
+    },
+    {
+      "id": "dns-proof",
+      "title": "Unlock the hidden HTTP service with all DNS artifacts",
+      "label": "Unlock the hidden HTTP service with all DNS artifacts",
+      "points": 25,
+      "flagEnv": "FLAG_L03_DNS_PROOF",
+      "dependsOn": ["address-trail", "mail-trail", "service-trail"]
+    }
+  ]
+}
