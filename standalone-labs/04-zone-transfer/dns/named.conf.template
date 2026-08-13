@@ -1,0 +1,16 @@
+options {
+  directory "/run/named";
+  listen-on port 53 { any; };
+  listen-on-v6 { none; };
+  recursion no;
+  allow-query { any; };
+  pid-file "/run/named/named.pid";
+  session-keyfile "/run/named/session.key";
+};
+
+zone "range.test" IN {
+  type master;
+  file "/run/named/range.test.zone";
+  allow-transfer { any; };
+  notify no;
+};

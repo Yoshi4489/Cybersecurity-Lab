@@ -1,0 +1,71 @@
+name: standalone-04-zone-transfer
+
+x-hardened: &hardened
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  read_only: true
+  pids_limit: 64
+  mem_limit: 128m
+  cpus: "0.50"
+
+services:
+  auth-dns:
+    <<: *hardened
+    build:
+      context: ./dns
+    environment:
+      LAB04_AUTHORITY_FLAG: ${LAB04_AUTHORITY_FLAG:?run via standalone-labctl}
+      LAB04_AXFR_FLAG: ${LAB04_AXFR_FLAG:?run via standalone-labctl}
+    tmpfs:
+      - /run/named:rw,noexec,nosuid,size=8m,uid=10001,gid=10001
+      - /tmp:rw,noexec,nosuid,size=4m,uid=10001,gid=10001
+    networks:
+      lab04:
+        ipv4_address: 172.30.44.53
+
+  vhost:
+    <<: *hardened
+    build:
+      context: ./vhost
+    environment:
+      LAB04_AUTHORITY_FLAG: ${LAB04_AUTHORITY_FLAG:?run via standalone-labctl}
+      LAB04_AXFR_FLAG: ${LAB04_AXFR_FLAG:?run via standalone-labctl}
+      LAB04_VHOST_FLAG: ${LAB04_VHOST_FLAG:?run via standalone-labctl}
+      LAB04_FINAL_FLAG: ${LAB04_FINAL_FLAG:?run via standalone-labctl}
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=4m,uid=10001,gid=10001
+    networks:
+      lab04:
+        ipv4_address: 172.30.44.80
+
+  toolbox:
+    <<: *hardened
+    build:
+      context: ../_shared/toolbox
+    command:
+      - sh
+      - -lc
+      - trap 'exit 0' TERM INT; while :; do sleep 3600 & wait $!; done
+    stdin_open: true
+    tty: true
+    dns:
+      - 172.30.44.53
+    depends_on:
+      - auth-dns
+      - vhost
+    tmpfs:
+      - /tmp:rw,nosuid,size=32m
+    volumes:
+      - ./smoke.sh:/opt/lab/smoke.sh:ro
+    networks:
+      lab04:
+        ipv4_address: 172.30.44.10
+
+networks:
+  lab04:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.30.44.0/24

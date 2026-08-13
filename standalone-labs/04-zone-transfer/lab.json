@@ -1,0 +1,50 @@
+{
+  "id": "04-zone-transfer",
+  "title": "Misconfigured Zone Transfer",
+  "summary": "Discover an authoritative DNS server, enumerate a synthetic zone through an intentionally permitted AXFR, and follow the leaked virtual host to a chained proof.",
+  "description": "A standalone, internal-only DNS reconnaissance lab covering dig, nslookup, AXFR, and virtual-host follow-up.",
+  "difficulty": "intermediate",
+  "minutes": 45,
+  "subnet": "172.30.44.0/24",
+  "composeFile": "docker-compose.yml",
+  "toolboxService": "toolbox",
+  "commandFamilies": ["dig", "nslookup", "curl", "awk", "sed"],
+  "services": ["auth-dns", "vhost", "toolbox"],
+  "objectives": [
+    {
+      "id": "authority",
+      "label": "Identify and query the authoritative name server",
+      "title": "Authoritative discovery",
+      "points": 100,
+      "flagEnv": "LAB04_AUTHORITY_FLAG",
+      "dependsOn": []
+    },
+    {
+      "id": "axfr",
+      "label": "Confirm the zone-transfer misconfiguration",
+      "title": "AXFR enumeration",
+      "points": 150,
+      "flagEnv": "LAB04_AXFR_FLAG",
+      "dependsOn": ["authority"]
+    },
+    {
+      "id": "vhost",
+      "label": "Reach the virtual host disclosed by DNS",
+      "title": "Virtual-host follow-up",
+      "points": 150,
+      "flagEnv": "LAB04_VHOST_FLAG",
+      "dependsOn": ["axfr"]
+    },
+    {
+      "id": "final",
+      "label": "Submit the three chained proofs to close the case",
+      "title": "Chained final proof",
+      "points": 250,
+      "flagEnv": "LAB04_FINAL_FLAG",
+      "dependsOn": ["authority", "axfr", "vhost"]
+    }
+  ],
+  "smoke": [
+    {"objectiveId": "final", "command": ["sh", "/opt/lab/smoke.sh"]}
+  ]
+}
