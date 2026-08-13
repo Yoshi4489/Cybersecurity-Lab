@@ -240,9 +240,10 @@ test("shared toolbox has the required tools and non-root identity", async () => 
     "binutils",
     "file",
     "less",
-    "ttyd",
   ];
   for (const packageName of requiredPackages) assert.match(dockerfile, new RegExp(`\\b${packageName}\\b`, "u"));
+  assert.doesNotMatch(dockerfile, /\bttyd\b/u, "standalone toolbox must not depend on unavailable ttyd");
+  assert.match(dockerfile, /CMD \["sleep", "infinity"\]/u);
   assert.match(dockerfile, /useradd[^\n]*--uid 10001/u);
   assert.match(dockerfile, /USER 10001:10001/u);
   assert.ok(existsSync(join(labsRoot, "_shared", "toolbox", "lab-scope")));

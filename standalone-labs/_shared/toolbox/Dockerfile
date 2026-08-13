@@ -22,7 +22,6 @@ RUN apt-get update \
         nmap \
         sed \
         tar \
-        ttyd \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 10001 student \
     && useradd --create-home --uid 10001 --gid 10001 --shell /bin/bash student
@@ -36,6 +35,4 @@ RUN chmod 0555 /usr/local/bin/lab-scope \
 USER 10001:10001
 WORKDIR /home/student
 
-EXPOSE 7681
-
-CMD ["ttyd", "--writable", "--port", "7681", "--interface", "0.0.0.0", "bash", "-lc", "cat /opt/cyberlab/welcome.txt; lab-scope; exec bash -l"]
+CMD ["sleep", "infinity"]
