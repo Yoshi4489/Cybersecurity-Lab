@@ -1,0 +1,55 @@
+name: standalone-05-linux-evidence
+
+x-hardened: &hardened
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  read_only: true
+  pids_limit: 64
+  mem_limit: 160m
+  cpus: "0.50"
+
+services:
+  evidence-vault:
+    <<: *hardened
+    build:
+      context: ./target
+    environment:
+      LAB05_FILESYSTEM_FLAG: ${LAB05_FILESYSTEM_FLAG:?run via standalone-labctl}
+      LAB05_LOG_FLAG: ${LAB05_LOG_FLAG:?run via standalone-labctl}
+      LAB05_BINARY_FLAG: ${LAB05_BINARY_FLAG:?run via standalone-labctl}
+      LAB05_FINAL_FLAG: ${LAB05_FINAL_FLAG:?run via standalone-labctl}
+    tmpfs:
+      - /run/evidence:rw,noexec,nosuid,size=16m,uid=10001,gid=10001,mode=0700
+      - /tmp:rw,noexec,nosuid,size=4m,uid=10001,gid=10001
+    networks:
+      lab05:
+        ipv4_address: 172.30.55.55
+
+  toolbox:
+    <<: *hardened
+    build:
+      context: ../_shared/toolbox
+    command:
+      - sh
+      - -lc
+      - trap 'exit 0' TERM INT; while :; do sleep 3600 & wait $!; done
+    stdin_open: true
+    tty: true
+    depends_on:
+      - evidence-vault
+    tmpfs:
+      - /tmp:rw,nosuid,size=64m
+    volumes:
+      - ./smoke.sh:/opt/lab/smoke.sh:ro
+    networks:
+      lab05:
+        ipv4_address: 172.30.55.10
+
+networks:
+  lab05:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.30.55.0/24

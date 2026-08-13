@@ -1,0 +1,53 @@
+{
+  "id": "05-linux-evidence",
+  "title": "Linux Evidence Hunt",
+  "summary": "Acquire a synthetic evidence archive and correlate filesystem metadata, access logs, encoded notes, and printable binary strings without privilege escalation.",
+  "description": "A standalone Linux command-line forensics lab with a runtime-generated, read-only source dataset.",
+  "difficulty": "intermediate",
+  "minutes": 60,
+  "subnet": "172.30.55.0/24",
+  "composeFile": "docker-compose.yml",
+  "toolboxService": "toolbox",
+  "commandFamilies": [
+    "find", "file", "stat", "permissions", "grep", "cut", "sort", "uniq",
+    "sed", "awk", "xargs", "strings", "base64", "sha256sum", "tar", "curl"
+  ],
+  "services": ["evidence-vault", "toolbox"],
+  "objectives": [
+    {
+      "id": "filesystem",
+      "label": "Inventory files and decode the permission-marked note",
+      "title": "Filesystem triage",
+      "points": 125,
+      "flagEnv": "LAB05_FILESYSTEM_FLAG",
+      "dependsOn": []
+    },
+    {
+      "id": "logs",
+      "label": "Correlate the top source in the access logs",
+      "title": "Log correlation",
+      "points": 150,
+      "flagEnv": "LAB05_LOG_FLAG",
+      "dependsOn": ["filesystem"]
+    },
+    {
+      "id": "binary",
+      "label": "Recover printable evidence from the binary artifact",
+      "title": "Binary strings",
+      "points": 150,
+      "flagEnv": "LAB05_BINARY_FLAG",
+      "dependsOn": ["logs"]
+    },
+    {
+      "id": "final",
+      "label": "Submit all proofs with the archive checksum and correlated source",
+      "title": "Evidence-chain closure",
+      "points": 275,
+      "flagEnv": "LAB05_FINAL_FLAG",
+      "dependsOn": ["filesystem", "logs", "binary"]
+    }
+  ],
+  "smoke": [
+    {"objectiveId": "final", "command": ["sh", "/opt/lab/smoke.sh"]}
+  ]
+}
