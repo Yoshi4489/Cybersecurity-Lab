@@ -1,0 +1,100 @@
+name: Standalone labs
+
+on:
+  push:
+    branches: [main, feat/recon-linux-chains]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npm test
+
+  compose-config:
+    needs: static
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Create non-secret config-validation flags
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+          import { join } from "node:path";
+
+          const root = "standalone-labs";
+          for (const entry of await readdir(root, { withFileTypes: true })) {
+            if (!entry.isDirectory() || entry.name.startsWith(".") || entry.name === "_shared") continue;
+            const manifestPath = join(root, entry.name, "lab.json");
+            let manifest;
+            try {
+              manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+            } catch (error) {
+              if (error.code === "ENOENT") continue;
+              throw error;
+            }
+            const runtime = join(root, ".runtime", manifest.id);
+            await mkdir(runtime, { recursive: true });
+            const env = manifest.objectives
+              .map((objective) => `${objective.flagEnv}=RLAB{00000000000000000000000000000000}`)
+              .join("\n");
+            await writeFile(join(runtime, "flags.env"), `${env}\n`, { mode: 0o600 });
+          }
+          NODE
+      - name: Validate every Compose model
+        shell: bash
+        run: |
+          set -euo pipefail
+          for manifest in standalone-labs/[0-9]*/lab.json; do
+            lab_id="$(node -p "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8')).id" "$manifest")"
+            docker compose \
+              --env-file "standalone-labs/.runtime/$lab_id/flags.env" \
+              -f "standalone-labs/$lab_id/docker-compose.yml" \
+              -p "cyberlab-$lab_id" \
+              config --quiet
+          done
+
+  smoke:
+    needs: compose-config
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        lab:
+          - 01-network-triage
+          - 02-service-fingerprint
+          - 03-dns-breadcrumbs
+          - 04-zone-transfer
+          - 05-linux-evidence
+          - 06-signals-capstone
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Start ${{ matrix.lab }}
+        run: node scripts/standalone-labctl.mjs start "${{ matrix.lab }}"
+      - name: Smoke ${{ matrix.lab }}
+        run: node scripts/standalone-labctl.mjs smoke "${{ matrix.lab }}"
+      - name: Stop ${{ matrix.lab }}
+        if: always()
+        run: node scripts/standalone-labctl.mjs stop "${{ matrix.lab }}"
