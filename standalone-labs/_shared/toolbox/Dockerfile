@@ -18,11 +18,13 @@ RUN apt-get update \
         iproute2 \
         jq \
         less \
+        libcap2-bin \
         netcat-openbsd \
         nmap \
         sed \
         tar \
     && rm -rf /var/lib/apt/lists/* \
+    && setcap -r /usr/lib/nmap/nmap \
     && groupadd --gid 10001 student \
     && useradd --create-home --uid 10001 --gid 10001 --shell /bin/bash student
 

@@ -25,7 +25,7 @@ mkdir "$work/unpacked"
 tar -xf "$work/case-55.tar" -C "$work/unpacked"
 
 find "$work/unpacked" -type f -print0 | xargs -0 file >"$work/file-types"
-grep -q 'session.bin: data' "$work/file-types"
+grep -Eq 'session\.bin:[[:space:]]+data$' "$work/file-types"
 mode="$(stat -c '%a' "$work/unpacked/case-55/notes/.handoff.b64")"
 test "$mode" = "400"
 filesystem="$(find "$work/unpacked" -name '*.b64' -print0 | xargs -0 base64 -d | sed -n 's/^filesystem_proof=//p')"
