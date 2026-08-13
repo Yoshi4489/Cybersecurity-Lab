@@ -1,0 +1,87 @@
+name: cybersecurity-lab-03-dns-breadcrumbs
+
+services:
+  toolbox:
+    build:
+      context: ../_shared/toolbox
+    command: ["sleep", "infinity"]
+    hostname: toolbox
+    stdin_open: true
+    tty: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+      - /run:size=8m,mode=0755
+    volumes:
+      - ./smoke.sh:/opt/lab/smoke.sh:ro
+    networks:
+      dns_net:
+        ipv4_address: 172.28.3.10
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 96
+    mem_limit: 192m
+    cpus: "0.50"
+    depends_on:
+      dns-lab:
+        condition: service_started
+      hidden-web:
+        condition: service_healthy
+
+  dns-lab:
+    build:
+      context: ./dns-target
+    hostname: dns-lab
+    environment:
+      FLAG_L03_ADDRESS_TRAIL: "${FLAG_L03_ADDRESS_TRAIL:?run via standalone-labctl}"
+      FLAG_L03_MAIL_TRAIL: "${FLAG_L03_MAIL_TRAIL:?run via standalone-labctl}"
+      FLAG_L03_SERVICE_TRAIL: "${FLAG_L03_SERVICE_TRAIL:?run via standalone-labctl}"
+    expose:
+      - "5353/udp"
+      - "5353/tcp"
+    read_only: true
+    tmpfs:
+      - /tmp:size=8m,mode=1777
+    networks:
+      dns_net:
+        ipv4_address: 172.28.3.53
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 48
+    mem_limit: 64m
+    cpus: "0.25"
+
+  hidden-web:
+    build:
+      context: ./web-target
+    hostname: vault.ops.recon.test
+    environment:
+      FLAG_L03_DNS_PROOF: "${FLAG_L03_DNS_PROOF:?run via standalone-labctl}"
+    expose:
+      - "8088"
+    read_only: true
+    tmpfs:
+      - /tmp:size=8m,mode=1777
+    networks:
+      dns_net:
+        ipv4_address: 172.28.3.30
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 48
+    mem_limit: 64m
+    cpus: "0.25"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8088/health', timeout=2)"]
+      interval: 3s
+      timeout: 2s
+      retries: 15
+
+networks:
+  dns_net:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.28.3.0/24

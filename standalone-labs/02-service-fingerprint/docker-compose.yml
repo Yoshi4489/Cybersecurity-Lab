@@ -1,0 +1,67 @@
+name: cybersecurity-lab-02-service-fingerprint
+
+services:
+  toolbox:
+    build:
+      context: ../_shared/toolbox
+    command: ["sleep", "infinity"]
+    hostname: toolbox
+    stdin_open: true
+    tty: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=48m,mode=1777
+      - /run:size=8m,mode=0755
+    volumes:
+      - ./smoke.sh:/opt/lab/smoke.sh:ro
+    networks:
+      fingerprint_net:
+        ipv4_address: 172.28.2.10
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 96
+    mem_limit: 224m
+    cpus: "0.60"
+    depends_on:
+      service-farm:
+        condition: service_healthy
+
+  service-farm:
+    build:
+      context: ./target
+    hostname: service-farm
+    environment:
+      FLAG_L02_FULL_PORT_MAP: "${FLAG_L02_FULL_PORT_MAP:?run via standalone-labctl}"
+      FLAG_L02_VERSION_LEDGER: "${FLAG_L02_VERSION_LEDGER:?run via standalone-labctl}"
+      FLAG_L02_HTTP_METADATA: "${FLAG_L02_HTTP_METADATA:?run via standalone-labctl}"
+      FLAG_L02_FINGERPRINT_PROOF: "${FLAG_L02_FINGERPRINT_PROOF:?run via standalone-labctl}"
+    expose:
+      - "2222"
+      - "8000"
+      - "8443"
+      - "31337"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    networks:
+      fingerprint_net:
+        ipv4_address: 172.28.2.20
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 112m
+    cpus: "0.40"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 3s
+      timeout: 2s
+      retries: 15
+
+networks:
+  fingerprint_net:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.28.2.0/24

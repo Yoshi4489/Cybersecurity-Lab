@@ -1,0 +1,71 @@
+name: standalone-06-signals-capstone
+
+x-hardened: &hardened
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  read_only: true
+  pids_limit: 72
+  mem_limit: 192m
+  cpus: "0.75"
+
+services:
+  auth-dns:
+    <<: *hardened
+    build:
+      context: ./dns
+    environment:
+      LAB06_DNS_FLAG: ${LAB06_DNS_FLAG:?run via standalone-labctl}
+    tmpfs:
+      - /run/named:rw,noexec,nosuid,size=8m,uid=10001,gid=10001
+      - /tmp:rw,noexec,nosuid,size=4m,uid=10001,gid=10001
+    networks:
+      lab06:
+        ipv4_address: 172.30.66.53
+
+  signal-relay:
+    <<: *hardened
+    build:
+      context: ./relay
+    environment:
+      LAB06_DNS_FLAG: ${LAB06_DNS_FLAG:?run via standalone-labctl}
+      LAB06_NMAP_FLAG: ${LAB06_NMAP_FLAG:?run via standalone-labctl}
+      LAB06_HTTP_FLAG: ${LAB06_HTTP_FLAG:?run via standalone-labctl}
+      LAB06_FINAL_FLAG: ${LAB06_FINAL_FLAG:?run via standalone-labctl}
+    tmpfs:
+      - /run/artifacts:rw,noexec,nosuid,size=16m,uid=10001,gid=10001,mode=0700
+      - /tmp:rw,noexec,nosuid,size=4m,uid=10001,gid=10001
+    networks:
+      lab06:
+        ipv4_address: 172.30.66.90
+
+  toolbox:
+    <<: *hardened
+    build:
+      context: ../_shared/toolbox
+    command:
+      - sh
+      - -lc
+      - trap 'exit 0' TERM INT; while :; do sleep 3600 & wait $!; done
+    stdin_open: true
+    tty: true
+    dns:
+      - 172.30.66.53
+    depends_on:
+      - auth-dns
+      - signal-relay
+    tmpfs:
+      - /tmp:rw,nosuid,size=96m
+    volumes:
+      - ./smoke.sh:/opt/lab/smoke.sh:ro
+    networks:
+      lab06:
+        ipv4_address: 172.30.66.10
+
+networks:
+  lab06:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.30.66.0/24

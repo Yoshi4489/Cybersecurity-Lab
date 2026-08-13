@@ -1,0 +1,9 @@
+CYBERSECURITY STANDALONE LAB TOOLBOX
+====================================
+This shell is for the selected, isolated Docker lab only.
+Public networks, the Docker host, and systems outside the lab are out of scope.
+
+Useful commands include nmap, dig, nslookup, curl, jq, ip, ss, nc, find,
+grep, sed, awk, strings, base64, sha256sum, and tar.
+
+Run `lab-scope` at any time to review the safety boundary.

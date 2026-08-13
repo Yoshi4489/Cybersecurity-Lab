@@ -1,0 +1,54 @@
+{
+  "id": "01-network-triage",
+  "title": "Network Triage: First Contact",
+  "summary": "Build a local network baseline, resolve the target, and use TCP connect scanning to assemble a three-part proof.",
+  "description": "Build a local network baseline, resolve the target, and use TCP connect scanning to assemble a three-part proof.",
+  "difficulty": "beginner",
+  "minutes": 35,
+  "subnet": "172.28.1.0/24",
+  "composeFile": "docker-compose.yml",
+  "toolboxService": "toolbox",
+  "commandFamilies": ["ip", "getent", "ss", "nmap", "curl", "nc"],
+  "services": [
+    {
+      "name": "triage-node",
+      "hostname": "triage-node",
+      "ports": [7070, 8080, 9090],
+      "purpose": "Synthetic multi-service host for network triage"
+    }
+  ],
+  "objectives": [
+    {
+      "id": "network-baseline",
+      "title": "Map the local network and resolve the target",
+      "label": "Map the local network and resolve the target",
+      "points": 20,
+      "flagEnv": "FLAG_L01_NETWORK_BASELINE",
+      "dependsOn": []
+    },
+    {
+      "id": "service-beacon",
+      "title": "Discover and inspect the raw TCP beacon",
+      "label": "Discover and inspect the raw TCP beacon",
+      "points": 25,
+      "flagEnv": "FLAG_L01_SERVICE_BEACON",
+      "dependsOn": ["network-baseline"]
+    },
+    {
+      "id": "operator-console",
+      "title": "Identify the secondary operator console",
+      "label": "Identify the secondary operator console",
+      "points": 25,
+      "flagEnv": "FLAG_L01_OPERATOR_CONSOLE",
+      "dependsOn": ["service-beacon"]
+    },
+    {
+      "id": "triage-proof",
+      "title": "Submit the chained triage proof",
+      "label": "Submit the chained triage proof",
+      "points": 30,
+      "flagEnv": "FLAG_L01_TRIAGE_PROOF",
+      "dependsOn": ["network-baseline", "service-beacon", "operator-console"]
+    }
+  ]
+}

@@ -46,3 +46,17 @@ npm run lint
 ```
 
 Controller ยอมรับ lifecycle actions จาก allowlisted lab IDs เท่านั้น และเรียก Docker Compose ด้วย argument คงที่ ไม่รับ container names หรือ shell commands จาก browser
+
+## Standalone Recon & Linux Labs
+
+ชุดฝึก command line รอบใหม่ถูกแยกออกจาก portal โดยสมบูรณ์ อยู่ใต้ `standalone-labs/` และไม่เพิ่มจำนวนใน catalog 18 labs เดิม แต่ละ lab มี manifest, Docker Compose project, internal subnet, dynamic flags, progress และ reset lifecycle ของตัวเอง
+
+```bash
+npm run labs:list
+npm run labs:start -- 01-network-triage
+npm run labs:shell -- 01-network-triage
+npm run labs:verify -- 01-network-triage network-baseline 'RLAB{...}'
+npm run labs:stop -- 01-network-triage
+```
+
+มี 6 chained scenarios: network triage, service fingerprinting, DNS breadcrumbs, zone transfer, Linux evidence hunt และ capstone ที่เชื่อม DNS → Nmap → HTTP artifact → log correlation ดูรายละเอียดและ safety boundary ที่ [`standalone-labs/README.md`](standalone-labs/README.md)

@@ -1,0 +1,10 @@
+$TTL 300
+@ IN SOA ns1.signals.test. hostmaster.signals.test. (
+  2026081306 3600 900 604800 300
+)
+  IN NS ns1.signals.test.
+ns1 IN A 172.30.66.53
+relay IN A 172.30.66.90
+_dns-proof IN TXT "__DNS_FLAG__"
+_mission IN TXT "case=SG-66; relay=relay.signals.test; scan=tcp-connect"
+_scope IN TXT "authorized=172.30.66.0/24; egress=disabled"

@@ -1,0 +1,12 @@
+$TTL 300
+@ IN SOA ns1.range.test. hostmaster.range.test. (
+  2026081304 3600 900 604800 300
+)
+  IN NS ns1.range.test.
+ns1 IN A 172.30.44.53
+portal IN A 172.30.44.80
+ops-archive IN A 172.30.44.80
+_authority IN TXT "__AUTHORITY_FLAG__"
+_axfr-proof IN TXT "__AXFR_FLAG__"
+_route IN TXT "host=ops-archive.range.test; path=/proof/blue-team"
+_case IN TXT "case=ZT-44; serial=2026081304"
