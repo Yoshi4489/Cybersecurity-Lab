@@ -11,7 +11,7 @@ type Lab = {
   minutes: number; description: string; skills: string[]; prerequisites: string[]; target: string;
   objectives: Objective[]; hints: Hint[]; solution: string;
 };
-type View = "home" | "learn" | "library" | "progress";
+type View = "home" | "learn" | "library" | "progress" | "setup";
 type Runtime = "stopped" | "starting" | "running" | "resetting";
 type Progress = Record<string, { completedObjectives: string[]; hints: string[]; score: number; solutionUnlocked: boolean }>;
 
@@ -110,6 +110,25 @@ export function ReconLab() {
     setView("learn");
   }
 
+  async function refreshRangeConnection() {
+    try {
+      const response = await fetch(`${controllerUrl}/api/session`, { credentials: "include" });
+      if (!response.ok) throw new Error("controller unavailable");
+      const session = (await response.json()) as { csrfToken: string; runtime: Runtime };
+      const progressResponse = await fetch(`${controllerUrl}/api/progress`, { credentials: "include" });
+      const progressData = progressResponse.ok ? (await progressResponse.json()) as Progress : {};
+      setCsrf(session.csrfToken);
+      setRuntime(session.runtime);
+      setProgress(progressData);
+      setConnected(true);
+      setMessage("Local range connected. Targets are isolated on this device only.");
+    } catch {
+      setConnected(false);
+      setRuntime("stopped");
+      setMessage("The controller is not ready yet. Run npm run lab, wait a moment, then check again.");
+    }
+  }
+
   async function controllerAction(action: "start" | "stop" | "reset") {
     if (!connected) {
       setMessage("The local range is not connected. Run npm run lab first, then return here.");
@@ -202,6 +221,7 @@ export function ReconLab() {
           <button className={view === "learn" ? "active" : ""} onClick={() => setView("learn")}><span>02</span> Learn <em>{labs.length}</em></button>
           <button className={view === "library" ? "active" : ""} onClick={() => setView("library")}><span>03</span> Defend</button>
           <button className={view === "progress" ? "active" : ""} onClick={() => setView("progress")}><span>04</span> Progress</button>
+          <button className={view === "setup" ? "active" : ""} onClick={() => setView("setup")}><span>05</span> Set up</button>
         </nav>
         <div className="sidebar-paths"><p className="eyebrow">Learning paths</p>{["FOUNDATION", "RECON", "WEB", "CAPSTONE"].map((item) => <button key={item} onClick={() => { setTrack(item); setView("learn"); }}><i className={`path-dot ${item.toLowerCase()}`} />{item === "FOUNDATION" ? "FOUNDATIONS" : item}<small>{labs.filter((lab) => lab.track === item).length}</small></button>)}</div>
         <div className="range-status"><span className={connected ? "status-dot online" : "status-dot"} /><div><strong>{connected ? "LOCAL RANGE READY" : "PREVIEW MODE"}</strong><p>{connected ? "Isolated Docker targets" : "Connect Docker to launch labs"}</p></div></div>
@@ -214,7 +234,7 @@ export function ReconLab() {
           <div className="home-hero"><div><p className="eyebrow green">BEGINNER PATH / LOCAL-FIRST BETA</p><h1>Learn the why.<br /><span>Prove the how.</span></h1><p>Build real security judgment through guided, isolated investigations. Every objective begins with a reason, stays within an authorized scope, and ends with a defensive lesson.</p><div className="hero-actions"><button className="button primary" onClick={() => chooseLab(nextLab.id)}>Continue learning <b>→</b></button><button className="button secondary" onClick={() => setView("library")}>Explore defenses</button></div></div><div className="hero-route"><p>YOUR NEXT INVESTIGATION</p><strong>{nextLab.number}. {nextLab.title}</strong><span>{storyFor(nextLab.id).mission}</span><div className="route-line"><i /><i /><i /><i /></div><small>{nextLab.minutes} min · {storyFor(nextLab.id).campaignName}</small></div></div>
           <div className="stat-grid"><article><small>MODULES COMPLETED</small><strong>{completedModules}<span>/{labs.length}</span></strong><div className="progress-track"><i style={{ width: `${(completedModules / labs.length) * 100}%` }} /></div></article><article><small>OBJECTIVES VERIFIED</small><strong>{solvedObjectives}<span>/{objectiveCount}</span></strong><p>Evidence-based progress</p></article><article><small>RANGE STATUS</small><strong className={runtime === "running" ? "positive" : "muted"}>{runtime === "running" ? "ONLINE" : "READY"}</strong><p>{connected ? "Controller connected" : "Start when Docker is ready"}</p></article></div>
           <section className="section"><div className="section-title"><div><p className="eyebrow">CHOOSE A PATH</p><h2>Learn in a sequence that makes sense</h2></div><button className="text-button" onClick={() => { setTrack("ALL"); setView("learn"); }}>View all modules →</button></div><div className="campaign-grid">{["FOUNDATION", "RECON", "WEB"].map((item) => { const first = labs.find((lab) => lab.track === item)!; const modules = labs.filter((lab) => lab.track === item); const pathName = item === "FOUNDATION" ? "Range Foundations" : item === "RECON" ? "Recon & Enumeration" : "Web Exploitation & Defense"; return <button className="campaign-card" key={item} onClick={() => { setTrack(item); chooseLab(first.id); }}><span className={`campaign-icon ${item.toLowerCase()}`}>{item === "FOUNDATION" ? "01" : item === "RECON" ? "02" : "03"}</span><p>{pathName}</p><strong>{item === "FOUNDATION" ? "Prepare for safe practice" : item === "RECON" ? "Follow the evidence trail" : "Test and fix web risk"}</strong><small>{modules.length} guided modules</small><b>Open path →</b></button>; })}</div></section>
-          <section className="setup-card"><div><p className="eyebrow">FIRST TIME HERE?</p><h2>Start with a short scope check</h2><p>Use the orientation module to learn the lab boundary and check your local Docker setup before entering a scenario.</p></div><button className="button primary" onClick={() => chooseLab("roe-lab-ops")}>Start orientation</button></section>
+          <section className="setup-card"><div><p className="eyebrow">FIRST TIME HERE?</p><h2>Set up your safe local range</h2><p>Check Docker, launch the local controller, then begin with a short scope orientation.</p></div><div className="setup-card-actions"><button className="button secondary" onClick={() => setView("setup")}>Set up range</button><button className="button primary" onClick={() => chooseLab("roe-lab-ops")}>Start orientation</button></div></section>
         </section>}
 
         {view === "learn" && <section className="page learn-page">
@@ -232,6 +252,8 @@ export function ReconLab() {
         {view === "library" && <section className="page library-page"><header className="page-heading"><p className="eyebrow green">DEFENSE LIBRARY</p><h1>Turn every finding into a fix</h1><p>Use the same lessons to understand how defenders discover, contain, and prevent common application risk.</p></header><div className="defense-grid">{labs.map((lab) => { const module = storyFor(lab.id); return <article key={lab.id} className="defense-entry"><div><span className="tag">{module.campaignName}</span><small>{lab.number}</small></div><h2>{lab.title}</h2><p className="defense-finding">{module.mission}</p><div><p><b>INVESTIGATE</b>{module.evidence}</p><p><b>PREVENT</b>{module.defense}</p></div><button className="text-button" onClick={() => chooseLab(lab.id)}>Open module →</button></article>; })}</div></section>}
 
         {view === "progress" && <section className="page progress-page"><header className="page-heading"><p className="eyebrow green">YOUR LEARNING RECORD</p><h1>Progress built on evidence</h1><p>Local progress is saved by the current controller. Account sync arrives in a later batch.</p></header><div className="progress-summary"><article><small>TOTAL XP</small><strong>{totalXp.toLocaleString()}</strong></article><article><small>OBJECTIVES</small><strong>{solvedObjectives}<span>/{objectiveCount}</span></strong></article><article className="completion-ring" style={{ "--completion": `${(solvedObjectives / objectiveCount) * 360}deg` } as CSSProperties}><span>{Math.round((solvedObjectives / objectiveCount) * 100)}%</span><small>COMPLETE</small></article></div><div className="progress-list"><div className="progress-row heading"><span>MODULE</span><span>PATH</span><span>PROOF</span><span>STATUS</span></div>{labs.map((lab) => { const item = progress[lab.id]; const solved = item?.completedObjectives.length ?? 0; const complete = solved === lab.objectives.length; return <button className="progress-row" key={lab.id} onClick={() => chooseLab(lab.id)}><span><i>{lab.number}</i><strong>{lab.title}</strong></span><span>{storyFor(lab.id).campaignName}</span><span>{solved}/{lab.objectives.length}</span><span className={complete ? "done" : "not-started"}>{complete ? "Complete" : solved ? "In progress" : "Not started"}</span></button>; })}</div></section>}
+
+        {view === "setup" && <section className="page setup-page"><header className="page-heading"><p className="eyebrow green">LOCAL RANGE SETUP</p><h1>Practice safely on your own device</h1><p>RECON//LAB starts the portal and a loopback-only controller. Training targets run in an isolated Docker network with no outbound access.</p></header><div className="setup-status-card"><div><span className={connected ? "status-dot online" : "status-dot"} /><div><p className="eyebrow">CONNECTION CHECK</p><strong>{connected ? "Local range connected" : "Local range not connected"}</strong><p>{connected ? "You can launch a guided lab whenever you are ready." : "Complete the three steps below, then check again."}</p></div></div><button className="button primary" onClick={() => void refreshRangeConnection()}>Check connection</button></div><div className="setup-steps"><article><span>01</span><div><p className="eyebrow">PREREQUISITES</p><h2>Install the local tools</h2><p>Install Node.js 22 or later and Docker Desktop. Open Docker once and wait until it reports that the engine is running.</p></div></article><article><span>02</span><div><p className="eyebrow">START</p><h2>Launch RECON//LAB</h2><p>From the project folder, run this one command. It starts the learning portal and local controller together.</p><code>npm run lab</code></div></article><article><span>03</span><div><p className="eyebrow">VERIFY</p><h2>Return to this page</h2><p>Use “Check connection.” When the range is connected, begin with orientation before starting a lab.</p><button className="text-button" onClick={() => chooseLab("roe-lab-ops")}>Open orientation →</button></div></article></div><section className="setup-safety"><p className="eyebrow">SAFETY BY DEFAULT</p><div><article><strong>Loopback controller</strong><p>Only this computer can control the local range.</p></article><article><strong>Isolated targets</strong><p>Docker targets are kept off the internet and outside your normal network.</p></article><article><strong>Scoped learning</strong><p>Every module states what is authorized and how to defend the finding.</p></article></div></section></section>}
       </section>
       <footer className="active-lab-bar"><div><span className={runtime === "running" ? "status-dot online" : "status-dot"} /><span><small>ACTIVE LAB</small><strong>{selected.number}. {selected.title}</strong></span></div><p>{runtime === "running" ? "Targets are running safely on this device." : "Choose Start lab when your local range is ready."}</p><button className="text-button" onClick={() => chooseLab(selected.id)}>Open workspace →</button></footer>
     </main>

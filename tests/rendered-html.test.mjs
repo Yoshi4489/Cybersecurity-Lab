@@ -23,6 +23,7 @@ test("server-renders the RECON//LAB portal", async () => {
   assert.match(html, /Rules of Engagement/);
   assert.match(html, /Start orientation/);
   assert.match(html, /Learn in a sequence that makes sense/);
+  assert.match(html, /Set up your safe local range/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/i);
 });
 
