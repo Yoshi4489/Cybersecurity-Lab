@@ -21,7 +21,8 @@ test("server-renders the RECON//LAB portal", async () => {
   assert.match(html, /<title>RECON\/\/LAB — Safe Exploit Training<\/title>/i);
   assert.match(html, /AUTHORIZED TRAINING ENVIRONMENT/);
   assert.match(html, /Rules of Engagement/);
-  assert.match(html, /START LAB/);
+  assert.match(html, /Start orientation/);
+  assert.match(html, /Learn in a sequence that makes sense/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/i);
 });
 
