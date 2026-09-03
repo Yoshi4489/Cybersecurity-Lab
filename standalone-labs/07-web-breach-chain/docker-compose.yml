@@ -1,0 +1,85 @@
+name: cybersecurity-lab-07-web-breach-chain
+
+x-hardened: &hardened
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  read_only: true
+  pids_limit: 96
+  mem_limit: 160m
+  cpus: "0.50"
+
+services:
+  edge-gateway:
+    <<: *hardened
+    build:
+      context: ./edge-gateway
+    hostname: edge-gateway
+    environment:
+      FLAG_L07_RECON_SWEEP: "${FLAG_L07_RECON_SWEEP:?run via standalone-labctl}"
+      FLAG_L07_SURFACE_MAP: "${FLAG_L07_SURFACE_MAP:?run via standalone-labctl}"
+      FLAG_L07_WEB_FOOTHOLD: "${FLAG_L07_WEB_FOOTHOLD:?run via standalone-labctl}"
+    expose:
+      - "8080"
+      - "9091"
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    networks:
+      breach_net:
+        ipv4_address: 172.31.7.20
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2)"]
+      interval: 3s
+      timeout: 2s
+      retries: 15
+
+  ops-internal:
+    <<: *hardened
+    build:
+      context: ./ops-internal
+    hostname: ops-internal
+    environment:
+      FLAG_L07_PRIV_ESC: "${FLAG_L07_PRIV_ESC:?run via standalone-labctl}"
+      FLAG_L07_ROOT_PROOF: "${FLAG_L07_ROOT_PROOF:?run via standalone-labctl}"
+    expose:
+      - "8081"
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    networks:
+      breach_net:
+        ipv4_address: 172.31.7.30
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/health', timeout=2)"]
+      interval: 3s
+      timeout: 2s
+      retries: 15
+
+  toolbox:
+    <<: *hardened
+    build:
+      context: ../_shared/toolbox
+    command: ["sleep", "infinity"]
+    hostname: toolbox
+    stdin_open: true
+    tty: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+      - /run:size=8m,mode=0755
+    volumes:
+      - ./smoke.sh:/opt/lab/smoke.sh:ro
+    networks:
+      breach_net:
+        ipv4_address: 172.31.7.10
+    depends_on:
+      edge-gateway:
+        condition: service_healthy
+      ops-internal:
+        condition: service_healthy
+
+networks:
+  breach_net:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.31.7.0/24
