@@ -36,8 +36,11 @@ yarn-error.log*
 .vercel
 
 /dist/
-/.wrangler/
+
 /outputs/
 /work/
 /.lab/
 /standalone-labs/.runtime/
+/.wrangler/
+__pycache__/
+*.py[cod]

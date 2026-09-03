@@ -36,6 +36,11 @@ services:
     volumes:
       - ./.lab/flags.json:/run/reconlab/flags.json:ro
     networks: [attacker_net]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:9090/health').then(r=>{if(!r.ok)process.exit(1)})"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
 
   internal:
     <<: *hardened
@@ -46,22 +51,48 @@ services:
     volumes:
       - ./.lab/flags.json:/run/reconlab/flags.json:ro
     networks: [internal_net]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8081/health').then(r=>{if(!r.ok)process.exit(1)})"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
 
   toolbox:
     <<: *hardened
     build: ./toolbox
-    ports:
-      - "127.0.0.1:7681:7681"
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=64m
       - /home/student:rw,nosuid,size=64m,uid=10001,gid=10001
-    networks: [attacker_net]
+    networks: [attacker_net, toolbox_access]
     depends_on:
       gateway:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7681/"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+
+  toolbox-ingress:
+    <<: *hardened
+    build: ./toolbox-ingress
+    ports:
+      - "127.0.0.1:7681:8082"
+    networks: [toolbox_access, toolbox_ingress]
+    depends_on:
+      toolbox:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8082/').then(r=>{if(!r.ok)process.exit(1)})"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
 
 networks:
   attacker_net:
     internal: true
   internal_net:
     internal: true
+  toolbox_access:
+    internal: true
+  toolbox_ingress: {}

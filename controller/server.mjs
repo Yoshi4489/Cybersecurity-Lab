@@ -6,6 +6,8 @@ import { createServer } from "node:http";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
+import { unmetLabPrerequisites, unmetObjectivePredecessors } from "./curriculum.mjs";
+import { hasRequiredServices } from "./runtime.mjs";
 import { createFlag, equalSecret, isAllowedHost, isAllowedOrigin, isLoopbackAddress, parseCookies } from "./security.mjs";
 
 const controllerDir = dirname(fileURLToPath(import.meta.url));
@@ -16,6 +18,7 @@ const flagsFile = join(stateDir, "flags.json");
 const secretFile = join(stateDir, "secret");
 const databaseFile = join(stateDir, "reconlab.sqlite");
 const port = String(process.env.LAB_CONTROLLER_PORT ?? "3030");
+const requiredServices = ["gateway", "recon-node", "internal", "toolbox", "toolbox-ingress"];
 const allowedOrigins = (process.env.LAB_ALLOWED_ORIGINS ?? "http://127.0.0.1:5173,http://localhost:5173")
   .split(",").map((value) => value.trim()).filter(Boolean);
 const sessions = new Map();
@@ -168,7 +171,7 @@ async function determineRuntime() {
   if (runtimeState === "starting" || runtimeState === "resetting") return runtimeState;
   try {
     const services = await runDocker(["ps", "--status", "running", "--services"], 15_000);
-    runtimeState = services.split(/\r?\n/).filter(Boolean).length >= 3 ? "running" : "stopped";
+    runtimeState = hasRequiredServices(services, requiredServices) ? "running" : "stopped";
   } catch { runtimeState = "stopped"; }
   return runtimeState;
 }
@@ -178,7 +181,7 @@ async function mutateRuntime(action, labId) {
     if (action === "start") {
       runtimeState = "starting";
       await currentProofs();
-      await runDocker(["up", "-d", "--build", "gateway", "recon-node", "internal", "toolbox"]);
+      await runDocker(["up", "-d", "--build", "--wait", "--wait-timeout", "300", ...requiredServices]);
       runtimeState = "running";
     } else if (action === "stop") {
       await runDocker(["down", "--remove-orphans"]);
@@ -187,7 +190,7 @@ async function mutateRuntime(action, labId) {
       runtimeState = "resetting";
       await runDocker(["down", "--volumes", "--remove-orphans"]);
       await createRunProofs();
-      await runDocker(["up", "-d", "--build", "gateway", "recon-node", "internal", "toolbox"]);
+      await runDocker(["up", "-d", "--build", "--wait", "--wait-timeout", "300", ...requiredServices]);
       runtimeState = "running";
     }
     recordEvent(labId, `lab_${action}`, runtimeState);
@@ -270,6 +273,16 @@ const server = createServer(async (request, response) => {
       const lab = labById.get(labId);
       const objective = lab?.objectives.find((item) => item.id === objectiveId);
       if (!objective) return json(response, 404, { error: "Unknown objective" }, cors);
+      const allProgress = Object.fromEntries(labs.map((item) => [item.id, progressFor(item.id)]));
+      const missingLabs = unmetLabPrerequisites(lab, labById, allProgress);
+      if (missingLabs.length) {
+        return json(response, 409, { correct: false, error: `Complete prerequisite labs first: ${missingLabs.join(", ")}` }, cors);
+      }
+      const currentProgress = allProgress[labId];
+      const missingObjectives = unmetObjectivePredecessors(lab, objectiveId, currentProgress);
+      if (missingObjectives.length) {
+        return json(response, 409, { correct: false, error: `Complete earlier objectives first: ${missingObjectives.join(", ")}` }, cors);
+      }
       const body = await readJson(request);
       const run = await currentProofs();
       const expected = run.proofs[objective.flagKey];
@@ -277,7 +290,7 @@ const server = createServer(async (request, response) => {
         recordEvent(labId, "flag_rejected", objectiveId);
         return json(response, 422, { correct: false, error: "Flag ยังไม่ถูกต้อง" }, cors);
       }
-      const progress = progressFor(labId);
+      const progress = currentProgress;
       if (!progress.completedObjectives.includes(objectiveId)) progress.completedObjectives.push(objectiveId);
       saveProgress(labId, progress);
       recordEvent(labId, "objective_complete", objectiveId);
