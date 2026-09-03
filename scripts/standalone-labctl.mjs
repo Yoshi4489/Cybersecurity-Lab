@@ -186,10 +186,16 @@ function composePrefix(lab, flagsPath) {
   ];
 }
 
+function dockerEnvironment(flagsPath) {
+  const environment = { ...process.env };
+  for (const name of Object.keys(parseFlags(flagsPath))) delete environment[name];
+  return environment;
+}
+
 function docker(lab, flagsPath, args, options = {}) {
   const result = spawnSync("docker", [...composePrefix(lab, flagsPath), ...args], {
     cwd: lab.directory,
-    env: { ...process.env },
+    env: dockerEnvironment(flagsPath),
     shell: false,
     stdio: options.capture ? ["ignore", "pipe", "pipe"] : "inherit",
     windowsHide: true,
