@@ -10,6 +10,7 @@ import test from "node:test";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const labsRoot = join(root, "standalone-labs");
 const controller = join(root, "scripts", "standalone-labctl.mjs");
+const standaloneControllerSource = await readFile(controller, "utf8");
 const idPattern = /^[a-z0-9](?:[a-z0-9-]{0,47}[a-z0-9])?$/;
 const flagEnvPattern = /^[A-Z][A-Z0-9_]{1,63}$/;
 
@@ -77,8 +78,8 @@ test("the original portal catalog remains exactly 18 labs", async () => {
   assert.equal(catalog.length, 18);
 });
 
-test("six standalone manifests have a complete, safe schema", () => {
-  assert.equal(labs.length, 6);
+test("nine standalone manifests have a complete, safe schema", () => {
+  assert.equal(labs.length, 9);
   assert.equal(new Set(labs.map((lab) => lab.id)).size, labs.length);
 
   const globalFlags = [];
@@ -253,6 +254,46 @@ test("shared toolbox has the required tools and non-root identity", async () => 
   assert.ok(existsSync(join(labsRoot, "_shared", "toolbox", "welcome.txt")));
 });
 
+test("standalone smoke scripts use Unix line endings inside Linux containers", async () => {
+  const attributes = await readFile(join(root, ".gitattributes"), "utf8");
+  assert.match(attributes, /^\*\.sh text eol=lf$/mu, "Git must preserve Unix shell-script line endings");
+  for (const lab of labs) {
+    const smoke = await readFile(join(lab.directory, "smoke.sh"));
+    assert.equal(smoke.includes(0x0d), false, `${lab.id} smoke.sh contains CRLF line endings`);
+  }
+  for (const entrypoint of [
+    join(labsRoot, "04-zone-transfer", "dns", "entrypoint.sh"),
+    join(labsRoot, "06-signals-capstone", "dns", "entrypoint.sh"),
+  ]) {
+    const content = await readFile(entrypoint);
+    assert.equal(content.includes(0x0d), false, `${entrypoint} contains CRLF line endings`);
+  }
+});
+
+test("lab 07 uses the JWT it constructs", async () => {
+  const directory = join(labsRoot, "07-web-breach-chain");
+  const [readme, smoke, edge, internal] = await Promise.all([
+    readFile(join(directory, "README.md"), "utf8"),
+    readFile(join(directory, "smoke.sh"), "utf8"),
+    readFile(join(directory, "edge-gateway", "server.py"), "utf8"),
+    readFile(join(directory, "ops-internal", "server.py"), "utf8"),
+  ]);
+
+  assert.doesNotMatch(readme, /Authorization: Bearer \*{3}/u);
+  assert.match(readme, /Authorization: Bearer \$forged/u);
+  assert.doesNotMatch(smoke, /Authorization: Bearer \*{3}/u);
+  assert.match(smoke, /Authorization: Bearer \$forged/u);
+  assert.match(edge, /ANALYST_SESSION_ID = "analyst-session-cinder-88"/u);
+  assert.match(edge, /"sid": ANALYST_SESSION_ID/u);
+  assert.match(internal, /ANALYST_SESSION_ID = "analyst-session-cinder-88"/u);
+  assert.match(internal, /def is_authorized_admin\(token: str\) -> bool:/u);
+  assert.match(internal, /str\(jwt_header\.get\("alg", ""\)\)\.lower\(\) == "none"/u);
+  assert.match(internal, /jwt_payload\.get\("role"\) == "admin"/u);
+  assert.match(internal, /jwt_payload\.get\("sub"\) == "analyst"/u);
+  assert.match(internal, /jwt_payload\.get\("sid"\) == ANALYST_SESSION_ID/u);
+  assert.match(internal, /if not self\.authorized_admin\(\):/u);
+});
+
 test("zone-transfer startup waits for both DNS and the virtual host", async () => {
   const directory = join(labsRoot, "04-zone-transfer");
   const compose = loadYaml(await readFile(join(directory, "docker-compose.yml"), "utf8"));
@@ -262,6 +303,19 @@ test("zone-transfer startup waits for both DNS and the virtual host", async () =
   const readiness = smoke.slice(0, smoke.indexOf("nslookup"));
   assert.match(readiness, /until dig/u);
   assert.match(readiness, /curl -fsS -H 'Host: ops-archive\.range\.test'/u);
+});
+
+test("DNS breadcrumbs allows enough healthcheck time for Docker Desktop", async () => {
+  const directory = join(labsRoot, "03-dns-breadcrumbs");
+  const compose = loadYaml(await readFile(join(directory, "docker-compose.yml"), "utf8"));
+  assert.match(compose.services["hidden-web"].healthcheck.timeout, /^5s|[6-9]s|[1-9]\d+s$/u);
+  assert.match(compose.services["hidden-web"].healthcheck.test.at(-1), /timeout=5/u);
+});
+
+test("standalone lab controller overrides inherited objective flag variables", () => {
+  assert.match(standaloneControllerSource, /function dockerEnvironment\(flagsPath\)/u);
+  assert.match(standaloneControllerSource, /delete environment\[name\]/u);
+  assert.match(standaloneControllerSource, /env: dockerEnvironment\(flagsPath\)/u);
 });
 
 test("controller lists only discovered labs and rejects path/argument injection", () => {
