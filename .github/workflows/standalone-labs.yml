@@ -2,7 +2,7 @@ name: Standalone labs
 
 on:
   push:
-    branches: [main, feat/recon-linux-chains]
+    branches: [main]
   pull_request:
 
 permissions:
@@ -21,7 +21,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
-      - run: npm test
+      - run: npm run test:unit
 
   compose-config:
     needs: static
@@ -86,6 +86,9 @@ jobs:
           - 04-zone-transfer
           - 05-linux-evidence
           - 06-signals-capstone
+          - 07-web-breach-chain
+          - 08-cipher-locker
+          - 09-content-discovery
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
