@@ -5,16 +5,51 @@ These exercises are **separate, self-contained labs**. They do not extend the
 manifest, Docker Compose topology, synthetic targets, walkthrough, and smoke
 test. Starting, stopping, or resetting one lab never operates on another lab.
 
+> **New here?** Start with the **[beginner setup guide](GETTING-STARTED.md)** — it
+> walks you through installing Node.js and Docker, the two-terminal workflow, and
+> playing your first lab end to end, then hands off to each lab's own README.
+
+## Available labs
+
+| ID | Focus |
+| --- | --- |
+| `01-network-triage` | Network baseline, host resolution, TCP connect scanning |
+| `02-service-fingerprint` | Service and version fingerprinting across multiple ports |
+| `03-dns-breadcrumbs` | DNS enumeration and record breadcrumbs |
+| `04-zone-transfer` | DNS zone transfer (AXFR) against a synthetic authority |
+| `05-linux-evidence` | Linux host evidence and artifact triage |
+| `06-signals-capstone` | Multi-step DNS → scan → HTTP signals capstone |
+| `07-web-breach-chain` | Recon → reflected XSS → JWT alg:none privesc → chained root proof |
+| `08-cipher-locker` | Layered-encoding artifact recovery and checksum verification |
+| `09-content-discovery` | Web content discovery: robots.txt, exposed `.git`, and backup files |
+
+Each lab is independent. Numeric prefixes are stable IDs, not a strict difficulty
+ramp; do not infer prerequisite relationships from the directory number alone.
+
+## Recommended learning order
+
+For a first pass, use this order:
+
+```text
+01 → 02 → 03 → 04 → 05 → 09 → 08 → 06 → 07
+```
+
+Labs 06 and 07 are capstones, so save them until after the foundational
+reconnaissance, evidence, content-discovery, and artifact-recovery exercises.
+
 ## Requirements and safety boundary
 
-- Node.js 22 or newer
+- Node.js 22.13 or newer (`node -v`)
 - Docker Engine/Desktop with Docker Compose v2
-- Enough disk space to build the shared Kali toolbox on first use
+- A writable Docker data location for the first toolbox image build
 
 Every lab network is internal. Target services do not publish host ports. The
 toolbox runs as UID/GID `10001`, drops capabilities, and is intended only for
 the synthetic services named by that lab. Never reuse the commands against a
 public address or a system you do not own and have explicit permission to test.
+Read the [local range threat model](../docs/THREAT-MODEL.md) for the trust
+boundary: local flags support progress consistency, not secrecy from the machine
+owner.
 
 ## Lab controller
 
