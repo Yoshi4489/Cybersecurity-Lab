@@ -1,0 +1,54 @@
+{
+  "id": "09-content-discovery",
+  "title": "Content Discovery: Forgotten Artifacts",
+  "summary": "Discover what a web root should not expose: robots.txt breadcrumbs, an exposed .git/config, and a leftover .bak backup, then chain the recovered tokens into a final proof.",
+  "description": "A standalone web content-discovery lab. A synthetic archive portal leaks internal paths through robots.txt, an accidentally published .git directory, and a stale backup file. All hosts, tokens, and flags are synthetic and live only on an internal Docker network.",
+  "difficulty": "intermediate",
+  "minutes": 30,
+  "subnet": "172.31.9.0/24",
+  "composeFile": "docker-compose.yml",
+  "toolboxService": "toolbox",
+  "commandFamilies": ["curl", "grep", "sed"],
+  "services": [
+    {
+      "name": "web-archive",
+      "hostname": "web-archive",
+      "ports": [8080],
+      "purpose": "Web root that exposes forgotten artifacts"
+    }
+  ],
+  "objectives": [
+    {
+      "id": "robots",
+      "title": "Follow the robots.txt breadcrumb",
+      "label": "Follow the robots.txt breadcrumb",
+      "points": 20,
+      "flagEnv": "FLAG_L09_ROBOTS",
+      "dependsOn": []
+    },
+    {
+      "id": "gitleak",
+      "title": "Read the exposed .git configuration",
+      "label": "Read the exposed .git configuration",
+      "points": 25,
+      "flagEnv": "FLAG_L09_GITLEAK",
+      "dependsOn": ["robots"]
+    },
+    {
+      "id": "backup",
+      "title": "Recover the leftover backup file",
+      "label": "Recover the leftover backup file",
+      "points": 25,
+      "flagEnv": "FLAG_L09_BACKUP",
+      "dependsOn": ["gitleak"]
+    },
+    {
+      "id": "final",
+      "title": "Submit the chained discovery proof",
+      "label": "Submit the chained discovery proof",
+      "points": 30,
+      "flagEnv": "FLAG_L09_FINAL",
+      "dependsOn": ["robots", "gitleak", "backup"]
+    }
+  ]
+}

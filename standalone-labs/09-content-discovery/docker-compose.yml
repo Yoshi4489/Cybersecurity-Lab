@@ -1,0 +1,64 @@
+name: cybersecurity-lab-09-content-discovery
+
+services:
+  toolbox:
+    build:
+      context: ../_shared/toolbox
+    command: ["sleep", "infinity"]
+    hostname: toolbox
+    stdin_open: true
+    tty: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+      - /run:size=8m,mode=0755
+    volumes:
+      - ./smoke.sh:/opt/lab/smoke.sh:ro
+    networks:
+      archive_net:
+        ipv4_address: 172.31.9.10
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 96
+    mem_limit: 192m
+    cpus: "0.50"
+    depends_on:
+      web-archive:
+        condition: service_healthy
+
+  web-archive:
+    build:
+      context: ./target
+    hostname: web-archive
+    environment:
+      FLAG_L09_ROBOTS: "${FLAG_L09_ROBOTS:?run via standalone-labctl}"
+      FLAG_L09_GITLEAK: "${FLAG_L09_GITLEAK:?run via standalone-labctl}"
+      FLAG_L09_BACKUP: "${FLAG_L09_BACKUP:?run via standalone-labctl}"
+      FLAG_L09_FINAL: "${FLAG_L09_FINAL:?run via standalone-labctl}"
+    expose:
+      - "8080"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    networks:
+      archive_net:
+        ipv4_address: 172.31.9.20
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 96m
+    cpus: "0.35"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2)"]
+      interval: 3s
+      timeout: 2s
+      retries: 15
+
+networks:
+  archive_net:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.31.9.0/24
