@@ -6,10 +6,8 @@ async function render() {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
-  return worker.fetch(
+  return worker(
     new Request("http://127.0.0.1:5173/", { headers: { accept: "text/html" } }),
-    { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
-    { waitUntil() {}, passThroughOnException() {} },
   );
 }
 
@@ -38,4 +36,27 @@ test("starter preview is removed and project metadata is production-specific", a
   assert.match(layout, /og\.png/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   await assert.rejects(access(new URL("../app/_sites-preview", import.meta.url)));
+});
+
+test("portal renders the catalog hint body and selected walkthrough", async () => {
+  const source = await readFile(new URL("../app/recon-lab.tsx", import.meta.url), "utf8");
+  assert.match(source, /hint\.body/u);
+  assert.match(source, /selected\.solution/u);
+});
+
+test("portal exposes configurable shared-range controls and toolbox", async () => {
+  const [source, envExample] = await Promise.all([
+    readFile(new URL("../app/recon-lab.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../.env.example", import.meta.url), "utf8"),
+  ]);
+  assert.match(source, /NEXT_PUBLIC_LAB_CONTROLLER_URL/u);
+  assert.match(source, /NEXT_PUBLIC_LAB_TOOLBOX_URL/u);
+  assert.match(source, /Open toolbox terminal/u);
+  assert.match(source, /target="_blank"/u);
+  assert.match(source, /rel="noreferrer"/u);
+  assert.match(source, /Start shared range/u);
+  assert.match(source, /Stop shared range/u);
+  assert.match(source, /Reset shared range/u);
+  assert.match(envExample, /NEXT_PUBLIC_LAB_CONTROLLER_URL=http:\/\/127\.0\.0\.1:3030/u);
+  assert.match(envExample, /NEXT_PUBLIC_LAB_TOOLBOX_URL=http:\/\/127\.0\.0\.1:7681/u);
 });

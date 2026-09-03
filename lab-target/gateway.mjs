@@ -1,5 +1,6 @@
 import { createServer } from "node:http";
 import { proof, readBody, sendJson, sendText } from "./proofs.mjs";
+import { acceptsUnsafeUpload, decodeJwtUnsafe, hasTrainingSession } from "./scenarios.mjs";
 
 function html(response, status, body, headers = {}) {
   response.writeHead(status, { "Content-Type": "text/html; charset=utf-8", "X-Lab-Only": "RECON-LAB", ...headers });
@@ -10,6 +11,8 @@ function parseInput(raw, contentType = "") {
   if (contentType.includes("application/json")) return raw ? JSON.parse(raw) : {};
   return Object.fromEntries(new URLSearchParams(raw));
 }
+
+let transferCount = 0;
 
 const server = createServer(async (request, response) => {
   const url = new URL(request.url ?? "/", "http://gateway:8080");
@@ -26,7 +29,7 @@ const server = createServer(async (request, response) => {
       return sendText(response, 200, `Contact: security@northstar.invalid\nPolicy: lab-only\nScope-Proof: ${proof("roe_scope")}\n`);
     }
     if (url.pathname === "/robots.txt") return sendText(response, 200, "User-agent: *\nDisallow: /backup/\nDisallow: /diagnostics\n");
-    if (url.pathname === "/backup/config.old") return sendText(response, 200, `APP_ENV=training\nbackup_proof=${proof("content_backup")}\nDB_HOST=synthetic-db\n`);
+    if (url.pathname === "/backup/config.old") return sendText(response, 200, `APP_ENV=training\nACCOUNT_CANDIDATE=ops.admin\nINTERNAL_SERVICE=http://internal:8081\nbackup_proof=${proof("content_backup")}\nDB_HOST=synthetic-db\n`);
     if (url.pathname === "/diagnostics") {
       return sendJson(response, 200, { service: "gateway", mode: "training", outbound: "blocked" }, { "X-Debug-Proof": proof("http_header"), "X-Framework": "northstar-node" });
     }
@@ -58,12 +61,17 @@ const server = createServer(async (request, response) => {
       const marker = /<script[\s>]/i.test(query) ? ` data-proof="${proof("xss_reflected")}"` : "";
       return html(response, 200, `<!doctype html><html><body${marker}><h1>Search</h1><div>Results for: ${query}</div><p>This page is intentionally vulnerable inside the isolated lab.</p></body></html>`);
     }
+    if (url.pathname === "/account/session" && request.method === "GET") {
+      return sendJson(response, 200, { authenticated: true, account: "student" }, { "Set-Cookie": "northstar_session=student-session; HttpOnly; SameSite=Lax; Path=/" });
+    }
     if (url.pathname === "/transfer") {
-      return sendJson(response, 200, { changed: true, to: url.searchParams.get("to"), amount: url.searchParams.get("amount"), proof: proof("csrf_transfer"), warning: "state-changing GET accepted without CSRF token" });
+      if (!hasTrainingSession(request.headers.cookie)) return sendJson(response, 401, { changed: false, error: "training session required" });
+      transferCount += 1;
+      return sendJson(response, 200, { changed: true, transferCount, to: url.searchParams.get("to"), amount: url.searchParams.get("amount"), proof: proof("csrf_transfer"), warning: "state-changing GET accepted without CSRF token" });
     }
     if (url.pathname === "/fetch") {
       const target = url.searchParams.get("url") ?? "";
-      const allowed = /^http:\/\/internal:8081\/(admin\/proof|admin\/capstone\/final\?artifact=user-3)$/.test(target);
+      const allowed = /^http:\/\/internal:8081\/?$/.test(target) || /^http:\/\/internal:8081\/(admin\/proof|admin\/capstone\/final\?artifact=user-3|admin\/capstone\/report\?artifact=user-3)$/.test(target);
       if (!allowed) return sendJson(response, 400, { error: "Training fetcher only accepts the intentionally exposed internal lab routes" });
       const upstream = await fetch(target, { signal: AbortSignal.timeout(3000) });
       const body = await upstream.text();
@@ -76,17 +84,21 @@ const server = createServer(async (request, response) => {
       return sendText(response, 200, "Only public training files are listed here.\n");
     }
     if (url.pathname === "/upload" && request.method === "POST") {
-      const values = parseInput(await readBody(request), request.headers["content-type"]);
-      const filename = String(values.filename ?? "");
-      const contentType = String(values.content_type ?? "");
-      if (filename.includes(".jpg") && !filename.endsWith(".jpg") && contentType === "image/jpeg") {
+      await readBody(request);
+      const filename = String(request.headers["x-filename"] ?? "");
+      const contentType = String(request.headers["content-type"] ?? "");
+      if (acceptsUnsafeUpload(filename, contentType)) {
         return sendJson(response, 200, { accepted: true, stored: false, proof: proof("upload_bypass"), note: "simulation only; no file was written or executed" });
       }
       return sendJson(response, 422, { accepted: false, error: "extension rejected" });
     }
     if (url.pathname === "/api/profile" && request.method === "POST") {
       const values = parseInput(await readBody(request), request.headers["content-type"]);
-      if (values.role === "admin" && values.token === "alg:none") return sendJson(response, 200, { role: "admin", proof: proof("jwt_mass") });
+      try {
+        const { header, payload } = decodeJwtUnsafe(values.token);
+        if (header.alg === "none" && payload.role === "admin") return sendJson(response, 200, { role: "admin", method: "unsigned-jwt", proof: proof("jwt_mass") });
+      } catch { /* malformed tokens are not accepted */ }
+      if (values.role === "admin") return sendJson(response, 200, { role: "admin", method: "mass-assignment", proof: proof("jwt_mass") });
       return sendJson(response, 200, { role: "student" });
     }
     if (url.pathname === "/api/checkout" && request.method === "POST") {

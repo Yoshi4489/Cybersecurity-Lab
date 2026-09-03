@@ -14,8 +14,8 @@
     "solution": "ดึง source ของหน้าแรกแล้วค้นหา build-codename; flag อยู่ใน HTML comment เดียวกัน"
   },
   {
-    "id": "dns-certificate-trail", "number": "02", "title": "DNS & Certificate Trail", "subtitle": "ไล่ service aliases ในเครือข่ายจำลอง", "track": "RECON", "difficulty": "CORE", "minutes": 35,
-    "description": "ใช้ DNS resolution และ TLS-style metadata จำลองเพื่อหา host ที่ไม่อยู่ใน navigation", "skills": ["DNS", "Hostnames", "Service map"], "prerequisites": ["passive-footprint"], "target": "recon-node:9090",
+    "id": "dns-certificate-trail", "number": "02", "title": "Service Alias Trail", "subtitle": "ไล่ service aliases ในเครือข่ายจำลอง", "track": "RECON", "difficulty": "CORE", "minutes": 35,
+    "description": "ใช้ container name resolution และ HTTP banner inspection เพื่อหา host ที่ไม่อยู่ใน navigation", "skills": ["Service aliases", "Hostnames", "HTTP banners"], "prerequisites": ["passive-footprint"], "target": "recon-node:9090",
     "objectives": [{"id":"dns-proof","label":"ค้นหา service alias ที่เผย admin banner","points":100,"flagKey":"dns_alias"}],
     "hints": [{"id":"h1","title":"Container DNS","penalty":10,"body":"ชื่อ recon-node ถูก resolve ได้จาก toolbox โดยตรง"},{"id":"h2","title":"Command","penalty":25,"body":"curl -i http://recon-node:9090/banner"}],
     "solution": "ร้องขอ /banner ที่ recon-node:9090 แล้วอ่าน X-Recon-Proof header"
@@ -39,14 +39,14 @@
     "description": "ใช้ robots.txt และ wordlist ขนาดเล็กเพื่อค้นหาไฟล์สำรองอย่างมีขอบเขต", "skills": ["Robots", "Fuzzing", "Backups"], "prerequisites": ["http-fingerprinting"], "target": "gateway:8080",
     "objectives": [{"id":"backup-proof","label":"กู้ configuration backup ที่ถูกเผยแพร่","points":100,"flagKey":"content_backup"}],
     "hints": [{"id":"h1","title":"Start polite","penalty":10,"body":"อ่าน robots.txt ก่อน brute-force"},{"id":"h2","title":"Path","penalty":25,"body":"เส้นทาง /backup/config.old ตอบกลับเฉพาะใน lab"}],
-    "solution": "robots.txt ชี้ไป /backup/; ดาวน์โหลด config.old และส่งค่า backup_proof"
+    "solution": "robots.txt ชี้ไป /backup/; ดาวน์โหลด config.old, ส่งค่า backup_proof และบันทึก ACCOUNT_CANDIDATE=ops.admin กับ INTERNAL_SERVICE สำหรับโมดูลถัดไป"
   },
   {
     "id": "auth-enumeration", "number": "06", "title": "Authentication Enumeration", "subtitle": "อ่านความต่างของ error และ timing", "track": "WEB", "difficulty": "INTERMEDIATE", "minutes": 45,
     "description": "ตรวจว่าหน้า login เปิดเผยการมีอยู่ของบัญชีผ่านข้อความตอบกลับอย่างไร", "skills": ["Auth", "Enumeration", "Error analysis"], "prerequisites": ["content-discovery"], "target": "gateway:8080/login",
     "objectives": [{"id":"auth-proof","label":"ยืนยัน username ที่มีอยู่โดยไม่เดารหัสผ่าน","points":100,"flagKey":"auth_enum"}],
-    "hints": [{"id":"h1","title":"Compare responses","penalty":10,"body":"เปรียบเทียบ username สุ่มกับ username ที่พบใน metadata"},{"id":"h2","title":"Candidate","penalty":25,"body":"ลองบัญชี ops.admin กับรหัสผ่านที่ผิด"}],
-    "solution": "POST username=ops.admin&password=wrong ไป /login; response ที่แยกประเภทบัญชีจะคืน proof"
+    "hints": [{"id":"h1","title":"Compare responses","penalty":10,"body":"เปรียบเทียบ username สุ่มกับ ACCOUNT_CANDIDATE ที่พบใน /backup/config.old"},{"id":"h2","title":"Candidate","penalty":25,"body":"ใช้ค่า ACCOUNT_CANDIDATE จาก config.old กับรหัสผ่านที่ผิด"}],
+    "solution": "ใช้ ACCOUNT_CANDIDATE=ops.admin จาก config.old แล้ว POST username=ops.admin&password=wrong ไป /login; response ที่แยกประเภทบัญชีจะคืน proof"
   },
   {
     "id": "idor-bola", "number": "07", "title": "IDOR / BOLA", "subtitle": "เปลี่ยน object reference ข้ามผู้ใช้", "track": "WEB", "difficulty": "INTERMEDIATE", "minutes": 50,
@@ -80,15 +80,15 @@
     "id": "csrf-session", "number": "11", "title": "CSRF & Session", "subtitle": "แยก authentication ออกจาก intent", "track": "WEB", "difficulty": "INTERMEDIATE", "minutes": 50,
     "description": "ตรวจ state-changing GET ที่ยอมรับ session แต่ไม่มี anti-CSRF control", "skills": ["CSRF", "Cookies", "SameSite"], "prerequisites": ["cross-site-scripting"], "target": "gateway:8080/transfer",
     "objectives": [{"id":"csrf-proof","label":"เรียก state change โดยไม่มี CSRF token","points":100,"flagKey":"csrf_transfer"}],
-    "hints": [{"id":"h1","title":"Unsafe method","penalty":10,"body":"ตรวจว่า GET route ใดเปลี่ยนยอดคงเหลือ"},{"id":"h2","title":"Command","penalty":25,"body":"curl -i 'http://gateway:8080/transfer?to=lab&amount=1'"}],
-    "solution": "เรียก /transfer ด้วย GET; response จำลองการเปลี่ยน state และคืน proof"
+    "hints": [{"id":"h1","title":"Authenticated state","penalty":10,"body":"ขอ training session ก่อน แล้วทดสอบว่า state-changing GET ยังขาด intent protection"},{"id":"h2","title":"Command","penalty":25,"body":"curl -c /tmp/rlab-cookies http://gateway:8080/account/session && curl -b /tmp/rlab-cookies 'http://gateway:8080/transfer?to=lab&amount=1'"}],
+    "solution": "ขอ session ด้วย curl -c /tmp/rlab-cookies http://gateway:8080/account/session แล้วใช้ curl -b /tmp/rlab-cookies 'http://gateway:8080/transfer?to=lab&amount=1'; response เพิ่ม transferCount และคืน proof โดยไม่มี CSRF token"
   },
   {
     "id": "ssrf-pivot", "number": "12", "title": "SSRF Pivot", "subtitle": "เข้าถึง service ที่ toolbox มองไม่เห็น", "track": "WEB", "difficulty": "ADVANCED", "minutes": 65,
     "description": "ใช้ fetch endpoint บน gateway เป็นตัวกลางเข้าถึง internal service ที่อยู่คนละ network", "skills": ["SSRF", "Network boundary", "URL parsing"], "prerequisites": ["csrf-session"], "target": "gateway:8080/fetch",
     "objectives": [{"id":"ssrf-proof","label":"อ่าน /admin/proof จาก internal service","points":100,"flagKey":"ssrf_internal"}],
-    "hints": [{"id":"h1","title":"Trust boundary","penalty":10,"body":"toolbox ต่อ internal:8081 ไม่ได้ แต่ gateway ต่อได้"},{"id":"h2","title":"URL","penalty":25,"body":"/fetch?url=http://internal:8081/admin/proof"}],
-    "solution": "ให้ gateway fetch URL ภายใน; body จาก internal service จะมี proof"
+    "hints": [{"id":"h1","title":"Prior evidence","penalty":10,"body":"กลับไปดูค่า INTERNAL_SERVICE ที่บันทึกจาก /backup/config.old; toolbox ต่อ service นี้โดยตรงไม่ได้ แต่ gateway ต่อได้"},{"id":"h2","title":"Route index","penalty":25,"body":"ให้ /fetch เรียก root ของ INTERNAL_SERVICE ก่อนเพื่ออ่าน route index แล้วค่อยเลือก /admin/proof"}],
+    "solution": "ใช้ INTERNAL_SERVICE=http://internal:8081 จาก config.old: ให้ gateway fetch http://internal:8081/ เพื่ออ่าน route index แล้ว fetch http://internal:8081/admin/proof; body จาก internal service จะมี proof"
   },
   {
     "id": "path-traversal-lfi", "number": "13", "title": "Path Traversal / LFI", "subtitle": "หนีจาก intended directory แบบจำลอง", "track": "WEB", "difficulty": "INTERMEDIATE", "minutes": 50,
@@ -101,15 +101,15 @@
     "id": "insecure-file-upload", "number": "14", "title": "Insecure File Upload", "subtitle": "หลบ extension-only validation", "track": "WEB", "difficulty": "ADVANCED", "minutes": 60,
     "description": "วิเคราะห์การตรวจ filename/content-type ที่ไม่สอดคล้องกันโดยไม่เก็บหรือรันไฟล์จริง", "skills": ["Upload", "MIME", "Validation"], "prerequisites": ["path-traversal-lfi"], "target": "gateway:8080/upload",
     "objectives": [{"id":"upload-proof","label":"ผ่าน validation ด้วย double extension","points":100,"flagKey":"upload_bypass"}],
-    "hints": [{"id":"h1","title":"Filename policy","penalty":10,"body":"validator เช็กว่ามี .jpg อยู่ในชื่อ ไม่ได้เช็ก suffix สุดท้าย"},{"id":"h2","title":"Request","penalty":25,"body":"POST filename=avatar.jpg.php&content_type=image/jpeg ไป /upload"}],
-    "solution": "ส่งชื่อไฟล์ double extension กับ image MIME; simulator จะยอมรับและคืน proof โดยไม่เขียนไฟล์"
+    "hints": [{"id":"h1","title":"Filename policy","penalty":10,"body":"validator เช็ก X-Filename ว่ามี .jpg อยู่ในชื่อ แต่ไม่ได้เช็ก suffix สุดท้าย"},{"id":"h2","title":"Request metadata","penalty":25,"body":"ส่ง X-Filename: avatar.jpg.php และ Content-Type: image/jpeg กับ POST body ไป /upload"}],
+    "solution": "printf 'synthetic payload' | curl -X POST -H 'X-Filename: avatar.jpg.php' -H 'Content-Type: image/jpeg' --data-binary @- http://gateway:8080/upload; simulator อ่าน metadata จาก HTTP headers, ยอมรับ และไม่เขียนไฟล์"
   },
   {
     "id": "jwt-mass-assignment", "number": "15", "title": "JWT & Mass Assignment", "subtitle": "ทดสอบ trust ใน client-controlled claims", "track": "API", "difficulty": "ADVANCED", "minutes": 65,
     "description": "พิสูจน์ alg=none acceptance และการ bind ฟิลด์ role โดยไม่มี allowlist", "skills": ["JWT", "Mass assignment", "Claims"], "prerequisites": ["insecure-file-upload"], "target": "gateway:8080/api/profile",
     "objectives": [{"id":"jwt-proof","label":"ยกระดับ role ผ่าน unsigned token หรือ body field","points":100,"flagKey":"jwt_mass"}],
-    "hints": [{"id":"h1","title":"Two trust failures","penalty":10,"body":"API เชื่อทั้ง token header และ field role จาก JSON"},{"id":"h2","title":"Request","penalty":25,"body":"POST JSON {\"role\":\"admin\",\"token\":\"alg:none\"} ไป /api/profile"}],
-    "solution": "ส่ง role=admin และ token=alg:none; API จำลองจะคืน proof ของ privilege escalation"
+    "hints": [{"id":"h1","title":"Two trust failures","penalty":10,"body":"API parse compact JWT header/payload โดยไม่ verify signature และยังเชื่อ field role จาก JSON"},{"id":"h2","title":"Unsigned token","penalty":25,"body":"สร้าง base64url header {\"alg\":\"none\"} และ payload {\"role\":\"admin\"} แล้วส่ง token=<header>.<payload>."}],
+    "solution": "h=$(printf '%s' '{\"alg\":\"none\"}' | base64 | tr -d '=\n' | tr '+/' '-_'); p=$(printf '%s' '{\"role\":\"admin\"}' | base64 | tr -d '=\n' | tr '+/' '-_'); curl -X POST -H 'Content-Type: application/json' -d \"{\\\"token\\\":\\\"$h.$p.\\\"}\" http://gateway:8080/api/profile. Response method=unsigned-jwt แยกจาก method=mass-assignment"
   },
   {
     "id": "business-logic", "number": "16", "title": "Business Logic", "subtitle": "ทำลาย invariant โดยไม่ใช้ payload พิเศษ", "track": "API", "difficulty": "ADVANCED", "minutes": 60,
@@ -123,6 +123,6 @@
     "description": "โจทย์ black-box ที่ต้องนำ service map, leaked object และ internal route มาต่อเป็น attack path เดียว", "skills": ["Attack chaining", "Evidence", "Reporting"], "prerequisites": ["business-logic"], "target": "gateway:8080/capstone",
     "objectives": [{"id":"chain-proof","label":"ประกอบสาม artifact เพื่อเปิด final proof","points":80,"flagKey":"capstone_chain"},{"id":"report-proof","label":"ค้นหา remediation receipt หลังจบ chain","points":20,"flagKey":"capstone_report"}],
     "hints": [{"id":"h1","title":"Artifact trail","penalty":10,"body":"เริ่มที่ /capstone/brief แล้วบันทึกค่าจากทุก hop"},{"id":"h2","title":"Three hops","penalty":25,"body":"service banner → user id=3 → fetch internal /capstone/final"}],
-    "solution": "อ่าน token จาก recon-node /capstone, ใช้เป็น key ขอ user id=3 แล้วส่ง route ที่ได้ผ่าน /fetch; final response ให้สอง proofs"
+    "solution": "อ่าน token จาก recon-node /capstone, ใช้เป็น key ขอ user id=3 แล้วส่ง route ที่ได้ผ่าน /fetch เพื่อรับ chainProof และ receiptPath; ใช้ /fetch อีกครั้งกับ receiptPath เพื่อรับ remediationReceipt"
   }
 ]

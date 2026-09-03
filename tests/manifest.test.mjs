@@ -39,3 +39,18 @@ test("learning path is acyclic", () => {
   for (const lab of labs) visit(lab.id);
   assert.equal(visited.size, labs.length);
 });
+
+test("authentication enumeration follows the backup evidence", () => {
+  const auth = labs.find((lab) => lab.id === "auth-enumeration");
+  const content = labs.find((lab) => lab.id === "content-discovery");
+  assert.ok(auth.prerequisites.includes(content.id));
+  assert.match(auth.hints[0].body, /config\.old/u);
+  assert.match(content.solution, /ops\.admin/u);
+});
+
+test("service alias trail matches the HTTP banner simulator", () => {
+  const alias = labs.find((lab) => lab.id === "dns-certificate-trail");
+  assert.equal(alias.title, "Service Alias Trail");
+  assert.doesNotMatch(`${alias.title} ${alias.subtitle} ${alias.description} ${alias.skills.join(" ")}`, /Certificate|TLS|certificate/u);
+  assert.match(alias.target, /recon-node:9090/u);
+});
