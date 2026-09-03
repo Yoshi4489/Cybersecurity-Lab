@@ -1,0 +1,54 @@
+{
+  "id": "08-cipher-locker",
+  "title": "Cipher Locker: Peel the Encoded Artifact",
+  "summary": "Decode a layered artifact chain: base64-wrapped manifest, a checksum-verified tar bundle, and printable strings carved from a binary, then submit the chained proof.",
+  "description": "A standalone encoding and artifact-recovery lab. A read-only vault serves a base64 manifest, a tar bundle whose payload is double base64-encoded, and a binary blob with printable evidence. All data is runtime-generated and synthetic.",
+  "difficulty": "intermediate",
+  "minutes": 35,
+  "subnet": "172.31.8.0/24",
+  "composeFile": "docker-compose.yml",
+  "toolboxService": "toolbox",
+  "commandFamilies": ["curl", "jq", "base64", "tar", "sha256sum", "strings", "grep"],
+  "services": [
+    {
+      "name": "cipher-vault",
+      "hostname": "cipher-vault",
+      "ports": [8080],
+      "purpose": "Read-only server for a layered-encoding artifact chain"
+    }
+  ],
+  "objectives": [
+    {
+      "id": "manifest",
+      "title": "Decode the base64 manifest",
+      "label": "Decode the base64 manifest",
+      "points": 20,
+      "flagEnv": "FLAG_L08_MANIFEST",
+      "dependsOn": []
+    },
+    {
+      "id": "bundle",
+      "title": "Verify and peel the tar bundle payload",
+      "label": "Verify and peel the tar bundle payload",
+      "points": 25,
+      "flagEnv": "FLAG_L08_BUNDLE",
+      "dependsOn": ["manifest"]
+    },
+    {
+      "id": "carve",
+      "title": "Carve printable evidence from the binary",
+      "label": "Carve printable evidence from the binary",
+      "points": 25,
+      "flagEnv": "FLAG_L08_CARVE",
+      "dependsOn": ["bundle"]
+    },
+    {
+      "id": "final",
+      "title": "Submit the chained decode proof",
+      "label": "Submit the chained decode proof",
+      "points": 30,
+      "flagEnv": "FLAG_L08_FINAL",
+      "dependsOn": ["manifest", "bundle", "carve"]
+    }
+  ]
+}

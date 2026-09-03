@@ -1,0 +1,64 @@
+name: cybersecurity-lab-08-cipher-locker
+
+services:
+  toolbox:
+    build:
+      context: ../_shared/toolbox
+    command: ["sleep", "infinity"]
+    hostname: toolbox
+    stdin_open: true
+    tty: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+      - /run:size=8m,mode=0755
+    volumes:
+      - ./smoke.sh:/opt/lab/smoke.sh:ro
+    networks:
+      cipher_net:
+        ipv4_address: 172.31.8.10
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 96
+    mem_limit: 192m
+    cpus: "0.50"
+    depends_on:
+      cipher-vault:
+        condition: service_healthy
+
+  cipher-vault:
+    build:
+      context: ./target
+    hostname: cipher-vault
+    environment:
+      FLAG_L08_MANIFEST: "${FLAG_L08_MANIFEST:?run via standalone-labctl}"
+      FLAG_L08_BUNDLE: "${FLAG_L08_BUNDLE:?run via standalone-labctl}"
+      FLAG_L08_CARVE: "${FLAG_L08_CARVE:?run via standalone-labctl}"
+      FLAG_L08_FINAL: "${FLAG_L08_FINAL:?run via standalone-labctl}"
+    expose:
+      - "8080"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    networks:
+      cipher_net:
+        ipv4_address: 172.31.8.20
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 96m
+    cpus: "0.35"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2)"]
+      interval: 3s
+      timeout: 2s
+      retries: 15
+
+networks:
+  cipher_net:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.31.8.0/24
