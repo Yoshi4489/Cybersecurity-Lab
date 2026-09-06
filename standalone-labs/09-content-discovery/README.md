@@ -1,111 +1,216 @@
-# Lab 09 — Content Discovery: Forgotten Artifacts
+# Lab 09 — Northstar Archive: Close the Breach
 
-A web content-discovery exercise. The `ops-archive` portal looks empty, but it
-leaks the things a web root should never expose: a `robots.txt` that names
-internal paths, an accidentally published `.git/` directory, and a stale `.bak`
-backup left over from a migration. Follow each breadcrumb, recover its token, and
-chain them into a final proof.
+Level: Intermediate | Mode: capstone | Time: 60–75 minutes
 
-Every host, token, and flag is synthetic and the lab network is internal-only
-(`172.31.9.0/24`, no host ports published, no outbound). Use these techniques
-only against the `web-archive` service named below.
+## Scenario
 
-Target:
+Northstar's archive migration is complete, but a customer export may have escaped.
+Your lead gives you one starting URL: `http://web-archive:8080/`. Reconstruct
+what the deployment exposed and identify the successful export in its evidence.
+This case contains everything needed; earlier labs do not need to be running.
 
-- `web-archive` (`172.31.9.20`) — an HTTP portal on `8080` serving the index,
-  `robots.txt`, `/server-status`, an exposed `.git/config`, and a leftover
-  `config.php.bak`.
+```text
+public page → crawler policy → deployment status → repository config → encoded backup → export log → report
+```
 
-## Before you start
+## What you need to know
 
-New to these labs? Read the **[setup guide](../GETTING-STARTED.md)** first — it
-covers installing Node.js and Docker, the two-terminal workflow, and how flags and
-`verify` work.
+Recommended first: Labs 03, 05, 06, 07, and 08.
 
-Start the lab and open the toolbox (run from the project root):
+- Reuse `curl` to read HTTP responses and `grep`/`sed` to select evidence.
+- `tee FILE` saves a copy while showing the same output; `cut -d ' ' -f1` extracts a hash from sha256sum output.
+- `robots.txt` gives crawler instructions. It is public and does not control access.
+  A disallowed path is a lead to test, not proof that the path is accessible.
+- A published `.git/config` can disclose deployment configuration and internal URLs.
+  Treat discovered URLs as evidence; follow only the named local lab target.
+- A `.bak` file is an old backup. It may expose data the live application hides.
+- Reuse `base64 -d` and `jq` from Lab 08 to decode a JSON handover.
+- Reuse `sha256sum` from Lab 05 to compare an acquired log with its reference hash.
+- In this case the log columns are actor, timestamp, method, path, and HTTP status.
+  `awk` selects rows by columns. A `200` response for an `/exports/` path is a
+  successful export; a `403` is a denied request. The busiest actor alone does not
+  establish a breach.
+
+## Start the lab
+
+**Host terminal**, from the project directory:
 
 ```sh
 node scripts/standalone-labctl.mjs start 09-content-discovery
 node scripts/standalone-labctl.mjs shell 09-content-discovery
 ```
 
-You are now **inside** the toolbox. Keep a **second terminal** open in the project
-folder — that's where you submit each flag with `verify`. Authorized scope is
-`172.31.9.0/24` only; no external targets.
+Investigation commands run in the **toolbox**. Submit flags in a second
+**host terminal**. Read the [setup guide](../GETTING-STARTED.md) if needed.
+Scope: `web-archive` at `172.31.9.20:8080`, inside `172.31.9.0/24`.
+Keep a short evidence log of path, finding, token, and why it justifies the next step.
 
-## Walkthrough
+## Objectives
 
-Record the `objective_flag=RLAB{...}` value at each stage and submit it with
-`verify` (from the second terminal). Objectives are gated in order:
-`robots → gitleak → backup → final`.
+### Flag 1 — Find the deployment exposure (`robots`)
 
-### 1. Follow the robots.txt breadcrumb (`robots`)
+Use public clues to locate the archive's status page. Record its case, deployment
+finding, token, and objective flag.
 
-`robots.txt` is a map of what the site wants hidden. Read it, then request the
-path it discloses:
+### Flag 2 — Trace the repository leak (`gitleak`)
+
+Follow the status handover to the exposed repository configuration. Identify the
+backup location and encoding. Record the repository token and flag.
+
+### Flag 3 — Recover the migration configuration (`backup`)
+
+Retrieve and decode the disclosed backup. Recover the next artifact's location,
+reference hash, case, token, and flag.
+
+### Flag 4 — Close the breach (`final`)
+
+Verify the artifact's integrity and determine which actor successfully downloaded
+which export. Submit the three earlier tokens and your case, actor, event, and
+log hash. State a remediation for the deployment exposure.
+
+## Hints
+
+<details>
+<summary>Hints for Flag 1 — robots</summary>
+
+1. Read the initial page and follow its public links.
+2. Crawler policy may name an internal status path.
+3. Read `/robots.txt`, then request `/server-status`.
+
+</details>
+
+<details>
+<summary>Hints for Flag 2 — gitleak</summary>
+
+1. The status response says a working tree was copied during deployment.
+2. Git keeps configuration in its hidden directory.
+3. Request `/.git/config` and read the deployment section.
+
+</details>
+
+<details>
+<summary>Hints for Flag 3 — backup</summary>
+
+1. Use the backup path and encoding recorded in the previous stage.
+2. Decode the response before parsing it as JSON.
+3. Run `curl -fsS http://web-archive:8080/config.php.bak | base64 -d | jq .`.
+
+</details>
+
+<details>
+<summary>Hints for Flag 4 — final</summary>
+
+1. Follow the artifact path in the decoded backup. Compare its SHA-256 before analysis.
+2. Select a successful `/exports/` request; ignore the denied decoy export.
+3. The actor is `migration-bot`, the event is `EXPORT-904`, and the case is
+   `NS-09`. The report fields are listed in the decoded backup.
+
+</details>
+
+## Solution
+
+### 1. Follow the public clues (`robots`)
+
+**Toolbox:**
 
 ```sh
-curl -fsS http://web-archive:8080/robots.txt      # Disallow: /server-status and /.git/
-curl -fsS http://web-archive:8080/server-status   # robots_token=index-quartz-09 + objective_flag=RLAB{...}
+curl -fsS http://web-archive:8080/
+curl -fsS http://web-archive:8080/robots.txt
+curl -fsS http://web-archive:8080/server-status
+```
+
+Record `robots_token=index-quartz-09` and the displayed objective flag.
+
+**Host terminal — submit this stage's displayed flag:**
+
+```sh
 node scripts/standalone-labctl.mjs verify 09-content-discovery robots 'RLAB{...}'
 ```
 
-### 2. Read the exposed .git configuration (`gitleak`)
+### 2. Read repository metadata (`gitleak`)
 
-`robots.txt` disallowed `/.git/` — which means it is reachable. A published
-`.git` directory leaks repository config:
+**Toolbox:**
 
 ```sh
-curl -fsS http://web-archive:8080/.git/config     # remote URL + git_token=repo-ember-33 + objective_flag=RLAB{...}
+curl -fsS http://web-archive:8080/.git/config
+```
+
+Record `git_token=repo-ember-33`. The deployment section discloses
+`/config.php.bak` and `base64-json`.
+
+**Host terminal — submit this stage's displayed flag:**
+
+```sh
 node scripts/standalone-labctl.mjs verify 09-content-discovery gitleak 'RLAB{...}'
 ```
 
-### 3. Recover the leftover backup file (`backup`)
+### 3. Decode the leaked backup (`backup`)
 
-Check the homepage source for developer comments, then grab the backup they
-forgot to delete:
+**Toolbox:**
 
 ```sh
-curl -fsS http://web-archive:8080/                # HTML comment mentions config.php.bak
-curl -fsS http://web-archive:8080/config.php.bak | grep -E 'backup_token|objective_flag'
-# backup_token=stale-onyx-58 + objective_flag=RLAB{...}
+curl -fsS http://web-archive:8080/config.php.bak | base64 -d | tee /tmp/ns09-config.json | jq .
+```
+
+Record `backup_token=stale-onyx-58` and its objective flag. The configuration names
+`/evidence/access.log`, its SHA-256, and the required report fields.
+
+**Host terminal — submit this stage's displayed flag:**
+
+```sh
 node scripts/standalone-labctl.mjs verify 09-content-discovery backup 'RLAB{...}'
 ```
 
-### 4. Submit the chained proof (`final`)
+### 4. Verify and correlate the export (`final`)
 
-POST the three recovered tokens. The endpoint returns `403` until all match:
+**Toolbox:**
 
 ```sh
+curl -fsS http://web-archive:8080/evidence/access.log -o /tmp/ns09-access.log
+jq -r .sha256 /tmp/ns09-config.json
+sha256sum /tmp/ns09-access.log
+```
+
+Compare the hashes. Stop and reacquire the artifact if they differ. Inspect the
+successful export, including its actor and event path:
+
+```sh
+awk '$5 == 200 && $4 ~ /^\/exports\// {print $1, $4}' /tmp/ns09-access.log
+log_hash=$(sha256sum /tmp/ns09-access.log | cut -d ' ' -f1)
 curl -fsS -X POST \
   --data-urlencode 'robots=index-quartz-09' \
   --data-urlencode 'git=repo-ember-33' \
   --data-urlencode 'backup=stale-onyx-58' \
-  http://web-archive:8080/final            # final_flag=RLAB{...}
+  --data-urlencode 'case=NS-09' \
+  --data-urlencode 'actor=migration-bot' \
+  --data-urlencode 'event=EXPORT-904' \
+  --data-urlencode "log_sha256=$log_hash" \
+  http://web-archive:8080/final
+```
+
+The report is rejected if the denied event, wrong actor, or modified log hash is
+supplied. Record `final_flag`.
+
+**Host terminal — submit this stage's displayed flag:**
+
+```sh
 node scripts/standalone-labctl.mjs verify 09-content-discovery final 'RLAB{...}'
 ```
 
-## Verify & reset
+## What this taught you
+
+Public metadata can expose a deployment mistake that leads to sensitive evidence.
+The decisive finding comes from correlating the decoded configuration with a
+successful export, not from merely discovering a path. Deploy only built
+artifacts, deny dotfiles and backups at the web server, authorize each export,
+and retain migration audit logs. This completes the nine-lab path.
+
+## Stop or reset
+
+**Host terminal:**
 
 ```sh
 node scripts/standalone-labctl.mjs status 09-content-discovery
-node scripts/standalone-labctl.mjs reset  09-content-discovery
-node scripts/standalone-labctl.mjs stop   09-content-discovery
+node scripts/standalone-labctl.mjs reset 09-content-discovery
+node scripts/standalone-labctl.mjs stop 09-content-discovery
 ```
-
-`smoke` (`node scripts/standalone-labctl.mjs smoke 09-content-discovery`)
-transiently injects the expected flags to self-check the whole chain; it is a
-maintainer/CI command, not part of the solution path.
-
-## Detection / remediation
-
-- **Don't leak paths in robots.txt:** it is public. Use it for crawler hints, not
-  as a place to name admin or status endpoints — attackers read it first.
-- **Never serve `.git/` (or other dotfiles):** block them at the web server. An
-  exposed repo leaks source, history, and often credentials; deploy build output,
-  not the working tree.
-- **Keep backups out of the web root:** `*.bak`, `*~`, `.old`, and editor swap
-  files are classic finds. Store backups off the served path and deny those
-  extensions at the server.
-- **Review source comments before deploy:** `TODO`/`FIXME` comments routinely
-  disclose forgotten files and internal hostnames.

