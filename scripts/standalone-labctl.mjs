@@ -11,6 +11,7 @@ import {
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { validateCurriculum } from "./standalone-curriculum.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const labsRoot = join(root, "standalone-labs");
@@ -83,6 +84,7 @@ function loadLabs() {
   if (new Set(labs.map((lab) => lab.id)).size !== labs.length) {
     throw new Error("Duplicate standalone lab id");
   }
+  validateCurriculum(labs);
   return labs;
 }
 
@@ -243,7 +245,10 @@ if (labs) {
     if (labId || objectiveId || suppliedFlag) usage("list does not accept additional arguments.");
     else {
       console.log("Standalone labs:");
-      for (const lab of labs) console.log(`  ${lab.id.padEnd(26)} ${lab.title}`);
+      for (const lab of labs) {
+        console.log(`  ${lab.id.padEnd(26)} ${lab.title} [${lab.mode}]`);
+        console.log(`    Recommended first: ${lab.prerequisites?.join(", ") || "none (start here)"}`);
+      }
     }
   } else {
     const lab = selectLab(labs, labId);

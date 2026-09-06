@@ -1,19 +1,30 @@
 {
   "id": "01-network-triage",
-  "title": "Network Triage: First Contact",
-  "summary": "Build a local network baseline, resolve the target, and use TCP connect scanning to assemble a three-part proof.",
-  "description": "Build a local network baseline, resolve the target, and use TCP connect scanning to assemble a three-part proof.",
+  "title": "First Contact at Northstar Shipping",
+  "summary": "Explain hosts, ports and protocols; Resolve a named asset; Choose HTTP or raw TCP clients from evidence.",
+  "description": "Northstar: Infrastructure Review. Learn each concept before trying it. Explain hosts, ports and protocols; Resolve a named asset; Choose HTTP or raw TCP clients from evidence.",
   "difficulty": "beginner",
   "minutes": 35,
   "subnet": "172.28.1.0/24",
   "composeFile": "docker-compose.yml",
   "toolboxService": "toolbox",
-  "commandFamilies": ["ip", "getent", "ss", "nmap", "curl", "nc"],
+  "commandFamilies": [
+    "ip",
+    "getent",
+    "ss",
+    "nmap",
+    "curl",
+    "nc"
+  ],
   "services": [
     {
       "name": "triage-node",
       "hostname": "triage-node",
-      "ports": [7070, 8080, 9090],
+      "ports": [
+        7070,
+        8080,
+        9090
+      ],
       "purpose": "Synthetic multi-service host for network triage"
     }
   ],
@@ -32,7 +43,9 @@
       "label": "Discover and inspect the raw TCP beacon",
       "points": 25,
       "flagEnv": "FLAG_L01_SERVICE_BEACON",
-      "dependsOn": ["network-baseline"]
+      "dependsOn": [
+        "network-baseline"
+      ]
     },
     {
       "id": "operator-console",
@@ -40,7 +53,9 @@
       "label": "Identify the secondary operator console",
       "points": 25,
       "flagEnv": "FLAG_L01_OPERATOR_CONSOLE",
-      "dependsOn": ["service-beacon"]
+      "dependsOn": [
+        "service-beacon"
+      ]
     },
     {
       "id": "triage-proof",
@@ -48,7 +63,19 @@
       "label": "Submit the chained triage proof",
       "points": 30,
       "flagEnv": "FLAG_L01_TRIAGE_PROOF",
-      "dependsOn": ["network-baseline", "service-beacon", "operator-console"]
+      "dependsOn": [
+        "network-baseline",
+        "service-beacon",
+        "operator-console"
+      ]
     }
+  ],
+  "campaign": "Northstar: Infrastructure Review",
+  "mode": "guided",
+  "prerequisites": [],
+  "learningOutcomes": [
+    "Explain hosts, ports and protocols",
+    "Resolve a named asset",
+    "Choose HTTP or raw TCP clients from evidence"
   ]
 }

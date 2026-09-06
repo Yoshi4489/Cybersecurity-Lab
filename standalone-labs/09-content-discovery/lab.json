@@ -1,19 +1,32 @@
 {
   "id": "09-content-discovery",
-  "title": "Content Discovery: Forgotten Artifacts",
-  "summary": "Discover what a web root should not expose: robots.txt breadcrumbs, an exposed .git/config, and a leftover .bak backup, then chain the recovered tokens into a final proof.",
-  "description": "A standalone web content-discovery lab. A synthetic archive portal leaks internal paths through robots.txt, an accidentally published .git directory, and a stale backup file. All hosts, tokens, and flags are synthetic and live only on an internal Docker network.",
+  "title": "Northstar Archive: Close the Breach",
+  "summary": "Discover exposed deployment artifacts; Decode a leaked configuration; Correlate a successful export and its actor; Submit evidence and remediation.",
+  "description": "Northstar: ApertureOps Incident. Apply earlier lessons with optional per-flag hints. Discover exposed deployment artifacts; Decode a leaked configuration; Correlate a successful export and its actor; Submit evidence and remediation.",
   "difficulty": "intermediate",
-  "minutes": 30,
+  "minutes": 75,
   "subnet": "172.31.9.0/24",
   "composeFile": "docker-compose.yml",
   "toolboxService": "toolbox",
-  "commandFamilies": ["curl", "grep", "sed"],
+  "commandFamilies": [
+    "curl",
+    "grep",
+    "sed",
+    "base64",
+    "jq",
+    "sha256sum",
+    "cut",
+    "sort",
+    "uniq",
+    "awk"
+  ],
   "services": [
     {
       "name": "web-archive",
       "hostname": "web-archive",
-      "ports": [8080],
+      "ports": [
+        8080
+      ],
       "purpose": "Web root that exposes forgotten artifacts"
     }
   ],
@@ -32,23 +45,46 @@
       "label": "Read the exposed .git configuration",
       "points": 25,
       "flagEnv": "FLAG_L09_GITLEAK",
-      "dependsOn": ["robots"]
+      "dependsOn": [
+        "robots"
+      ]
     },
     {
       "id": "backup",
-      "title": "Recover the leftover backup file",
-      "label": "Recover the leftover backup file",
+      "title": "Decode the exposed migration configuration",
+      "label": "Decode the exposed migration configuration",
       "points": 25,
       "flagEnv": "FLAG_L09_BACKUP",
-      "dependsOn": ["gitleak"]
+      "dependsOn": [
+        "gitleak"
+      ]
     },
     {
       "id": "final",
-      "title": "Submit the chained discovery proof",
-      "label": "Submit the chained discovery proof",
+      "title": "Correlate the export log and close the breach",
+      "label": "Correlate the export log and close the breach",
       "points": 30,
       "flagEnv": "FLAG_L09_FINAL",
-      "dependsOn": ["robots", "gitleak", "backup"]
+      "dependsOn": [
+        "robots",
+        "gitleak",
+        "backup"
+      ]
     }
+  ],
+  "campaign": "Northstar: ApertureOps Incident",
+  "mode": "capstone",
+  "prerequisites": [
+    "03-dns-breadcrumbs",
+    "05-linux-evidence",
+    "06-signals-capstone",
+    "07-web-breach-chain",
+    "08-cipher-locker"
+  ],
+  "learningOutcomes": [
+    "Discover exposed deployment artifacts",
+    "Decode a leaked configuration",
+    "Correlate a successful export and its actor",
+    "Submit evidence and remediation"
   ]
 }

@@ -1,19 +1,29 @@
 {
   "id": "08-cipher-locker",
-  "title": "Cipher Locker: Peel the Encoded Artifact",
-  "summary": "Decode a layered artifact chain: base64-wrapped manifest, a checksum-verified tar bundle, and printable strings carved from a binary, then submit the chained proof.",
-  "description": "A standalone encoding and artifact-recovery lab. A read-only vault serves a base64 manifest, a tar bundle whose payload is double base64-encoded, and a binary blob with printable evidence. All data is runtime-generated and synthetic.",
+  "title": "ApertureOps: The Recovered Cache",
+  "summary": "Distinguish encoding from encryption; Verify an artifact against a reference hash; Recover printable evidence without executing it.",
+  "description": "Northstar: ApertureOps Incident. Apply earlier lessons with optional per-flag hints. Distinguish encoding from encryption; Verify an artifact against a reference hash; Recover printable evidence without executing it.",
   "difficulty": "intermediate",
   "minutes": 35,
   "subnet": "172.31.8.0/24",
   "composeFile": "docker-compose.yml",
   "toolboxService": "toolbox",
-  "commandFamilies": ["curl", "jq", "base64", "tar", "sha256sum", "strings", "grep"],
+  "commandFamilies": [
+    "curl",
+    "jq",
+    "base64",
+    "tar",
+    "sha256sum",
+    "strings",
+    "grep"
+  ],
   "services": [
     {
       "name": "cipher-vault",
       "hostname": "cipher-vault",
-      "ports": [8080],
+      "ports": [
+        8080
+      ],
       "purpose": "Read-only server for a layered-encoding artifact chain"
     }
   ],
@@ -32,7 +42,9 @@
       "label": "Verify and peel the tar bundle payload",
       "points": 25,
       "flagEnv": "FLAG_L08_BUNDLE",
-      "dependsOn": ["manifest"]
+      "dependsOn": [
+        "manifest"
+      ]
     },
     {
       "id": "carve",
@@ -40,7 +52,9 @@
       "label": "Carve printable evidence from the binary",
       "points": 25,
       "flagEnv": "FLAG_L08_CARVE",
-      "dependsOn": ["bundle"]
+      "dependsOn": [
+        "bundle"
+      ]
     },
     {
       "id": "final",
@@ -48,7 +62,22 @@
       "label": "Submit the chained decode proof",
       "points": 30,
       "flagEnv": "FLAG_L08_FINAL",
-      "dependsOn": ["manifest", "bundle", "carve"]
+      "dependsOn": [
+        "manifest",
+        "bundle",
+        "carve"
+      ]
     }
+  ],
+  "campaign": "Northstar: ApertureOps Incident",
+  "mode": "challenge",
+  "prerequisites": [
+    "05-linux-evidence",
+    "07-web-breach-chain"
+  ],
+  "learningOutcomes": [
+    "Distinguish encoding from encryption",
+    "Verify an artifact against a reference hash",
+    "Recover printable evidence without executing it"
   ]
 }

@@ -1,18 +1,35 @@
 {
   "id": "06-signals-capstone",
   "title": "Signals in the Noise",
-  "summary": "Chain a synthetic DNS zone transfer into Nmap service mapping, retrieve an HTTP evidence artifact, and correlate Linux logs to produce the final proof.",
-  "description": "A standalone capstone joining DNS reconnaissance, TCP connect scanning, HTTP acquisition, and command-line log analysis.",
-  "difficulty": "advanced",
+  "summary": "Connect DNS and network evidence; Acquire and verify a disclosed bundle; Correlate an actor and event.",
+  "description": "Northstar: Infrastructure Review. Apply earlier lessons with optional per-flag hints. Connect DNS and network evidence; Acquire and verify a disclosed bundle; Correlate an actor and event.",
+  "difficulty": "intermediate",
   "minutes": 90,
   "subnet": "172.30.66.0/24",
   "composeFile": "docker-compose.yml",
   "toolboxService": "toolbox",
   "commandFamilies": [
-    "dig", "nslookup", "nmap", "curl", "tar", "sha256sum", "find",
-    "file", "grep", "cut", "sort", "uniq", "sed", "awk", "xargs"
+    "dig",
+    "nslookup",
+    "nmap",
+    "curl",
+    "tar",
+    "sha256sum",
+    "find",
+    "file",
+    "grep",
+    "cut",
+    "sort",
+    "uniq",
+    "sed",
+    "awk",
+    "xargs"
   ],
-  "services": ["auth-dns", "signal-relay", "toolbox"],
+  "services": [
+    "auth-dns",
+    "signal-relay",
+    "toolbox"
+  ],
   "objectives": [
     {
       "id": "dns-chain",
@@ -28,7 +45,9 @@
       "title": "Service mapping",
       "points": 175,
       "flagEnv": "LAB06_NMAP_FLAG",
-      "dependsOn": ["dns-chain"]
+      "dependsOn": [
+        "dns-chain"
+      ]
     },
     {
       "id": "http-artifact",
@@ -36,7 +55,9 @@
       "title": "HTTP artifact acquisition",
       "points": 175,
       "flagEnv": "LAB06_HTTP_FLAG",
-      "dependsOn": ["service-map"]
+      "dependsOn": [
+        "service-map"
+      ]
     },
     {
       "id": "final",
@@ -44,10 +65,33 @@
       "title": "Signals correlation",
       "points": 350,
       "flagEnv": "LAB06_FINAL_FLAG",
-      "dependsOn": ["dns-chain", "service-map", "http-artifact"]
+      "dependsOn": [
+        "dns-chain",
+        "service-map",
+        "http-artifact"
+      ]
     }
   ],
   "smoke": [
-    {"objectiveId": "final", "command": ["sh", "/opt/lab/smoke.sh"]}
+    {
+      "objectiveId": "final",
+      "command": [
+        "sh",
+        "/opt/lab/smoke.sh"
+      ]
+    }
+  ],
+  "campaign": "Northstar: Infrastructure Review",
+  "mode": "capstone",
+  "prerequisites": [
+    "02-service-fingerprint",
+    "03-dns-breadcrumbs",
+    "04-zone-transfer",
+    "05-linux-evidence"
+  ],
+  "learningOutcomes": [
+    "Connect DNS and network evidence",
+    "Acquire and verify a disclosed bundle",
+    "Correlate an actor and event"
   ]
 }

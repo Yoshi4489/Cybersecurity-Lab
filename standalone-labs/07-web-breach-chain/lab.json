@@ -1,25 +1,37 @@
 {
   "id": "07-web-breach-chain",
-  "title": "Web Breach Chain: Recon to Root",
-  "summary": "Chain TCP connect scanning, HTTP surface mapping, a reflected-XSS foothold, and a JWT alg:none privilege escalation into a single end-to-end web breach proof.",
-  "description": "A multi-skill capstone that walks the full intrusion path against a synthetic web estate. Start from an empty network view, use nmap TCP connect scans to find the edge host and read its service beacon, fingerprint the HTTP surface and discover a hidden developer route, exploit a reflected cross-site scripting sink to steal an analyst session, forge an alg:none JSON Web Token to reach the internal admin console, and finally chain every recovered token into the root proof. All hosts, tokens, and flags are synthetic and the network is internal-only; the privilege escalation is an application-layer simulation because the containers are hardened (read-only, no-new-privileges, all capabilities dropped).",
-  "difficulty": "advanced",
+  "title": "ApertureOps: The Support Desk Incident",
+  "summary": "Map web content from public clues; Explain a simulated XSS session exposure; Demonstrate a JWT authorization failure.",
+  "description": "Northstar: ApertureOps Incident. Apply earlier lessons with optional per-flag hints. Map web content from public clues; Explain a simulated XSS session exposure; Demonstrate a JWT authorization failure.",
+  "difficulty": "intermediate",
   "minutes": 75,
   "subnet": "172.31.7.0/24",
   "composeFile": "docker-compose.yml",
   "toolboxService": "toolbox",
-  "commandFamilies": ["nmap", "curl", "nc", "jq", "base64", "getent"],
+  "commandFamilies": [
+    "nmap",
+    "curl",
+    "nc",
+    "jq",
+    "base64",
+    "getent"
+  ],
   "services": [
     {
       "name": "edge-gateway",
       "hostname": "edge-gateway",
-      "ports": [8080, 9091],
+      "ports": [
+        8080,
+        9091
+      ],
       "purpose": "Internet-facing edge host: TCP service beacon plus the vulnerable ApertureOps web portal"
     },
     {
       "name": "ops-internal",
       "hostname": "ops-internal",
-      "ports": [8081],
+      "ports": [
+        8081
+      ],
       "purpose": "Internal operations API that trusts bearer tokens; holds the admin console and the final chained proof"
     }
   ],
@@ -38,15 +50,19 @@
       "label": "Fingerprint the HTTP surface and find the developer route",
       "points": 25,
       "flagEnv": "FLAG_L07_SURFACE_MAP",
-      "dependsOn": ["recon-sweep"]
+      "dependsOn": [
+        "recon-sweep"
+      ]
     },
     {
       "id": "web-foothold",
-      "title": "Steal the analyst session through the reflected-XSS support sink",
-      "label": "Steal the analyst session through the reflected-XSS support sink",
+      "title": "Explain and reproduce the simulated analyst-session exposure",
+      "label": "Explain and reproduce the simulated analyst-session exposure",
       "points": 30,
       "flagEnv": "FLAG_L07_WEB_FOOTHOLD",
-      "dependsOn": ["surface-map"]
+      "dependsOn": [
+        "surface-map"
+      ]
     },
     {
       "id": "privilege-escalation",
@@ -54,15 +70,33 @@
       "label": "Forge an alg:none token to reach the internal admin console",
       "points": 35,
       "flagEnv": "FLAG_L07_PRIV_ESC",
-      "dependsOn": ["web-foothold"]
+      "dependsOn": [
+        "web-foothold"
+      ]
     },
     {
       "id": "root-proof",
-      "title": "Chain every recovered token into the root proof",
-      "label": "Chain every recovered token into the root proof",
+      "title": "Report the application admin evidence chain",
+      "label": "Report the application admin evidence chain",
       "points": 40,
       "flagEnv": "FLAG_L07_ROOT_PROOF",
-      "dependsOn": ["recon-sweep", "surface-map", "web-foothold", "privilege-escalation"]
+      "dependsOn": [
+        "recon-sweep",
+        "surface-map",
+        "web-foothold",
+        "privilege-escalation"
+      ]
     }
+  ],
+  "campaign": "Northstar: ApertureOps Incident",
+  "mode": "challenge",
+  "prerequisites": [
+    "01-network-triage",
+    "02-service-fingerprint"
+  ],
+  "learningOutcomes": [
+    "Map web content from public clues",
+    "Explain a simulated XSS session exposure",
+    "Demonstrate a JWT authorization failure"
   ]
 }
