@@ -74,7 +74,7 @@ jobs:
   smoke:
     needs: compose-config
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       max-parallel: 2
@@ -94,10 +94,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Start ${{ matrix.lab }}
-        run: node scripts/standalone-labctl.mjs start "${{ matrix.lab }}"
-      - name: Smoke ${{ matrix.lab }}
-        run: node scripts/standalone-labctl.mjs smoke "${{ matrix.lab }}"
+      - name: Verify lifecycle and solution for ${{ matrix.lab }}
+        run: node scripts/verify-standalone.mjs "${{ matrix.lab }}"
       - name: Stop ${{ matrix.lab }}
         if: always()
         run: node scripts/standalone-labctl.mjs stop "${{ matrix.lab }}"

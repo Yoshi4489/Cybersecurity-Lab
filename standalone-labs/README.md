@@ -1,90 +1,70 @@
-# Standalone Recon & Linux Labs
+# Northstar Shipping: Beginner Security Labs
 
-These exercises are **separate, self-contained labs**. They do not extend the
-18-lab portal catalog in `data/labs.json`. Each numbered directory owns its own
-manifest, Docker Compose topology, synthetic targets, walkthrough, and smoke
-test. Starting, stopping, or resetting one lab never operates on another lab.
+Nine independent local investigations teach you how evidence leads to the next
+question and the next command. Start with the [setup guide](GETTING-STARTED.md).
+The separate portal still contains eighteen modules.
 
-> **New here?** Start with the **[beginner setup guide](GETTING-STARTED.md)** — it
-> walks you through installing Node.js and Docker, the two-terminal workflow, and
-> playing your first lab end to end, then hands off to each lab's own README.
+## Learning path
 
-## Available labs
+Follow this order: **01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09**.
 
-| ID | Focus |
-| --- | --- |
-| `01-network-triage` | Network baseline, host resolution, TCP connect scanning |
-| `02-service-fingerprint` | Service and version fingerprinting across multiple ports |
-| `03-dns-breadcrumbs` | DNS enumeration and record breadcrumbs |
-| `04-zone-transfer` | DNS zone transfer (AXFR) against a synthetic authority |
-| `05-linux-evidence` | Linux host evidence and artifact triage |
-| `06-signals-capstone` | Multi-step DNS → scan → HTTP signals capstone |
-| `07-web-breach-chain` | Recon → reflected XSS → JWT alg:none privesc → chained root proof |
-| `08-cipher-locker` | Layered-encoding artifact recovery and checksum verification |
-| `09-content-discovery` | Web content discovery: robots.txt, exposed `.git`, and backup files |
+| Lab | Investigation | Mode | You learn |
+| --- | --- | --- | --- |
+| [01](01-network-triage/README.md) | First Contact | Guided | Hosts, ports, HTTP, and raw TCP |
+| [02](02-service-fingerprint/README.md) | Unmanaged Service Farm | Guided | Inventory, versions, saved evidence |
+| [03](03-dns-breadcrumbs/README.md) | Ghost Service in DNS | Guided | Aliases, addresses, mail and service records |
+| [04](04-zone-transfer/README.md) | Acquired Company DNS Leak | Guided | AXFR and virtual hosts |
+| [05](05-linux-evidence/README.md) | Incident EV-55 | Guided | Hashes, files, logs, printable artifacts |
+| [06](06-signals-capstone/README.md) | Signals in the Noise | Midpoint capstone | Correlate DNS, scans, artifacts and logs |
+| [07](07-web-breach-chain/README.md) | Support Desk Incident | Challenge | Web discovery, XSS simulation, JWT trust |
+| [08](08-cipher-locker/README.md) | Recovered Cache | Challenge | Encoding, integrity and artifact analysis |
+| [09](09-content-discovery/README.md) | Close the Breach | Final capstone | Deployment leaks and export evidence |
 
-Each lab is independent. Numeric prefixes are stable IDs, not a strict difficulty
-ramp; do not infer prerequisite relationships from the directory number alone.
+Numeric prefixes remain stable IDs. The rebuilt curriculum now follows numeric
+order; 06 and 09 are the capstones. Prerequisites are recommendations, not startup
+locks. Labs 01–06 form Northstar's infrastructure review; 07–09 form the
+ApertureOps incident campaign. Each lab includes its own evidence so earlier
+targets can be stopped.
 
-## Recommended learning order
+## How to learn
 
-For a first pass, use this order:
+Every README gives a scenario, concepts, objectives, three hints for each flag,
+a complete solution, and defensive takeaways. Read concepts first. Try an
+objective, reveal one hint if needed, and consult the solution after an attempt.
+A correct flag is a progress checkpoint; also write down what the evidence means.
 
-```text
-01 → 02 → 03 → 04 → 05 → 09 → 08 → 06 → 07
-```
+## Commands
 
-Labs 06 and 07 are capstones, so save them until after the foundational
-reconnaissance, evidence, content-discovery, and artifact-recovery exercises.
+Run these in a host terminal from the project directory:
 
-## Requirements and safety boundary
-
-- Node.js 22.13 or newer (`node -v`)
-- Docker Engine/Desktop with Docker Compose v2
-- A writable Docker data location for the first toolbox image build
-
-Every lab network is internal. Target services do not publish host ports. The
-toolbox runs as UID/GID `10001`, drops capabilities, and is intended only for
-the synthetic services named by that lab. Never reuse the commands against a
-public address or a system you do not own and have explicit permission to test.
-Read the [local range threat model](../docs/THREAT-MODEL.md) for the trust
-boundary: local flags support progress consistency, not secrecy from the machine
-owner.
-
-## Lab controller
-
-Run commands from the repository root:
-
-```text
+```sh
 node scripts/standalone-labctl.mjs list
 node scripts/standalone-labctl.mjs start <lab-id>
 node scripts/standalone-labctl.mjs shell <lab-id>
 node scripts/standalone-labctl.mjs status <lab-id>
 node scripts/standalone-labctl.mjs verify <lab-id> <objective-id> 'RLAB{...}'
-node scripts/standalone-labctl.mjs smoke <lab-id>
 node scripts/standalone-labctl.mjs reset <lab-id>
 node scripts/standalone-labctl.mjs stop <lab-id>
 ```
 
-`start` creates new HMAC-derived flags for that run and stores them in the
-ignored `standalone-labs/.runtime/<lab-id>/flags.env` file. Targets receive only
-their required flags; the learner toolbox does not. `verify` checks the submitted
-flag locally and enforces objective dependencies. `reset` removes only the
-selected Compose project and its volumes, rotates its flags, clears its progress,
-and starts it again.
+After shell opens, that terminal is the Linux toolbox. Use a second host terminal
+for verify. Start creates fresh per-run flags; reset clears only the selected
+lab's progress and rotates its flags. Start a fresh run when trying the rebuilt
+curriculum. Old directory IDs and objective IDs still work.
 
-The lab ID is resolved through a checked-in `lab.json`; it is never treated as a
-path or a Docker argument. All Compose paths, project names, service names, and
-commands are fixed by the controller.
+## Runtime and trust
 
-## Suggested workflow
+Use Node 22.13+ and Docker Desktop/Engine with Compose v2. Targets remain
+unprivileged, capability-dropped, read-only, and on internal networks without
+published target ports. They receive only flags needed for their own stage or
+report validation. The normal learner toolbox receives no expected flags.
 
-1. Use `list`, choose one lab, and read that lab's `README.md`.
-2. Run `start`, then enter the toolbox with `shell`.
-3. Work through the objectives in order and submit each discovered flag with
-   `verify` from a second terminal.
-4. Use `reset` for a clean run or `stop` when finished.
+The [local range threat model](../docs/THREAT-MODEL.md) explains why local flags
+support progress consistency rather than secrecy from the owner of the machine.
+XSS review and application privilege demonstrations are labeled simulations.
+No external account, real victim, or internet target is part of the curriculum.
 
-`smoke` is a maintainer/CI command. It transiently supplies expected values to
-the read-only smoke script inside the toolbox; it is not part of the learner
-solution path.
+Maintainers can run `node scripts/standalone-labctl.mjs smoke <lab-id>`.
+It temporarily supplies expected flags to assert the solution and negative
+cases. It is an automated test, not a learner step. See the
+[design research](../docs/CURRICULUM-DESIGN.md) for the teaching rationale.
