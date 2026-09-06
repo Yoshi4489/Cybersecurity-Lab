@@ -32,6 +32,7 @@ assert_eq "$(printf '%s' "$manifest_body" | sed -n 's/^objective_flag=//p')" "$F
 # 2) bundle: checksum, extract, peel double base64
 curl -fsS "$base/artifact/cache.tar" -o "$work/cache.tar"
 archive_sha="$(sha256sum "$work/cache.tar" | cut -d ' ' -f 1)"
+assert_eq "$archive_sha" "$(curl -fsS "$base/manifest" | jq -r .archive_sha256)"
 mkdir "$work/unpacked"
 tar -xf "$work/cache.tar" -C "$work/unpacked"
 bundle_body="$(base64 -d "$work/unpacked/cipher-08/payload.b64" | base64 -d)"
@@ -53,4 +54,9 @@ final="$(curl -fsS -X POST \
   "$base/final" | sed -n 's/^final_flag=//p')"
 assert_eq "$final" "$FLAG_L08_FINAL"
 
-echo "08-cipher-locker smoke: PASS"
+# Missing evidence must never release the final proof.
+status=$(curl -sS -o /tmp/negative-report-$ -w '%{http_code}' -X POST  'http://cipher-vault:8080/final')
+test "$status" = "403"
+! grep -q 'RLAB{' /tmp/negative-report-$
+
+echo "08 smoke: positive chain and incomplete report passed"

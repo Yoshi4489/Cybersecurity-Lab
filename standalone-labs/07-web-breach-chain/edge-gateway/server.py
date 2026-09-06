@@ -106,7 +106,7 @@ class Handler(BaseHTTPRequestHandler):
                 "<html><head><title>ApertureOps Portal</title></head>\n"
                 "<body>\n"
                 "  <h1>ApertureOps Operations Portal</h1>\n"
-                "  <p>Public status page. Authenticated areas require staff sign-in.</p>\n"
+                "  <p>Northstar Shipping | ApertureOps support incident AP-07. Review how a report reaches a staff session.</p>\n"
                 "  <!-- TODO(dev): staging helper /api/dev/hello is still reachable, remove before GA -->\n"
                 "  <p>Trouble? File a report through <a href=\"/support?msg=hello\">/support</a>.</p>\n"
                 "</body></html>\n",
@@ -166,6 +166,7 @@ class Handler(BaseHTTPRequestHandler):
         if "<script" in report and "document.cookie" in report:
             self.send_text(
                 200,
+                "simulation=The training rule recognized a script reading document.cookie; no browser executed it.\n"
                 "analyst reviewed your report in their session\n"
                 f"stolen_cookie=session={ANALYST_JWT}\n"
                 f"foothold_token={FOOTHOLD_TOKEN}\n"

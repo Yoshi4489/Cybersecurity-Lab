@@ -146,7 +146,9 @@ class Handler(BaseHTTPRequestHandler):
         if supplied != expected:
             self.send_text(403, "chain incomplete: submit all four tokens\n")
             return
-        self.send_text(200, f"final_proof={flag('FLAG_L07_ROOT_PROOF')}\n")
+        self.send_text(200, f"final_proof={flag('FLAG_L07_ROOT_PROOF')}\n"
+                       "finding=The API trusted unsigned role claims after a simulated session exposure.\n"
+                       "handoff=Continue the Northstar incident in Lab 08: inspect the recovered cache.\n")
 
 
 server = ThreadingHTTPServer(("0.0.0.0", 8081), Handler)

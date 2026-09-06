@@ -19,7 +19,8 @@ CARVE_TOKEN = "locker-sable-71"
 
 # Single base64 layer for the manifest payload.
 MANIFEST_PAYLOAD = base64.b64encode(
-    f"manifest_token={MANIFEST_TOKEN}\nobjective_flag={MANIFEST_FLAG}\n".encode()
+    f"manifest_token={MANIFEST_TOKEN}\nobjective_flag={MANIFEST_FLAG}\n"
+    "case=AP-08\nartifact=/artifact/cache.tar\nencoding=base64-twice\n".encode()
 ).decode()
 
 
@@ -42,10 +43,12 @@ def make_archive():
         add_file(
             archive,
             "cipher-08/README.txt",
-            "Synthetic cache CACHE-08. Peel the payload, then carve the binary. Do not escalate.\n",
+            "Northstar ApertureOps incident AP-08. This cache was recovered after the support review.\n"
+            "The export wrapper encoded payload.b64 twice; decode both layers.\n"
+            "Then inspect printable evidence in session.bin without executing it.\n",
         )
         # payload.b64 is base64 wrapped twice: base64 -d | base64 -d recovers the tokens.
-        inner = f"bundle_token={BUNDLE_TOKEN}\nobjective_flag={BUNDLE_FLAG}\n".encode()
+        inner = f"bundle_token={BUNDLE_TOKEN}\nobjective_flag={BUNDLE_FLAG}\nnext=session.bin\n".encode()
         double = base64.b64encode(base64.b64encode(inner))
         add_file(archive, "cipher-08/payload.b64", double + b"\n", 0o400)
         # session.bin hides printable evidence between non-printable bytes.
@@ -81,16 +84,15 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/":
             self.reply(
                 200,
-                "cipher-vault: recover the cache.\n"
-                "1) GET /manifest and decode the base64 payload field\n"
-                "2) GET /artifact/cache.tar, checksum it, extract it, peel payload.b64\n"
-                "3) carve session.bin for printable evidence\n"
-                "4) POST the three tokens plus archive_sha256 to /final\n",
+                "Northstar ApertureOps | AP-08 recovered export cache\n"
+                "The response team preserved the handover at /manifest.\n"
+                "Follow its artifact reference and compare the recorded hash before analysis.\n"
+                "Case reports go to POST /final with manifest, bundle, carve, archive_sha256.\n",
             )
         elif path == "/manifest":
             self.reply(
                 200,
-                json.dumps({"note": "base64-decode the payload field", "payload": MANIFEST_PAYLOAD}) + "\n",
+                json.dumps({"case": "AP-08", "note": "base64-decode the payload field", "payload": MANIFEST_PAYLOAD, "archive_sha256": ARCHIVE_SHA256}) + "\n",
                 "application/json; charset=utf-8",
             )
         elif path == "/artifact/cache.tar":
