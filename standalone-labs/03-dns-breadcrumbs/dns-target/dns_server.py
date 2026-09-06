@@ -64,7 +64,8 @@ def records():
                 TYPE_TXT,
                 txt(
                     f"address_token={ADDRESS_TOKEN} "
-                    f"objective_flag={required('FLAG_L03_ADDRESS_TRAIL')}"
+                    f"objective_flag={required('FLAG_L03_ADDRESS_TRAIL')} "
+                    "next=recon.test/MX purpose=Find-the-vault-mail-owner"
                 ),
             )
         ],
@@ -75,7 +76,8 @@ def records():
                 TYPE_TXT,
                 txt(
                     f"mail_token={MAIL_TOKEN} "
-                    f"objective_flag={required('FLAG_L03_MAIL_TRAIL')}"
+                    f"objective_flag={required('FLAG_L03_MAIL_TRAIL')} "
+                    "next=_ops._tcp.recon.test/SRV purpose=Locate-the-operations-vault"
                 ),
             )
         ],
@@ -88,7 +90,8 @@ def records():
                 TYPE_TXT,
                 txt(
                     f"service_token={SERVICE_TOKEN} "
-                    f"objective_flag={required('FLAG_L03_SERVICE_TRAIL')}"
+                    f"objective_flag={required('FLAG_L03_SERVICE_TRAIL')} "
+                    "next=http://172.28.3.30:8088/"
                 ),
             )
         ],

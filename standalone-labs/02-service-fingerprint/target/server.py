@@ -58,7 +58,9 @@ class HttpHandler(BaseHTTPRequestHandler):
         if self.server.server_port == 8000 and parsed.path == "/":
             body = (
                 "<html><head><title>Quartz Inventory Console</title></head>"
-                "<body><h1>Synthetic service inventory</h1>"
+                "<body><h1>Northstar Shipping: unmanaged service inventory</h1>"
+                "<p>Case NS-02: identify the owner of every listener. Port 2222 is a banner-only SSH simulator.</p>"
+                "<p>Next: inspect the ledger on TCP 31337 for its version and handover.</p>"
                 f"<p>port_token={PORT_TOKEN}</p>"
                 f"<p>objective_flag={flag('FLAG_L02_FULL_PORT_MAP')}</p>"
                 "</body></html>\n"
@@ -69,7 +71,8 @@ class HttpHandler(BaseHTTPRequestHandler):
         if self.server.server_port == 8443 and parsed.path == "/":
             body = (
                 "<html><head><title>Ember Operations Portal</title></head>"
-                "<body>Lab-only HTTP metadata endpoint.</body></html>\n"
+                "<body>Northstar operations metadata. Compare the response headers with the inventory. "
+                "Report at http://service-farm:8000/final using ports, version, metadata tokens.</body></html>\n"
             )
             self.send_text(
                 200,
@@ -105,6 +108,8 @@ class BannerHandler(socketserver.BaseRequestHandler):
         else:
             payload = (
                 "SYNTH-LEDGER/5.7 ready\r\n"
+                "owner=Northstar legacy operations\r\n"
+                "next=HTTP metadata on port 8443; despite its number this lab uses plain HTTP.\r\n"
                 f"version_token={VERSION_TOKEN}\r\n"
                 f"objective_flag={flag('FLAG_L02_VERSION_LEDGER')}\r\n"
             )

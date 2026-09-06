@@ -47,4 +47,9 @@ assert_contains "$service" "$FLAG_L03_SERVICE_TRAIL"
 final=$(curl -fsS 'http://172.28.3.30:8088/final?address=address-iris-30&mail=mail-kestrel-25&service=service-vault-8088')
 assert_contains "$final" "$FLAG_L03_DNS_PROOF"
 
-echo "03-dns-breadcrumbs smoke: PASS"
+# Missing evidence must never release the final proof.
+status=$(curl -sS -o /tmp/negative-report-$ -w '%{http_code}' -X GET  'http://172.28.3.30:8088/final')
+test "$status" = "403"
+! grep -q 'RLAB{' /tmp/negative-report-$
+
+echo "03 smoke: positive chain and incomplete report passed"

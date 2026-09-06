@@ -15,6 +15,8 @@ assert_contains() {
   }
 }
 
+nmap -sT -Pn -p7070,8080,9090 triage-node -oN /tmp/triage-scan >/dev/null
+grep -Eq '^9090/tcp +open' /tmp/triage-scan
 resolved=$(getent hosts triage-node)
 assert_contains "$resolved" "172.28.1.20"
 
@@ -33,4 +35,9 @@ assert_contains "$operator" "$FLAG_L01_OPERATOR_CONSOLE"
 final=$(curl -fsS 'http://triage-node:8080/final?segment=segment-cobalt-41&beacon=beacon-lantern-27&operator=operator-sable-63')
 assert_contains "$final" "$FLAG_L01_TRIAGE_PROOF"
 
-echo "01-network-triage smoke: PASS"
+# Missing evidence must never release the final proof.
+status=$(curl -sS -o /tmp/negative-report-$ -w '%{http_code}' -X GET  'http://triage-node:8080/final')
+test "$status" = "403"
+! grep -q 'RLAB{' /tmp/negative-report-$
+
+echo "01 smoke: positive chain and incomplete report passed"

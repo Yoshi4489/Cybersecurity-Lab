@@ -39,13 +39,15 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if self.server.server_port == 8080 and parsed.path == "/":
-            self.send_text(200, "triage-node: start with /network\n")
+            self.send_text(200, "Northstar Shipping | Incident NS-01\nThe monitoring agent stopped reporting. Start with /network to read the handover.\n")
             return
 
         if self.server.server_port == 8080 and parsed.path == "/network":
             self.send_text(
                 200,
-                "scope=172.28.1.0/24\n"
+                "case=NS-01\nscope=172.28.1.0/24\n"
+                "finding=The diagnostics host is reachable; inventory its listening services.\n"
+                "next=Inspect TCP port 9090 with nc -w 3 triage-node 9090. It speaks plain text, not HTTP.\n"
                 f"segment_token={SEGMENT_TOKEN}\n"
                 f"objective_flag={flag('FLAG_L01_NETWORK_BASELINE')}\n",
             )
@@ -54,6 +56,8 @@ class Handler(BaseHTTPRequestHandler):
         if self.server.server_port == 7070 and parsed.path == "/operator":
             self.send_text(
                 200,
+                "finding=An unauthenticated operator console remains exposed.\n"
+                "next=GET http://triage-node:8080/final with segment, beacon, operator query fields.\n"
                 f"operator_token={OPERATOR_TOKEN}\n"
                 f"objective_flag={flag('FLAG_L01_OPERATOR_CONSOLE')}\n",
             )
@@ -79,6 +83,8 @@ class BeaconHandler(socketserver.BaseRequestHandler):
     def handle(self):
         payload = (
             "TRIAGE-BEACON/2.1\r\n"
+            "finding=The agent is broadcasting its handover without authentication.\r\n"
+            "next=http://triage-node:7070/operator (HTTP; use curl)\r\n"
             f"service_token={SERVICE_TOKEN}\r\n"
             f"objective_flag={flag('FLAG_L01_SERVICE_BEACON')}\r\n"
         )

@@ -28,7 +28,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_text(200, "ok\n")
             return
         if parsed.path == "/":
-            self.send_text(200, "Hidden vault online. Correlate DNS artifacts before requesting /final.\n")
+            self.send_text(200, "Northstar legacy vault | NS-03\nThe old dashboard alias still points here.\nReport at /final using address, mail, service query fields collected from DNS.\n")
             return
         if parsed.path == "/final":
             query = parse_qs(parsed.query)

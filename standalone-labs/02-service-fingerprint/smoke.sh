@@ -30,4 +30,9 @@ assert_contains "$metadata" "$FLAG_L02_HTTP_METADATA"
 final=$(curl -fsS 'http://service-farm:8000/final?ports=ports-quartz-2222-8000-8443-31337&version=version-heron-5.7&metadata=metadata-ember-console')
 assert_contains "$final" "$FLAG_L02_FINGERPRINT_PROOF"
 
-echo "02-service-fingerprint smoke: PASS"
+# Missing evidence must never release the final proof.
+status=$(curl -sS -o /tmp/negative-report-$ -w '%{http_code}' -X GET  'http://service-farm:8000/final')
+test "$status" = "403"
+! grep -q 'RLAB{' /tmp/negative-report-$
+
+echo "02 smoke: positive chain and incomplete report passed"

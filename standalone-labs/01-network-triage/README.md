@@ -1,56 +1,172 @@
-# Lab 01 — Network Triage: First Contact
+# Lab 01 — First Contact at Northstar Shipping
 
-Practice building a **network baseline** from a Linux toolbox and using a **TCP
-connect scan** (`nmap -sT`) to explore a target inside an isolated, offline Docker
-network. Every hostname, IP, token, and flag is **synthetic** and exists only for
-this lab.
+**Level:** Complete beginner
 
-## Before you start
+**Mode:** Guided investigation
 
-New to these labs? Read the **[setup guide](../GETTING-STARTED.md)** first — it
-covers installing Node.js and Docker, the two-terminal workflow, and how flags and
-`verify` work.
+**Time:** 35–45 minutes
 
-Start the lab and open the toolbox (run from the project root):
+**Skills:** network basics, hostnames, ports, HTTP, raw TCP
+
+## Scenario
+
+It is your first shift on Northstar Shipping's security team. A monitoring agent
+stopped reporting from a diagnostics server named `triage-node`. The operations
+team knows the server hosts several services, but its handover notes are missing.
+
+Your job is to rebuild the service map, inspect each discovered service with the
+right client, and give the incident lead one final proof assembled from your
+evidence.
+
+The investigation is one connected chain:
+
+```text
+your network → resolve triage-node → discover ports → inspect each service → combine evidence
+```
+
+Nothing here assumes you already know `nmap`, `curl`, or `nc`. Read the short
+tool briefing before starting the objectives.
+
+## What you need to know
+
+- An **IP address** identifies a host on a network.
+- A **port** identifies a service on that host, much like a numbered door.
+- `getent hosts NAME` asks Linux to resolve a hostname to an IP address.
+- `nmap -sT` attempts normal TCP connections and reports which ports accept them.
+- Without version detection, Nmap's SERVICE column is a guess based on the port
+  number. Confirm the protocol by reading the service's response and handover.
+- `curl` speaks HTTP, so use it when a discovered service is a website or API.
+- `nc` (netcat) opens a plain TCP connection. Use it when a service sends raw
+  text instead of HTTP. In this lab it only reads a banner and then exits.
+
+That is why the workflow changes tools: the scan tells you which doors are open,
+and the service type tells you which client can understand what is behind a door.
+
+Begin at the prompt: a terminal accepts commands, and Enter runs one command.
+`pwd` shows your folder, `ls` lists files, and `cd` changes folder.
+
+An HTTP URL such as `http://triage-node:8080/network` means protocol, hostname, port, and page path.
+
+`-sT` uses ordinary TCP connections; `-Pn` skips ping discovery; `-p-` checks all TCP ports. This is connection scanning, not packet capture.
+
+`curl -fsS` downloads an HTTP response and reports errors. In `nc -w 3`, `-w` limits waiting to three seconds; `</dev/null` supplies no keyboard input.
+
+Quotes keep a URL's `&` characters together; query fields after `?` send named values. The first flag needs only resolution, a scan, and HTTP; each later service is announced by an earlier response.
+
+## Start the lab
+
+Read the [setup guide](../GETTING-STARTED.md) first. The commands below start in a **host terminal**.
+
+From the project directory, start the range and enter its toolbox:
 
 ```sh
 node scripts/standalone-labctl.mjs start 01-network-triage
 node scripts/standalone-labctl.mjs shell 01-network-triage
 ```
 
-You are now **inside** the toolbox. Keep a **second terminal** open in the project
-folder — that's where you submit flags with `verify`. Run the recon commands below
-inside the toolbox; run each `verify` in the second terminal. Authorized scope is
-`172.28.1.0/24` only — don't point these commands at any other system.
+Run investigation commands inside the toolbox. Keep a second terminal in the
+project directory for `verify` commands. Your authorized scope is only
+`triage-node` and `172.28.1.0/24`.
 
-## What you're collecting
+## Objectives
 
-Each stage shows you **two** things:
+### Flag 1 — Build the network baseline (`network-baseline`)
 
-- a `*_token=...` value — save these; you'll chain them into the final URL.
-- an `objective_flag=RLAB{...}` value — this is what you submit with `verify`.
+Answer these questions before submitting the flag:
 
-Objectives are gated in order: `network-baseline → service-beacon →
-operator-console → triage-proof`.
+1. Which subnet is connected to your toolbox?
+2. Which IP address belongs to `triage-node`?
+3. Which TCP ports are open on it?
+4. What does the HTTP `/network` page report?
 
-## Walkthrough
-
-### 1. Map the network and read the discovery page (`network-baseline`)
-
-Look at your interfaces, routes, local listeners, and name resolution, then scan
-the target and read its `/network` page:
+Save the `segment_token`; it is evidence for the final objective. Submit the
+`objective_flag` from the page:
 
 ```sh
-ip -brief addr                       # your addresses
-ip route                             # your routes
-ss -lntup                            # local listening sockets
-getent hosts triage-node             # resolve the target name to an IP
-nmap -sT -Pn -p- triage-node         # TCP connect scan, all ports
+node scripts/standalone-labctl.mjs verify 01-network-triage network-baseline 'RLAB{...}'
+```
+
+### Flag 2 — Identify the unknown TCP service (`service-beacon`)
+
+One discovered port is not a website. Connect to it, identify the banner, and
+save its `service_token`. Submit the objective flag returned by that service.
+
+### Flag 3 — Find the operator console (`operator-console`)
+
+Another discovered port serves HTTP. Find the operator page, record its
+`operator_token`, and submit its objective flag.
+
+### Flag 4 — Close the triage case (`triage-proof`)
+
+The main web service has a `/final` route. Supply the three tokens collected in
+the earlier objectives to prove that your service map is complete.
+
+## Hints
+
+Use hints in order. Stop as soon as you know what to try next.
+
+<details>
+<summary>Hints for Flag 1 — network-baseline</summary>
+
+1. Start with `ip -brief addr` and `ip route`; these describe your side of the network.
+2. Resolve the target with `getent hosts triage-node`, then scan it with `nmap -sT -Pn`.
+3. The complete command path is `nmap -sT -Pn -p- triage-node`, followed by
+   `curl http://triage-node:8080/network`.
+
+</details>
+
+<details>
+<summary>Hints for Flag 2 — service-beacon</summary>
+
+1. Review the open ports. The raw TCP beacon is the service on port `9090`.
+2. HTTP clients expect HTTP syntax; netcat simply shows bytes sent by a TCP server.
+3. Run `nc -w 3 triage-node 9090 </dev/null`.
+
+</details>
+
+<details>
+<summary>Hints for Flag 3 — operator-console</summary>
+
+1. The remaining HTTP service is on port `7070`.
+2. The page name matches the people who maintain the server.
+3. Run `curl http://triage-node:7070/operator`.
+
+</details>
+
+<details>
+<summary>Hints for Flag 4 — triage-proof</summary>
+
+1. This objective checks evidence from all three earlier services; it does not require a new scan.
+2. The query parameter names are `segment`, `beacon`, and `operator`.
+3. Request `/final?segment=...&beacon=...&operator=...` on port `8080`.
+
+</details>
+
+## Solution
+
+Try the objectives and hints first. The commands below are the complete path.
+
+### 1. Establish the baseline (`network-baseline`)
+
+**Toolbox:**
+
+```sh
+ip -brief addr
+ip route
+getent hosts triage-node
+nmap -sT -Pn -p- triage-node
 curl -fsS http://triage-node:8080/network
 ```
 
-The `curl` output prints `segment_token=...` (save it) and
-`objective_flag=RLAB{...}`. Submit the flag (second terminal):
+Record `segment_token=...` and verify the displayed `objective_flag`.
+
+Expected observations: the toolbox is on 172.28.1.0/24, triage-node resolves to
+172.28.1.20, and ports 7070, 8080, and 9090 are open. The SERVICE column may show
+realserver, http-proxy, and zeus-admin; these are port-name guesses. The network
+handover explicitly identifies 9090 as plain TCP and tells you to use nc.
+No default internet route is expected in this isolated network.
+
+**Host terminal — submit this stage's displayed flag:**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 01-network-triage network-baseline 'RLAB{...}'
@@ -58,64 +174,68 @@ node scripts/standalone-labctl.mjs verify 01-network-triage network-baseline 'RL
 
 ### 2. Read the raw TCP beacon (`service-beacon`)
 
-Your full-port scan revealed a raw service on `9090`. Read its banner:
+**Toolbox:**
 
 ```sh
-nc -w 3 triage-node 9090 </dev/null   # prints service_token + objective_flag
+nc -w 3 triage-node 9090 </dev/null
 ```
 
-Save `service_token=...`, then verify the flag:
+`nc` is used here because port `9090` returns a plain-text TCP banner, not an
+HTTP response. Record `service_token=...` and verify the displayed flag.
+
+**Host terminal — submit this stage's displayed flag:**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 01-network-triage service-beacon 'RLAB{...}'
 ```
 
-### 3. Find the operator console (`operator-console`)
+### 3. Read the HTTP operator console (`operator-console`)
 
-Another port hosts a second HTTP console on `7070`:
+**Toolbox:**
 
 ```sh
-curl -fsS http://triage-node:7070/operator   # prints operator_token + objective_flag
+curl -fsS http://triage-node:7070/operator
 ```
 
-Save `operator_token=...`, then verify:
+Record `operator_token=...` and verify the displayed flag.
+
+**Host terminal — submit this stage's displayed flag:**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 01-network-triage operator-console 'RLAB{...}'
 ```
 
-### 4. Chain the three tokens into the final proof (`triage-proof`)
+### 4. Combine the evidence (`triage-proof`)
 
-Feed the three saved **tokens** to the `/final` route. It answers `403` until all
-three match:
+**Toolbox:**
 
 ```sh
-curl -fsS 'http://triage-node:8080/final?segment=<segment_token>&beacon=<service_token>&operator=<operator_token>'
+curl -fsS 'http://triage-node:8080/final?segment=<segment-token>&beacon=<service-token>&operator=<operator-token>'
 ```
 
-Replace each `<...>` with the token value you saved. The response prints
-`final_flag=RLAB{...}` — verify it:
+Replace each placeholder with the value you recorded, then verify the returned
+`final_flag`:
+
+**Host terminal — submit this stage's displayed flag:**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 01-network-triage triage-proof 'RLAB{...}'
 ```
 
-## Verify & reset
+## What this taught you
+
+Next: Lab 02. Record a one-sentence explanation of how your evidence led to each new command before moving on.
+
+You did not use disconnected commands. You followed a normal triage decision
+tree: understand your network, resolve the named asset, discover services, choose
+a protocol-appropriate client, and correlate the evidence. Defenders can detect
+similar scans as bursts of connection attempts and reduce exposure with network
+segmentation, host firewalls, and fewer diagnostic listeners.
+
+## Stop or reset
 
 ```sh
-node scripts/standalone-labctl.mjs status 01-network-triage   # see progress
-node scripts/standalone-labctl.mjs reset  01-network-triage   # fresh flags, clean run
-node scripts/standalone-labctl.mjs stop   01-network-triage   # shut it down
+node scripts/standalone-labctl.mjs status 01-network-triage
+node scripts/standalone-labctl.mjs reset 01-network-triage
+node scripts/standalone-labctl.mjs stop 01-network-triage
 ```
-
-`smoke` (`node scripts/standalone-labctl.mjs smoke 01-network-triage`) is a
-maintainer/CI self-check that auto-solves the lab; it is not part of learning.
-
-## Detection / remediation
-
-- Scanning every TCP port creates a burst of short-lived connection attempts.
-  Firewall and flow logs can reveal that fan-out pattern.
-- Reduce exposure with network segmentation, host firewalls, authenticated service
-  discovery, and by shutting down unnecessary diagnostic listeners.
-- This lab intentionally has no outbound route, publishes no target host ports, and
-  every container drops all Linux capabilities.
