@@ -20,6 +20,7 @@ grep -q '^case=EV-55$' "$work/manifest"
 
 curl -fsS "$base/case-55.tar" -o "$work/case-55.tar"
 archive_sha="$(sha256sum "$work/case-55.tar" | cut -d ' ' -f 1)"
+test "$archive_sha" = "$(sed -n 's/^sha256=//p' "$work/manifest")"
 tar -tf "$work/case-55.tar" | grep -q 'case-55/logs/access.log'
 mkdir "$work/unpacked"
 tar -xf "$work/case-55.tar" -C "$work/unpacked"
@@ -49,4 +50,9 @@ final="$(curl -fsS -X POST \
   "$base/final" | sed -n 's/^final_proof=//p')"
 test "$final" = "$LAB05_FINAL_FLAG"
 
-echo "lab 05 smoke: all chained objectives passed"
+# Missing evidence must never release the final proof.
+status=$(curl -sS -o /tmp/negative-report-$ -w '%{http_code}' -X POST  'http://172.30.55.55:8080/final')
+test "$status" = "403"
+! grep -q 'RLAB{' /tmp/negative-report-$
+
+echo "05 smoke: positive chain and incomplete report passed"

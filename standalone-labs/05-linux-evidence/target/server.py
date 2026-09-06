@@ -33,11 +33,14 @@ def make_archive():
         add_file(
             archive,
             "case-55/README.txt",
-            "Synthetic evidence case EV-55. Work as the unprivileged analyst; do not escalate.\n",
+            "Northstar Shipping incident EV-55: review a web access burst.\n"
+            "First inventory file permissions and decode the hidden handoff note.\n"
+            "Analyze copies; never execute the session artifact.\n",
             0o444,
             1786579200,
         )
-        encoded = base64.b64encode(f"filesystem_proof={FILESYSTEM_FLAG}\n".encode())
+        encoded = base64.b64encode(f"filesystem_proof={FILESYSTEM_FLAG}\nnext=logs/access.log\n"
+                                    "question=Which source made the most requests? Follow its proof path and inspect artifacts/session.bin.\n".encode())
         add_file(archive, "case-55/notes/.handoff.b64", encoded + b"\n", 0o400, 1786579260)
         logs = "".join(
             [
@@ -88,7 +91,8 @@ class Handler(BaseHTTPRequestHandler):
             with open(ARCHIVE_PATH, "rb") as archive_file:
                 self.reply(200, archive_file.read(), "application/x-tar")
         elif self.path == "/manifest":
-            self.reply(200, "case=EV-55\nsource=read-only-runtime-generated\nartifact=/case-55.tar\n")
+            self.reply(200, f"case=EV-55\nsource=read-only-runtime-generated\nartifact=/case-55.tar\nsha256={ARCHIVE_SHA256}\n"
+                       "report=POST /final with filesystem, logs, binary, top_source, archive_sha256, case\n")
         else:
             self.reply(404, "not found\n")
 

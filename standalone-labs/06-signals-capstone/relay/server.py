@@ -35,7 +35,8 @@ def make_bundle():
             archive,
             "signals-66/manifest.txt",
             f"case=SG-66\nhttp_proof={HTTP_FLAG}\n"
-            "analysis=group field 1, then inspect the winning actor's successful event path\n",
+            "analysis=group field 1, then inspect the winning actor's successful event path\n"
+            "report=POST /final with dns, nmap, http, ports, actor, event, bundle_sha256, case\n",
         )
         events = "".join(
             [
@@ -92,6 +93,7 @@ class Handler(BaseHTTPRequestHandler):
                         "X-Service-Proof": NMAP_FLAG,
                         "X-Artifact-Path": "/artifact/signals-bundle.tar",
                         "X-Artifact-Port": "8080",
+                        "X-Artifact-SHA256": BUNDLE_SHA256,
                     },
                 )
             else:
@@ -107,7 +109,7 @@ class Handler(BaseHTTPRequestHandler):
                     {"X-Artifact-Case": "SG-66", "X-Artifact-Read-Only": "true"},
                 )
         elif self.path == "/":
-            self.reply(200, "Signal artifact vault. Discover the artifact route from mapped services.\n")
+            self.reply(200, "Northstar Shipping | SG-66 relay investigation\nDiscover the artifact route from mapped services.\n")
         else:
             self.reply(404, "not found\n")
 

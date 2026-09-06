@@ -36,7 +36,7 @@ class Handler(BaseHTTPRequestHandler):
                 "Submit authority, transfer, and vhost proofs to POST /final.\n",
             )
             return
-        self._reply(200, "Synthetic operations archive. Follow the DNS-disclosed route.\n")
+        self._reply(200, "Northstar acquisition archive | ZT-44\nThis virtual host was exposed through DNS replication. Follow the DNS-disclosed route.\n")
 
     def do_POST(self):
         if not self._valid_host() or self.path != "/final":

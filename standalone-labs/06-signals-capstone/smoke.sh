@@ -42,6 +42,8 @@ test "$artifact_path" = "/artifact/signals-bundle.tar"
 
 curl -fsS "http://$relay:8080$artifact_path" -o "$work/signals-bundle.tar"
 bundle_sha="$(sha256sum "$work/signals-bundle.tar" | cut -d ' ' -f 1)"
+reference=$(curl -fsS -D - -o /dev/null "http://$relay:9090/" | sed -n 's/^X-Artifact-SHA256: *//Ip' | tr -d '\r')
+test "$bundle_sha" = "$reference"
 tar -tf "$work/signals-bundle.tar" | grep -q 'signals-66/logs/relay-access.log'
 mkdir "$work/unpacked"
 tar -xf "$work/signals-bundle.tar" -C "$work/unpacked"
@@ -67,4 +69,9 @@ final="$(curl -fsS -X POST \
   "http://$relay:8080/final" | sed -n 's/^final_proof=//p')"
 test "$final" = "$LAB06_FINAL_FLAG"
 
-echo "lab 06 smoke: DNS, Nmap, HTTP, and log chain passed"
+# Missing evidence must never release the final proof.
+status=$(curl -sS -o /tmp/negative-report-$ -w '%{http_code}' -X POST  'http://172.30.66.90:8080/final')
+test "$status" = "403"
+! grep -q 'RLAB{' /tmp/negative-report-$
+
+echo "06 smoke: positive chain and incomplete report passed"

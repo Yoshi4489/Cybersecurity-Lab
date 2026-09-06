@@ -1,104 +1,181 @@
 # Lab 06 — Signals in the Noise
 
-A standalone **capstone** that chains evidence end to end: DNS zone transfer →
-Nmap TCP connect service mapping → HTTP artifact retrieval → Linux log
-correlation. All data, IPs, and domains are synthetic and live only on an internal
-Docker network.
+**Level:** Intermediate
 
-## Before you start
+**Mode:** Investigation capstone
 
-New to these labs? Read the **[setup guide](../GETTING-STARTED.md)** first — it
-covers installing Node.js and Docker, the two-terminal workflow, and how flags and
-`verify` work.
+**Time:** 75–90 minutes
 
-Start the lab and open the toolbox (run from the project root):
+**Recommended first:** Labs 01–05
+
+**Skills:** DNS exposure, service mapping, artifact acquisition, log correlation
+
+## Scenario
+
+Northstar Shipping detected repeated connections to a forgotten relay in the
+`signals.test` environment. No single alert proves an incident. The DNS team has
+an unusual transfer log, network monitoring sees two open web ports, and the
+response team has not yet retrieved the relay's evidence bundle.
+
+Act as the incident investigator. Build one defensible timeline by connecting the
+signals instead of treating them as separate puzzles:
+
+```text
+DNS disclosure → relay address → service map → evidence bundle → actor/event correlation
+```
+
+## What you need to know
+
+This capstone deliberately reuses earlier skills:
+
+- Lab 03: DNS queries and interpreting record types.
+- Lab 04: why an open AXFR discloses a zone.
+- Labs 01–02: TCP connect scans, HTTP headers, and saved scan evidence.
+- Lab 05: hashing archives and counting/correlating log fields.
+
+Use `nmap -sT` only. The toolbox has no raw-socket capability. If any tool feels
+unfamiliar, revisit its earlier guided lab before continuing.
+
+`awk` selects fields and rows; `sed` extracts an event ID from a matching path. These are the field-analysis skills introduced in Lab 05. An actor can make several successful requests: select the successful /events/ path specifically.
+
+## Start the lab
+
+Read the [setup guide](../GETTING-STARTED.md) first. The commands below start in a **host terminal**.
 
 ```sh
 node scripts/standalone-labctl.mjs start 06-signals-capstone
 node scripts/standalone-labctl.mjs shell 06-signals-capstone
 ```
 
-You are now **inside** the toolbox. Keep a **second terminal** open in the project
-folder for `verify`. Authorized scope is `172.30.66.0/24` only. The toolbox has no
-`NET_RAW`, so use TCP connect scans (`nmap -sT`) only.
+Investigate inside the toolbox and verify in a second project terminal. Authorized
+scope is only `signals.test` and `172.30.66.0/24`. Keep every early flag and the
+bundle hash because the final report validates the full evidence chain.
 
-> Each stage's proof value **is** the `RLAB{...}` flag: submit it with `verify`,
-> and reuse those same values in the final POST.
+## Objectives
 
-Objectives are gated in order: `dns-chain → service-map → http-artifact → final`.
+### Flag 1 — Recover the relay route (`dns-chain`)
 
-## Walkthrough
+Identify the authoritative DNS service, test whether the synthetic zone allows
+AXFR, and record the relay address, case ID, and DNS proof.
 
-### 1. Transfer the zone and recover the relay route (`dns-chain`)
+### Flag 2 — Map the relay (`service-map`)
 
-Find the authoritative server with two tools, then AXFR the synthetic zone and pull
-the proof record:
+Scan the disclosed relay address, identify all open services, and inspect the
+metadata service for the proof and artifact path.
+
+### Flag 3 — Preserve the HTTP artifact (`http-artifact`)
+
+Download the disclosed bundle, calculate its SHA-256 hash before extraction, and
+recover the HTTP proof from its manifest.
+
+### Flag 4 — Correlate the incident (`final`)
+
+Analyze the bundled relay log to find the busiest actor and that actor's successful
+event. Submit all earlier evidence as one case report.
+
+## Hints
+
+<details>
+<summary>Hints for Flag 1 — dns-chain</summary>
+
+1. The authoritative server is `172.30.66.53`; begin with SOA and NS queries.
+2. Attempt `AXFR` for `signals.test` and save it to `/tmp/signals.axfr`.
+3. Search the transfer for `_dns-proof`, A records, TXT records, and case `SG-66`.
+
+</details>
+
+<details>
+<summary>Hints for Flag 2 — service-map</summary>
+
+1. The transfer reveals the relay at `172.30.66.90`.
+2. Run an all-port TCP connect scan, then version detection only on open ports.
+3. Inspect port `9090` with `curl -i`; the proof and artifact path are HTTP headers.
+
+</details>
+
+<details>
+<summary>Hints for Flag 3 — http-artifact</summary>
+
+1. The metadata header points to a tar archive on port `8080`.
+2. Hash the downloaded bytes before extracting them.
+3. Extract the bundle and find `http_proof=` in `signals-66/manifest.txt`.
+
+</details>
+
+<details>
+<summary>Hints for Flag 4 — final</summary>
+
+1. Count the first field of `relay-access.log`; then inspect successful requests from the top actor.
+2. The dominant actor is `relay-7`, and its successful event is `EVT-6604`.
+3. POST the three flags, `ports=8080,9090`, actor, event, hash, and `case=SG-66` to `/final`.
+
+</details>
+
+## Solution
+
+### 1. Transfer the synthetic zone (`dns-chain`)
+
+**Toolbox:**
 
 ```sh
 dig @172.30.66.53 signals.test SOA
 nslookup -type=ns signals.test 172.30.66.53
 dig @172.30.66.53 signals.test AXFR | tee /tmp/signals.axfr
-grep '_dns-proof' /tmp/signals.axfr                       # the flag for this stage
-awk '$4 == "A" || $4 == "TXT" {print}' /tmp/signals.axfr  # note relay.signals.test + case SG-66
+grep '_dns-proof' /tmp/signals.axfr
+awk '$4 == "A" || $4 == "TXT" {print}' /tmp/signals.axfr
 ```
 
-Verify the `_dns-proof` value (second terminal):
+**Host terminal — submit this stage's displayed flag:**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 06-signals-capstone dns-chain 'RLAB{...}'
 ```
 
-### 2. Map the relay services (`service-map`)
+### 2. Map the disclosed relay (`service-map`)
 
-Connect-scan the relay host the zone disclosed (`172.30.66.90`), then read the HTTP
-metadata on `9090`. The flag arrives as a response **header**:
+**Toolbox:**
 
 ```sh
-nmap -sT -Pn -p- 172.30.66.90 -oN /tmp/relay-ports.nmap    # finds 8080 and 9090
+nmap -sT -Pn -p- 172.30.66.90 -oN /tmp/relay-ports.nmap
 nmap -sT -Pn -sV -p 8080,9090 --script http-title,http-headers 172.30.66.90
 curl -i http://172.30.66.90:9090/
 ```
 
-In the `curl -i` output, `X-Service-Proof:` is the flag and `X-Artifact-Path:`
-points to the bundle you'll fetch next. Verify the service-map flag:
+Record `X-Service-Proof` and `X-Artifact-Path`.
+
+**Host terminal — submit this stage's displayed flag:**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 06-signals-capstone service-map 'RLAB{...}'
 ```
 
-### 3. Acquire and verify the evidence bundle (`http-artifact`)
+### 3. Acquire and inspect the evidence (`http-artifact`)
 
-Download the bundle from port `8080`, check its hash, extract it, and read the
-manifest proof:
+**Toolbox:**
 
 ```sh
 curl -fsS http://172.30.66.90:8080/artifact/signals-bundle.tar -o /tmp/signals-bundle.tar
-sha256sum /tmp/signals-bundle.tar          # save this hex value for the final step
-mkdir -p /tmp/signals && tar -xf /tmp/signals-bundle.tar -C /tmp/signals
+sha256sum /tmp/signals-bundle.tar
+# Compare with X-Artifact-SHA256 from step 2; stop if they differ.
+mkdir -p /tmp/signals
+tar -xf /tmp/signals-bundle.tar -C /tmp/signals
 grep '^http_proof=' /tmp/signals/signals-66/manifest.txt | cut -d= -f2-
 ```
 
-Verify the http-artifact flag:
+**Host terminal — submit this stage's displayed flag:**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 06-signals-capstone http-artifact 'RLAB{...}'
 ```
 
-### 4. Correlate the logs and submit everything (`final`)
+### 4. Correlate and report (`final`)
 
-Find the busiest actor in the bundled log, then its one successful event path. The
-top actor is `relay-7` and the correlated event is `EVT-6604`:
+**Toolbox:**
 
 ```sh
 LOG=/tmp/signals/signals-66/logs/relay-access.log
 cut -d ' ' -f1 "$LOG" | sort | uniq -c | sort -nr
 grep '^relay-7 ' "$LOG" | awk '$5 == 200 {print $4}' | sed -n 's#^/events/##p'
-```
-
-POST the three flags plus the correlated details (the endpoint refuses a single
-flag on its own):
-
-```sh
 curl -X POST \
   --data-urlencode 'dns=<dns-flag>' \
   --data-urlencode 'nmap=<service-map-flag>' \
@@ -111,26 +188,23 @@ curl -X POST \
   http://172.30.66.90:8080/final
 ```
 
-The response prints `final_proof=RLAB{...}` — verify it:
+**Host terminal — submit this stage's displayed flag:**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 06-signals-capstone final 'RLAB{...}'
 ```
 
-## Verify & reset
+## What this taught you
+
+Real investigations become useful when separate telemetry shares an asset, case,
+time, or actor. Reduce this attack path by restricting AXFR, minimizing banners,
+segmenting relay services, signing artifacts, and correlating DNS, flow, and
+application logs in one detection timeline.
+
+## Stop or reset
 
 ```sh
 node scripts/standalone-labctl.mjs status 06-signals-capstone
-node scripts/standalone-labctl.mjs reset  06-signals-capstone
-node scripts/standalone-labctl.mjs stop   06-signals-capstone
+node scripts/standalone-labctl.mjs reset 06-signals-capstone
+node scripts/standalone-labctl.mjs stop 06-signals-capstone
 ```
-
-`smoke` is a maintainer/CI self-check, not part of the solution path.
-
-## Detection / remediation
-
-- Disable public AXFR, minimize data in service banners/headers, verify artifact
-  hashes, and correlate DNS, network, and application logs by shared case ID and
-  timestamp.
-- The DNS and relay targets publish no host ports and have no internet egress; the
-  toolbox is limited to TCP connect scans.

@@ -43,4 +43,9 @@ final="$(curl -fsS -H 'Host: ops-archive.range.test' -X POST \
   http://172.30.44.80:8080/final | sed -n 's/^final_proof=//p')"
 test "$final" = "$LAB04_FINAL_FLAG"
 
-echo "lab 04 smoke: all chained objectives passed"
+# Missing evidence must never release the final proof.
+status=$(curl -sS -o /tmp/negative-report-$ -w '%{http_code}' -X POST -H 'Host: ops-archive.range.test' 'http://172.30.44.80:8080/final')
+test "$status" = "403"
+! grep -q 'RLAB{' /tmp/negative-report-$
+
+echo "04 smoke: positive chain and incomplete report passed"
