@@ -33,11 +33,23 @@ test("every objective has discoverable hints, a solution, and a host verificatio
     const objectives = text.split("## Objectives")[1].split("## Hints")[0];
     const hints = text.split("## Hints")[1].split("## Solution")[0];
     const solution = text.split("## Solution")[1].split("## What this taught you")[0];
+    const cleanup = text.split("## Stop or reset")[1];
+    assert.match(cleanup, /deletes this lab's progress and creates new flags/, lab.id);
+    assert.match(cleanup, /submitted progress stay the same/, lab.id);
+    for (const block of cleanup.matchAll(/```sh\n([\s\S]*?)```/g)) {
+      if (block[1].includes(" reset ")) {
+        assert.equal(block[1].trim(), `node scripts/standalone-labctl.mjs reset ${lab.id}`,
+          `${lab.id}: destructive reset must not be bundled with routine shutdown`);
+      }
+    }
     for (const objective of lab.objectives) {
       assert.ok(objectives.includes(objective.id), `${lab.id}: missing objective ${objective.id}`);
-      const hintBlock = hints.split("<details>").find((part) => part.split("</summary>")[0].includes(objective.id));
+      const hintBlock = hints.split(/^### /m).find((part) => part.split("\n")[0].includes(objective.id));
       assert.ok(hintBlock, `${lab.id}: missing hints for ${objective.id}`);
-      assert.equal((hintBlock.match(/^\d\. /gm) || []).length, 3, `${lab.id}/${objective.id}: progressive hints`);
+      const reveals = [...hintBlock.matchAll(/<details>\n<summary>Hint ([123]) — [^<]+<\/summary>\n\n([\s\S]*?)\n\n<\/details>/g)];
+      assert.deepEqual(reveals.map((match) => match[1]), ["1", "2", "3"], `${lab.id}/${objective.id}: reveal each hint independently`);
+      assert.ok(reveals.every((match) => match[2].trim()), `${lab.id}/${objective.id}: empty hint`);
+      assert.doesNotMatch(hintBlock, /<details\s+open/, `${lab.id}/${objective.id}: hints should start closed`);
       assert.ok(solution.includes(`verify ${lab.id} ${objective.id} 'RLAB{...}'`), `${lab.id}/${objective.id}: missing submission`);
     }
     // A block mixing host verification with toolbox commands causes beginner copy/paste failures.

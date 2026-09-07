@@ -75,39 +75,95 @@ Combine the port, version, and metadata tokens in the final inventory endpoint.
 
 ## Hints
 
-<details>
-<summary>Hints for Flag 1 — full-port-map</summary>
+### Flag 1 — full-port-map
 
-1. A default Nmap scan is not a complete port inventory.
-2. Use `-p-` for all ports and `-oA /tmp/service-farm-full` to keep evidence.
-3. After scanning, request `http://service-farm:8000/`.
+<details>
+<summary>Hint 1 — where to look</summary>
+
+A default Nmap scan is not a complete port inventory.
 
 </details>
 
 <details>
-<summary>Hints for Flag 2 — version-ledger</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. Add `-sV` to the scan of the open ports.
-2. Port `31337` is a raw banner, so use the same simple TCP client introduced in Lab 01.
-3. Run `nc -w 3 service-farm 31337 </dev/null`.
+Use `-p-` for all ports and `-oA /tmp/service-farm-full` to keep evidence.
 
 </details>
 
 <details>
-<summary>Hints for Flag 3 — http-metadata</summary>
+<summary>Hint 3 — concrete help</summary>
 
-1. The two HTTP-like ports are `8000` and `8443`.
-2. Try Nmap scripts `http-title,http-headers`; then inspect port `8443` directly.
-3. Run `curl -fsS -D - -o /dev/null http://service-farm:8443/` and read the `X-` headers.
+After scanning, request `http://service-farm:8000/`.
+
+</details>
+
+### Flag 2 — version-ledger
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+Add `-sV` to the scan of the open ports.
 
 </details>
 
 <details>
-<summary>Hints for Flag 4 — fingerprint-proof</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. Reuse the three tokens; no further scanning is required.
-2. The final parameters are `ports`, `version`, and `metadata`.
-3. Send them to `http://service-farm:8000/final` as query parameters.
+Port `31337` is a raw banner, so use the same simple TCP client introduced in Lab 01.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+Run `nc -w 3 service-farm 31337 </dev/null`.
+
+</details>
+
+### Flag 3 — http-metadata
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+The two HTTP-like ports are `8000` and `8443`.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+Try Nmap scripts `http-title,http-headers`; then inspect port `8443` directly.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+Run `curl -fsS -D - -o /dev/null http://service-farm:8443/` and read the `X-` headers.
+
+</details>
+
+### Flag 4 — fingerprint-proof
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+Reuse the three tokens; no further scanning is required.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+The final parameters are `ports`, `version`, and `metadata`.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+Send them to `http://service-farm:8000/final` as query parameters.
 
 </details>
 
@@ -192,8 +248,19 @@ management services, and alert on broad connection patterns.
 
 ## Stop or reset
 
+**Host terminal — finish this session without clearing submitted progress:**
+
 ```sh
 node scripts/standalone-labctl.mjs status 02-service-fingerprint
-node scripts/standalone-labctl.mjs reset 02-service-fingerprint
 node scripts/standalone-labctl.mjs stop 02-service-fingerprint
+```
+
+To continue later, use the start and shell commands above. Your flags and
+submitted progress stay the same. Files downloaded into the toolbox's /tmp do
+not survive stop; download them again when you resume.
+
+**Optional clean retry — deletes this lab's progress and creates new flags:**
+
+```sh
+node scripts/standalone-labctl.mjs reset 02-service-fingerprint
 ```

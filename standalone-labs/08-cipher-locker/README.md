@@ -59,39 +59,95 @@ Submit the three recovered tokens and the hash of the archive you analyzed.
 
 Open only the hint block you need. Read one hint at a time.
 
-<details>
-<summary>Hints for Flag 1 — manifest</summary>
+### Flag 1 — manifest
 
-1. The root page identifies the manifest endpoint.
-2. The response is JSON; decode the payload field rather than the whole response.
-3. Use `curl -fsS http://cipher-vault:8080/manifest | jq -r .payload | base64 -d`.
+<details>
+<summary>Hint 1 — where to look</summary>
+
+The root page identifies the manifest endpoint.
 
 </details>
 
 <details>
-<summary>Hints for Flag 2 — bundle</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. The manifest names the archive and its reference SHA-256.
-2. Read the archive README: the exporter applied base64 twice.
-3. After verifying and extracting, use `base64 -d /tmp/cache/cipher-08/payload.b64 | base64 -d`.
+The response is JSON; decode the payload field rather than the whole response.
 
 </details>
 
 <details>
-<summary>Hints for Flag 3 — carve</summary>
+<summary>Hint 3 — concrete help</summary>
 
-1. The decoded payload names session.bin.
-2. Use strings to extract readable sequences, then search for evidence labels.
-3. Run `strings /tmp/cache/cipher-08/session.bin | grep -E 'carve_token|binary_proof'`.
+Use `curl -fsS http://cipher-vault:8080/manifest | jq -r .payload | base64 -d`.
+
+</details>
+
+### Flag 2 — bundle
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+The manifest names the archive and its reference SHA-256.
 
 </details>
 
 <details>
-<summary>Hints for Flag 4 — final</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. Use your recorded evidence, including the original tar hash.
-2. The form fields are manifest, bundle, carve, archive_sha256.
-3. POST those fields to `http://cipher-vault:8080/final`.
+Read the archive README: the exporter applied base64 twice.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+After verifying and extracting, use `base64 -d /tmp/cache/cipher-08/payload.b64 | base64 -d`.
+
+</details>
+
+### Flag 3 — carve
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+The decoded payload names session.bin.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+Use strings to extract readable sequences, then search for evidence labels.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+Run `strings /tmp/cache/cipher-08/session.bin | grep -E 'carve_token|binary_proof'`.
+
+</details>
+
+### Flag 4 — final
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+Use your recorded evidence, including the original tar hash.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+The form fields are manifest, bundle, carve, archive_sha256.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+POST those fields to `http://cipher-vault:8080/final`.
 
 </details>
 
@@ -188,10 +244,19 @@ Layered encoding does not protect credentials. Hash downloads against a referenc
 
 ## Stop or reset
 
-**Host terminal:**
+**Host terminal — finish this session without clearing submitted progress:**
 
 ```sh
 node scripts/standalone-labctl.mjs status 08-cipher-locker
-node scripts/standalone-labctl.mjs reset 08-cipher-locker
 node scripts/standalone-labctl.mjs stop 08-cipher-locker
+```
+
+To continue later, use the start and shell commands above. Your flags and
+submitted progress stay the same. Files downloaded into the toolbox's /tmp do
+not survive stop; download them again when you resume.
+
+**Optional clean retry — deletes this lab's progress and creates new flags:**
+
+```sh
+node scripts/standalone-labctl.mjs reset 08-cipher-locker
 ```

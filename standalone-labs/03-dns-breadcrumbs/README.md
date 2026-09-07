@@ -76,39 +76,95 @@ to its final HTTP route.
 
 ## Hints
 
-<details>
-<summary>Hints for Flag 1 — address-trail</summary>
+### Flag 1 — address-trail
 
-1. Ask specifically for the `CNAME` of `entry.recon.test`.
-2. Query the returned hostname for `A`, `AAAA`, and `TXT` records.
-3. Use `dig @dns-lab -p 5353 atlas.recon.test TXT +short` for the evidence.
+<details>
+<summary>Hint 1 — where to look</summary>
+
+Ask specifically for the `CNAME` of `entry.recon.test`.
 
 </details>
 
 <details>
-<summary>Hints for Flag 2 — mail-trail</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. An `MX` record tells you the mail hostname, not necessarily its IP.
-2. Query `recon.test MX`, then query the returned mail host for `A` and `TXT`.
-3. The evidence is in `mail.recon.test TXT`.
+Query the returned hostname for `A`, `AAAA`, and `TXT` records.
 
 </details>
 
 <details>
-<summary>Hints for Flag 3 — service-trail</summary>
+<summary>Hint 3 — concrete help</summary>
 
-1. SRV names begin with `_service._transport`.
-2. Query `_ops._tcp.recon.test SRV`; its answer includes a port and target.
-3. Confirm `vault.ops.recon.test`, reverse-query `172.28.3.30`, then read the target's TXT record.
+Use `dig @dns-lab -p 5353 atlas.recon.test TXT +short` for the evidence.
+
+</details>
+
+### Flag 2 — mail-trail
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+An `MX` record tells you the mail hostname, not necessarily its IP.
 
 </details>
 
 <details>
-<summary>Hints for Flag 4 — dns-proof</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. The SRV answer identifies an HTTP listener on port `8088`.
-2. The final endpoint needs `address`, `mail`, and `service` parameters.
-3. Request `http://172.28.3.30:8088/final?address=...&mail=...&service=...`.
+Query `recon.test MX`, then query the returned mail host for `A` and `TXT`.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+The evidence is in `mail.recon.test TXT`.
+
+</details>
+
+### Flag 3 — service-trail
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+SRV names begin with `_service._transport`.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+Query `_ops._tcp.recon.test SRV`; its answer includes a port and target.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+Confirm `vault.ops.recon.test`, reverse-query `172.28.3.30`, then read the target's TXT record.
+
+</details>
+
+### Flag 4 — dns-proof
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+The SRV answer identifies an HTTP listener on port `8088`.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+The final endpoint needs `address`, `mail`, and `service` parameters.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+Request `http://172.28.3.30:8088/final?address=...&mail=...&service=...`.
 
 </details>
 
@@ -195,8 +251,19 @@ DNS views, minimize unnecessary TXT/SRV disclosure, and audit stale records.
 
 ## Stop or reset
 
+**Host terminal — finish this session without clearing submitted progress:**
+
 ```sh
 node scripts/standalone-labctl.mjs status 03-dns-breadcrumbs
-node scripts/standalone-labctl.mjs reset 03-dns-breadcrumbs
 node scripts/standalone-labctl.mjs stop 03-dns-breadcrumbs
+```
+
+To continue later, use the start and shell commands above. Your flags and
+submitted progress stay the same. Files downloaded into the toolbox's /tmp do
+not survive stop; download them again when you resume.
+
+**Optional clean retry — deletes this lab's progress and creates new flags:**
+
+```sh
+node scripts/standalone-labctl.mjs reset 03-dns-breadcrumbs
 ```

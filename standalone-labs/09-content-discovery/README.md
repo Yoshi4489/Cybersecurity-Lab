@@ -70,40 +70,96 @@ log hash. State a remediation for the deployment exposure.
 
 ## Hints
 
-<details>
-<summary>Hints for Flag 1 — robots</summary>
+### Flag 1 — robots
 
-1. Read the initial page and follow its public links.
-2. Crawler policy may name an internal status path.
-3. Read `/robots.txt`, then request `/server-status`.
+<details>
+<summary>Hint 1 — where to look</summary>
+
+Read the initial page and follow its public links.
 
 </details>
 
 <details>
-<summary>Hints for Flag 2 — gitleak</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. The status response says a working tree was copied during deployment.
-2. Git keeps configuration in its hidden directory.
-3. Request `/.git/config` and read the deployment section.
+Crawler policy may name an internal status path.
 
 </details>
 
 <details>
-<summary>Hints for Flag 3 — backup</summary>
+<summary>Hint 3 — concrete help</summary>
 
-1. Use the backup path and encoding recorded in the previous stage.
-2. Decode the response before parsing it as JSON.
-3. Run `curl -fsS http://web-archive:8080/config.php.bak | base64 -d | jq .`.
+Read `/robots.txt`, then request `/server-status`.
+
+</details>
+
+### Flag 2 — gitleak
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+The status response says a working tree was copied during deployment.
 
 </details>
 
 <details>
-<summary>Hints for Flag 4 — final</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. Follow the artifact path in the decoded backup. Compare its SHA-256 before analysis.
-2. Select a successful `/exports/` request; ignore the denied decoy export.
-3. The actor is `migration-bot`, the event is `EXPORT-904`, and the case is
-   `NS-09`. The report fields are listed in the decoded backup.
+Git keeps configuration in its hidden directory.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+Request `/.git/config` and read the deployment section.
+
+</details>
+
+### Flag 3 — backup
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+Use the backup path and encoding recorded in the previous stage.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+Decode the response before parsing it as JSON.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+Run `curl -fsS http://web-archive:8080/config.php.bak | base64 -d | jq .`.
+
+</details>
+
+### Flag 4 — final
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+Follow the artifact path in the decoded backup. Compare its SHA-256 before analysis.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+Select a successful `/exports/` request; ignore the denied decoy export.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+The actor is `migration-bot`, the event is `EXPORT-904`, and the case is
+`NS-09`. The report fields are listed in the decoded backup.
 
 </details>
 
@@ -207,10 +263,19 @@ and retain migration audit logs. This completes the nine-lab path.
 
 ## Stop or reset
 
-**Host terminal:**
+**Host terminal — finish this session without clearing submitted progress:**
 
 ```sh
 node scripts/standalone-labctl.mjs status 09-content-discovery
-node scripts/standalone-labctl.mjs reset 09-content-discovery
 node scripts/standalone-labctl.mjs stop 09-content-discovery
+```
+
+To continue later, use the start and shell commands above. Your flags and
+submitted progress stay the same. Files downloaded into the toolbox's /tmp do
+not survive stop; download them again when you resume.
+
+**Optional clean retry — deletes this lab's progress and creates new flags:**
+
+```sh
+node scripts/standalone-labctl.mjs reset 09-content-discovery
 ```

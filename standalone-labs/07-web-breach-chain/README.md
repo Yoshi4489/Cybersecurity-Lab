@@ -64,48 +64,118 @@ Submit all stage tokens with the forged bearer token. Explain which controls wou
 
 Open only the hint block you need. Read one hint at a time.
 
-<details>
-<summary>Hints for Flag 1 — recon-sweep</summary>
+### Flag 1 — recon-sweep
 
-1. The scan distinguishes a text beacon from the web portal.
-2. Use the raw TCP client introduced in Lab 01 for port 9091.
-3. Run `nc -w 3 edge-gateway 9091 </dev/null` and follow `next=http/8080`.
+<details>
+<summary>Hint 1 — where to look</summary>
+
+The scan distinguishes a text beacon from the web portal.
 
 </details>
 
 <details>
-<summary>Hints for Flag 2 — surface-map</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. Inspect the page source and robots.txt before guessing paths.
-2. A developer left a staging helper in an HTML comment.
-3. Request `/api/dev/hello` on port 8080.
+Use the raw TCP client introduced in Lab 01 for port 9091.
 
 </details>
 
 <details>
-<summary>Hints for Flag 3 — web-foothold</summary>
+<summary>Hint 3 — concrete help</summary>
 
-1. The developer helper names a preview parameter and ticket endpoint.
-2. Use `--get --data-urlencode` to send markup safely in a query.
-3. POST `report=<script>document.cookie</script>` to `/support/ticket`. The server labels this synthetic reviewer behavior.
+Run `nc -w 3 edge-gateway 9091 </dev/null` and follow `next=http/8080`.
+
+</details>
+
+### Flag 2 — surface-map
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+Inspect the page source and robots.txt before guessing paths.
 
 </details>
 
 <details>
-<summary>Hints for Flag 4 — privilege-escalation</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. A JWT is three dot-separated segments; inspect the second one.
-2. Keep the stolen `sub` and `sid`; change role to admin, header alg to none, and leave the signature empty.
-3. Construct `header.payload.` and send `Authorization: Bearer $forged` to `http://ops-internal:8081/admin/console`.
+A developer left a staging helper in an HTML comment.
 
 </details>
 
 <details>
-<summary>Hints for Flag 5 — root-proof</summary>
+<summary>Hint 3 — concrete help</summary>
 
-1. Retain the four tokens from the previous steps.
-2. The final endpoint also requires the same authorized bearer token.
-3. POST `recon`, `surface`, `foothold`, and `admin` to `http://ops-internal:8081/final`.
+Request `/api/dev/hello` on port 8080.
+
+</details>
+
+### Flag 3 — web-foothold
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+The developer helper names a preview parameter and ticket endpoint.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+Use `--get --data-urlencode` to send markup safely in a query.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+POST `report=<script>document.cookie</script>` to `/support/ticket`. The server labels this synthetic reviewer behavior.
+
+</details>
+
+### Flag 4 — privilege-escalation
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+A JWT is three dot-separated segments; inspect the second one.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+Keep the stolen `sub` and `sid`; change role to admin, header alg to none, and leave the signature empty.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+Construct `header.payload.` and send `Authorization: Bearer $forged` to `http://ops-internal:8081/admin/console`.
+
+</details>
+
+### Flag 5 — root-proof
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+Retain the four tokens from the previous steps.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+The final endpoint also requires the same authorized bearer token.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+POST `recon`, `surface`, `foothold`, and `admin` to `http://ops-internal:8081/final`.
 
 </details>
 
@@ -230,10 +300,19 @@ This chain crosses two trust decisions: rendering a report and accepting identit
 
 ## Stop or reset
 
-**Host terminal:**
+**Host terminal — finish this session without clearing submitted progress:**
 
 ```sh
 node scripts/standalone-labctl.mjs status 07-web-breach-chain
-node scripts/standalone-labctl.mjs reset 07-web-breach-chain
 node scripts/standalone-labctl.mjs stop 07-web-breach-chain
+```
+
+To continue later, use the start and shell commands above. Your flags and
+submitted progress stay the same. Files downloaded into the toolbox's /tmp do
+not survive stop; download them again when you resume.
+
+**Optional clean retry — deletes this lab's progress and creates new flags:**
+
+```sh
+node scripts/standalone-labctl.mjs reset 07-web-breach-chain
 ```

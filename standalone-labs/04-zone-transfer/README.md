@@ -74,39 +74,95 @@ to the archive's final route.
 
 ## Hints
 
-<details>
-<summary>Hints for Flag 1 — authority</summary>
+### Flag 1 — authority
 
-1. Start with `range.test SOA` and `range.test NS` against `172.30.44.53`.
-2. TXT labels can begin with an underscore.
-3. Query `dig @172.30.44.53 _authority.range.test TXT +short`.
+<details>
+<summary>Hint 1 — where to look</summary>
+
+Start with `range.test SOA` and `range.test NS` against `172.30.44.53`.
 
 </details>
 
 <details>
-<summary>Hints for Flag 2 — axfr</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. `AXFR` is used in the same position where you normally write `A` or `TXT`.
-2. Save the whole answer before filtering it.
-3. Run `dig @172.30.44.53 range.test AXFR | tee /tmp/range.axfr`, then search for `_axfr-proof`, `_route`, and `_case`.
+TXT labels can begin with an underscore.
 
 </details>
 
 <details>
-<summary>Hints for Flag 3 — vhost</summary>
+<summary>Hint 3 — concrete help</summary>
 
-1. The transfer discloses `ops-archive.range.test`, its IP, and a proof path.
-2. DNS resolution is not configured globally in the toolbox, so select the site with an HTTP header.
-3. Use `curl -H 'Host: ops-archive.range.test' http://172.30.44.80:8080/proof/blue-team`.
+Query `dig @172.30.44.53 _authority.range.test TXT +short`.
+
+</details>
+
+### Flag 2 — axfr
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+`AXFR` is used in the same position where you normally write `A` or `TXT`.
 
 </details>
 
 <details>
-<summary>Hints for Flag 4 — final</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. This is the written finding represented as a POST: all prior evidence plus case metadata.
-2. The fields are `authority`, `axfr`, `vhost`, `case`, and `serial`.
-3. The fixed metadata is `case=ZT-44` and `serial=2026081304`.
+Save the whole answer before filtering it.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+Run `dig @172.30.44.53 range.test AXFR | tee /tmp/range.axfr`, then search for `_axfr-proof`, `_route`, and `_case`.
+
+</details>
+
+### Flag 3 — vhost
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+The transfer discloses `ops-archive.range.test`, its IP, and a proof path.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+DNS resolution is not configured globally in the toolbox, so select the site with an HTTP header.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+Use `curl -H 'Host: ops-archive.range.test' http://172.30.44.80:8080/proof/blue-team`.
+
+</details>
+
+### Flag 4 — final
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+This is the written finding represented as a POST: all prior evidence plus case metadata.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+The fields are `authority`, `axfr`, `vhost`, `case`, and `serial`.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+The fixed metadata is `case=ZT-44` and `serial=2026081304`.
 
 </details>
 
@@ -192,8 +248,19 @@ as exposed.
 
 ## Stop or reset
 
+**Host terminal — finish this session without clearing submitted progress:**
+
 ```sh
 node scripts/standalone-labctl.mjs status 04-zone-transfer
-node scripts/standalone-labctl.mjs reset 04-zone-transfer
 node scripts/standalone-labctl.mjs stop 04-zone-transfer
+```
+
+To continue later, use the start and shell commands above. Your flags and
+submitted progress stay the same. Files downloaded into the toolbox's /tmp do
+not survive stop; download them again when you resume.
+
+**Optional clean retry — deletes this lab's progress and creates new flags:**
+
+```sh
+node scripts/standalone-labctl.mjs reset 04-zone-transfer
 ```

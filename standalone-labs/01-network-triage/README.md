@@ -105,40 +105,96 @@ the earlier objectives to prove that your service map is complete.
 
 Use hints in order. Stop as soon as you know what to try next.
 
-<details>
-<summary>Hints for Flag 1 — network-baseline</summary>
+### Flag 1 — network-baseline
 
-1. Start with `ip -brief addr` and `ip route`; these describe your side of the network.
-2. Resolve the target with `getent hosts triage-node`, then scan it with `nmap -sT -Pn`.
-3. The complete command path is `nmap -sT -Pn -p- triage-node`, followed by
-   `curl http://triage-node:8080/network`.
+<details>
+<summary>Hint 1 — where to look</summary>
+
+Start with `ip -brief addr` and `ip route`; these describe your side of the network.
 
 </details>
 
 <details>
-<summary>Hints for Flag 2 — service-beacon</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. Review the open ports. The raw TCP beacon is the service on port `9090`.
-2. HTTP clients expect HTTP syntax; netcat simply shows bytes sent by a TCP server.
-3. Run `nc -w 3 triage-node 9090 </dev/null`.
+Resolve the target with `getent hosts triage-node`, then scan it with `nmap -sT -Pn`.
 
 </details>
 
 <details>
-<summary>Hints for Flag 3 — operator-console</summary>
+<summary>Hint 3 — concrete help</summary>
 
-1. The remaining HTTP service is on port `7070`.
-2. The page name matches the people who maintain the server.
-3. Run `curl http://triage-node:7070/operator`.
+The complete command path is `nmap -sT -Pn -p- triage-node`, followed by
+`curl http://triage-node:8080/network`.
+
+</details>
+
+### Flag 2 — service-beacon
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+Review the open ports. The raw TCP beacon is the service on port `9090`.
 
 </details>
 
 <details>
-<summary>Hints for Flag 4 — triage-proof</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. This objective checks evidence from all three earlier services; it does not require a new scan.
-2. The query parameter names are `segment`, `beacon`, and `operator`.
-3. Request `/final?segment=...&beacon=...&operator=...` on port `8080`.
+HTTP clients expect HTTP syntax; netcat simply shows bytes sent by a TCP server.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+Run `nc -w 3 triage-node 9090 </dev/null`.
+
+</details>
+
+### Flag 3 — operator-console
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+The remaining HTTP service is on port `7070`.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+The page name matches the people who maintain the server.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+Run `curl http://triage-node:7070/operator`.
+
+</details>
+
+### Flag 4 — triage-proof
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+This objective checks evidence from all three earlier services; it does not require a new scan.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+The query parameter names are `segment`, `beacon`, and `operator`.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+Request `/final?segment=...&beacon=...&operator=...` on port `8080`.
 
 </details>
 
@@ -234,8 +290,19 @@ segmentation, host firewalls, and fewer diagnostic listeners.
 
 ## Stop or reset
 
+**Host terminal — finish this session without clearing submitted progress:**
+
 ```sh
 node scripts/standalone-labctl.mjs status 01-network-triage
-node scripts/standalone-labctl.mjs reset 01-network-triage
 node scripts/standalone-labctl.mjs stop 01-network-triage
+```
+
+To continue later, use the start and shell commands above. Your flags and
+submitted progress stay the same. Files downloaded into the toolbox's /tmp do
+not survive stop; download them again when you resume.
+
+**Optional clean retry — deletes this lab's progress and creates new flags:**
+
+```sh
+node scripts/standalone-labctl.mjs reset 01-network-triage
 ```

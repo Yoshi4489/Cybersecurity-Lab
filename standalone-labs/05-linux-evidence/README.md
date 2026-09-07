@@ -77,39 +77,95 @@ Submit the three flags, dominant source, original archive hash, and case ID.
 
 ## Hints
 
-<details>
-<summary>Hints for Flag 1 — filesystem</summary>
+### Flag 1 — filesystem
 
-1. The server exposes `/manifest` and `/case-55.tar`; work on an extracted copy in `/tmp`.
-2. List permissions for every file and look for an unusually restricted `.b64` file.
-3. Use `find /tmp/evidence -name '*.b64' -print0 | xargs -0 base64 -d`.
+<details>
+<summary>Hint 1 — where to look</summary>
+
+The server exposes `/manifest` and `/case-55.tar`; work on an extracted copy in `/tmp`.
 
 </details>
 
 <details>
-<summary>Hints for Flag 2 — logs</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. The first space-separated field in an access log is the source.
-2. Count that field, sort numerically, then inspect requests from the top source.
-3. The top source is `10.55.0.23`; extract the value after `/proof/` from its log entries.
+List permissions for every file and look for an unusually restricted `.b64` file.
 
 </details>
 
 <details>
-<summary>Hints for Flag 3 — binary</summary>
+<summary>Hint 3 — concrete help</summary>
 
-1. Do not run an unknown binary during evidence review.
-2. `strings` displays printable sequences safely.
-3. Run `strings /tmp/evidence/case-55/artifacts/session.bin | grep binary_proof`.
+Use `find /tmp/evidence -name '*.b64' -print0 | xargs -0 base64 -d`.
+
+</details>
+
+### Flag 2 — logs
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+The first space-separated field in an access log is the source.
 
 </details>
 
 <details>
-<summary>Hints for Flag 4 — final</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. The final endpoint checks evidence continuity across the whole case.
-2. You need `filesystem`, `logs`, `binary`, `top_source`, `archive_sha256`, and `case` fields.
-3. POST those fields to `http://172.30.55.55:8080/final`; the case is `EV-55`.
+Count that field, sort numerically, then inspect requests from the top source.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+The top source is `10.55.0.23`; extract the value after `/proof/` from its log entries.
+
+</details>
+
+### Flag 3 — binary
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+Do not run an unknown binary during evidence review.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+`strings` displays printable sequences safely.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+Run `strings /tmp/evidence/case-55/artifacts/session.bin | grep binary_proof`.
+
+</details>
+
+### Flag 4 — final
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+The final endpoint checks evidence continuity across the whole case.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+You need `filesystem`, `logs`, `binary`, `top_source`, `archive_sha256`, and `case` fields.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+POST those fields to `http://172.30.55.55:8080/final`; the case is `EV-55`.
 
 </details>
 
@@ -201,8 +257,19 @@ maintain chain-of-custody records.
 
 ## Stop or reset
 
+**Host terminal — finish this session without clearing submitted progress:**
+
 ```sh
 node scripts/standalone-labctl.mjs status 05-linux-evidence
-node scripts/standalone-labctl.mjs reset 05-linux-evidence
 node scripts/standalone-labctl.mjs stop 05-linux-evidence
+```
+
+To continue later, use the start and shell commands above. Your flags and
+submitted progress stay the same. Files downloaded into the toolbox's /tmp do
+not survive stop; download them again when you resume.
+
+**Optional clean retry — deletes this lab's progress and creates new flags:**
+
+```sh
+node scripts/standalone-labctl.mjs reset 05-linux-evidence
 ```

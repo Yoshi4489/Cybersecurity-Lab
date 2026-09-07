@@ -75,39 +75,95 @@ event. Submit all earlier evidence as one case report.
 
 ## Hints
 
-<details>
-<summary>Hints for Flag 1 — dns-chain</summary>
+### Flag 1 — dns-chain
 
-1. The authoritative server is `172.30.66.53`; begin with SOA and NS queries.
-2. Attempt `AXFR` for `signals.test` and save it to `/tmp/signals.axfr`.
-3. Search the transfer for `_dns-proof`, A records, TXT records, and case `SG-66`.
+<details>
+<summary>Hint 1 — where to look</summary>
+
+The authoritative server is `172.30.66.53`; begin with SOA and NS queries.
 
 </details>
 
 <details>
-<summary>Hints for Flag 2 — service-map</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. The transfer reveals the relay at `172.30.66.90`.
-2. Run an all-port TCP connect scan, then version detection only on open ports.
-3. Inspect port `9090` with `curl -i`; the proof and artifact path are HTTP headers.
+Attempt `AXFR` for `signals.test` and save it to `/tmp/signals.axfr`.
 
 </details>
 
 <details>
-<summary>Hints for Flag 3 — http-artifact</summary>
+<summary>Hint 3 — concrete help</summary>
 
-1. The metadata header points to a tar archive on port `8080`.
-2. Hash the downloaded bytes before extracting them.
-3. Extract the bundle and find `http_proof=` in `signals-66/manifest.txt`.
+Search the transfer for `_dns-proof`, A records, TXT records, and case `SG-66`.
+
+</details>
+
+### Flag 2 — service-map
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+The transfer reveals the relay at `172.30.66.90`.
 
 </details>
 
 <details>
-<summary>Hints for Flag 4 — final</summary>
+<summary>Hint 2 — what to try</summary>
 
-1. Count the first field of `relay-access.log`; then inspect successful requests from the top actor.
-2. The dominant actor is `relay-7`, and its successful event is `EVT-6604`.
-3. POST the three flags, `ports=8080,9090`, actor, event, hash, and `case=SG-66` to `/final`.
+Run an all-port TCP connect scan, then version detection only on open ports.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+Inspect port `9090` with `curl -i`; the proof and artifact path are HTTP headers.
+
+</details>
+
+### Flag 3 — http-artifact
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+The metadata header points to a tar archive on port `8080`.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+Hash the downloaded bytes before extracting them.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+Extract the bundle and find `http_proof=` in `signals-66/manifest.txt`.
+
+</details>
+
+### Flag 4 — final
+
+<details>
+<summary>Hint 1 — where to look</summary>
+
+Count the first field of `relay-access.log`; then inspect successful requests from the top actor.
+
+</details>
+
+<details>
+<summary>Hint 2 — what to try</summary>
+
+The dominant actor is `relay-7`, and its successful event is `EVT-6604`.
+
+</details>
+
+<details>
+<summary>Hint 3 — concrete help</summary>
+
+POST the three flags, `ports=8080,9090`, actor, event, hash, and `case=SG-66` to `/final`.
 
 </details>
 
@@ -203,8 +259,19 @@ application logs in one detection timeline.
 
 ## Stop or reset
 
+**Host terminal — finish this session without clearing submitted progress:**
+
 ```sh
 node scripts/standalone-labctl.mjs status 06-signals-capstone
-node scripts/standalone-labctl.mjs reset 06-signals-capstone
 node scripts/standalone-labctl.mjs stop 06-signals-capstone
+```
+
+To continue later, use the start and shell commands above. Your flags and
+submitted progress stay the same. Files downloaded into the toolbox's /tmp do
+not survive stop; download them again when you resume.
+
+**Optional clean retry — deletes this lab's progress and creates new flags:**
+
+```sh
+node scripts/standalone-labctl.mjs reset 06-signals-capstone
 ```
