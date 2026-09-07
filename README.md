@@ -1,5 +1,22 @@
 # RECON//LAB
 
+### Beginner lab workspace
+
+After `npm run lab`, open **http://127.0.0.1:5173/labs** for the nine rebuilt investigations.
+Scenarios, tool briefings, objectives, progressive per-flag hints, and full solutions
+are readable in the portal; no local README needs to be opened. Use Start / resume,
+open the lab toolbox with the displayed shell command, and submit each discovered
+flag into its matching form. Portal and CLI share the same per-run progress.
+Only Reset clears that lab's flags and submissions. The original 18-module shared
+range remains available from the home page and has separate flags and progress.
+
+Port **3030 is the controller API**, not the portal. If a controller route is not
+found after updating, restart the old process with `npm run lab:stop` followed by
+`npm run lab` (stopping also shuts down the original shared range). On PowerShell,
+use `npm.cmd` if script execution policy blocks `npm`. Standalone targets should
+be stopped using their workspace Stop button or `npm run labs:stop -- <lab-id>`;
+`lab:stop` does not stop those independent projects.
+
 RECON//LAB is a single-user, local-only guided teaching range, not a production multi-user service. สนามฝึก Web Exploitation และ Recon สำหรับผู้เรียนระดับกลางถึงสูง เป้าหมายและข้อมูลทั้งหมดเป็นของจำลอง อยู่ใน Docker networks ที่ไม่มี outbound internet และ reset ได้จากหน้าเว็บ
 
 ## เริ่มใช้งาน

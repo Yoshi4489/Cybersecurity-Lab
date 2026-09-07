@@ -33,6 +33,18 @@ On Windows, if PowerShell blocks npm.ps1, use `npm.cmd run doctor` and
 Doctor checks prerequisites and potential network conflicts. Fix any reported
 failure before starting a range.
 
+## Read and submit in the portal
+
+Run `npm run lab` (or `npm.cmd run lab` in PowerShell), then open
+**http://127.0.0.1:5173/labs**. Choose a lab and use Start / resume. The portal
+contains the scenario, objective descriptions, individual hints, and complete
+walkthrough, so you do not need to open a local Markdown file.
+
+Use the displayed shell command to enter that lab's toolbox and investigate.
+Paste each discovered flag into its matching portal form. CLI verification is
+still supported, and both interfaces use the same saved progress and per-run flags.
+The original shared-range modules use separate flags; do not mix the two ranges.
+
 ## Two terminals with different jobs
 
 **Host terminal:** your ordinary computer, in this project directory. It runs

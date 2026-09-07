@@ -57,7 +57,8 @@ if (action === "start") {
   writeFileSync(pidsFile, JSON.stringify({ controller, portal, startedAt: new Date().toISOString() }, null, 2));
   console.log("RECON//LAB is starting locally.");
   console.log("Portal:     http://127.0.0.1:5173");
-  console.log("Controller: http://127.0.0.1:3030");
+  console.log("Beginner labs: http://127.0.0.1:5173/labs");
+  console.log("Controller API (not the portal): http://127.0.0.1:3030/health");
   console.log("Use START LAB in the portal to build and launch the isolated targets.");
 } else if (action === "stop") {
   const current = readPids();
