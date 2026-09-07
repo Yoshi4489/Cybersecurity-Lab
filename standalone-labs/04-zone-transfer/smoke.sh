@@ -23,8 +23,8 @@ grep -q 'ns1.range.test' /tmp/lab04-nslookup
 
 authority="$(dig +short "@$dns_server" _authority.range.test TXT | tr -d '"')"
 transfer="$(dig "@$dns_server" "$zone" AXFR)"
-axfr="$(printf '%s\n' "$transfer" | awk '/_axfr-proof/ {gsub(/"/, "", $NF); print $NF; exit}')"
-route="$(printf '%s\n' "$transfer" | awk '/_route/ {$1=$2=$3=$4=""; sub(/^ +/, ""); gsub(/"/, ""); print; exit}')"
+axfr="$(printf '%s\n' "$transfer" | awk '$1 == "_axfr-proof.range.test." && $4 == "TXT" {gsub(/"/, "", $NF); print $NF; exit}')"
+route="$(printf '%s\n' "$transfer" | awk '$1 == "_route.range.test." && $4 == "TXT" {$1=$2=$3=$4=""; sub(/^ +/, ""); gsub(/"/, ""); print; exit}')"
 
 test "$authority" = "$LAB04_AUTHORITY_FLAG"
 test "$axfr" = "$LAB04_AXFR_FLAG"

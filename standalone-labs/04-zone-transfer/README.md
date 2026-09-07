@@ -191,8 +191,8 @@ node scripts/standalone-labctl.mjs verify 04-zone-transfer authority 'RLAB{...}'
 
 ```sh
 dig @172.30.44.53 range.test AXFR | tee /tmp/range.axfr
-grep '_axfr-proof' /tmp/range.axfr
-grep -E '_route|_case' /tmp/range.axfr
+grep '^_axfr-proof\.' /tmp/range.axfr
+grep -E '^(_route|_case)\.' /tmp/range.axfr
 ```
 
 **Host terminal — submit this stage's displayed flag:**

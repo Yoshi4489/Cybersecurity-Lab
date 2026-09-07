@@ -312,6 +312,16 @@ test("DNS breadcrumbs allows enough healthcheck time for Docker Desktop", async 
   assert.match(compose.services["hidden-web"].healthcheck.test.at(-1), /timeout=5/u);
 });
 
+test("AXFR evidence extraction selects DNS record owners, not mentions in briefing text", async () => {
+  const directory = join(labsRoot, "04-zone-transfer");
+  const smoke = await readFile(join(directory, "smoke.sh"), "utf8");
+  const zone = await readFile(join(directory, "dns", "zone.template"), "utf8");
+  assert.match(zone, /_brief IN TXT .*_route/, "keep the cross-reference that exposed the ambiguous match");
+  for (const owner of ["_route.range.test.", "_axfr-proof.range.test."]) {
+    assert.ok(smoke.includes(`awk '$1 == "${owner}" && $4 == "TXT"`), `select the exact TXT owner ${owner}`);
+  }
+});
+
 test("standalone lab controller overrides inherited objective flag variables", () => {
   assert.match(standaloneControllerSource, /function dockerEnvironment\(flagsPath\)/u);
   assert.match(standaloneControllerSource, /delete environment\[name\]/u);
