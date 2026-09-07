@@ -85,7 +85,9 @@ Each flag has three hints, from a gentle clue to a concrete command. Read one at
 a time. A full solution explains what each command reveals. Understanding why a
 tool is useful matters more than finishing without hints.
 
-Flags change after start/reset. Submit current flags in dependency order. A wrong
+The first start creates flags. Starting again preserves those flags and your
+submitted progress, including after stop. Only reset creates a fresh run.
+Submit current flags in dependency order. A wrong
 flag, an old run's flag, or an incomplete prerequisite objective is rejected.
 The CLI recommends prior labs but allows you to start any lab independently.
 
@@ -101,6 +103,10 @@ For a clean retry:
 ```sh
 node scripts/standalone-labctl.mjs reset 01-network-triage
 ```
+
+To resume later, run the same start and shell commands. Stop preserves submitted
+progress and flags, but downloaded files under the toolbox's /tmp disappear when
+its container is removed. Reacquire those files when continuing an investigation.
 
 Reset removes this lab's containers and volumes, clears its progress, and creates
 fresh flags. Files under the toolbox's /tmp are temporary and disappear with its

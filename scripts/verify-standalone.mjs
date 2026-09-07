@@ -32,9 +32,10 @@ for (const id of selected.length ? selected : ids) {
   const flags = () => Object.fromEntries(readFileSync(join(runtime, "flags.env"), "utf8")
     .trim().split(/\r?\n/).map((line) => [line.slice(0, line.indexOf("=")), line.slice(line.indexOf("=") + 1)]));
   const record = { id, passed: false };
-  console.log(`Verifying ${id}: start, configuration, smoke, flags, reset, cleanup`);
+  console.log(`Verifying ${id}: reset, configuration, smoke, flags, repeated start, stop/resume, cleanup`);
   try {
-    ctl("start");
+    // This maintainer check deliberately uses a clean run; ordinary start must resume.
+    ctl("reset");
     const prefix = ["compose", "--env-file", join(runtime, "flags.env"),
       "-f", join(labsRoot, id, "docker-compose.yml"), "-p", `cyberlab-${id}`];
     check("docker", [...prefix, "config", "--quiet"]);
@@ -49,6 +50,17 @@ for (const id of selected.length ? selected : ids) {
     ctl("verify", [last.id, original[last.flagEnv]], 1);
     ctl("verify", [first.id, "RLAB{invalid}"], 1);
     for (const objective of manifest.objectives) ctl("verify", [objective.id, original[objective.flagEnv]]);
+    const savedProgress = readFileSync(join(runtime, "progress.json"), "utf8");
+    const assertPreserved = () => {
+      if (JSON.stringify(flags()) !== JSON.stringify(original)) throw new Error("Start changed existing flags");
+      if (readFileSync(join(runtime, "progress.json"), "utf8") !== savedProgress) throw new Error("Start changed existing progress");
+    };
+    ctl("start");
+    assertPreserved();
+    ctl("stop");
+    ctl("start");
+    assertPreserved();
+    ctl("smoke");
     ctl("reset");
     const fresh = flags();
     if (Object.entries(original).some(([key, value]) => fresh[key] === value)) throw new Error("Reset did not rotate every flag");

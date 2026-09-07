@@ -48,8 +48,9 @@ node scripts/standalone-labctl.mjs stop <lab-id>
 ```
 
 After shell opens, that terminal is the Linux toolbox. Use a second host terminal
-for verify. Start creates fresh per-run flags; reset clears only the selected
-lab's progress and rotates its flags. Start a fresh run when trying the rebuilt
+for verify. Start creates flags on the first run and resumes existing flags and
+progress on later runs, including after stop. Reset clears only the selected
+lab's progress and rotates its flags. Use reset for a fresh attempt at the rebuilt
 curriculum. Old directory IDs and objective IDs still work.
 
 ## Runtime and trust

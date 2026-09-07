@@ -43,7 +43,7 @@ one lab never requires another lab's containers or rotating flags.
 ## Compatibility and simulations
 
 Lab IDs, objective IDs, flag environment names, and CLI syntax remain stable.
-Titles and stage descriptions change. Start/reset a lab for fresh curriculum
+Titles and stage descriptions change. Reset a previously started lab for fresh curriculum
 evidence. Lab 09 retains its final objective ID but now requires a decoded
 configuration, log hash, actor, event, and case as well as earlier tokens.
 
@@ -57,6 +57,8 @@ Encoding exercises use real base64, tar, and SHA-256 operations.
 
 Validate manifest graphs and README objective coverage in the unit suite.
 Exercise documented protocols and wrong-report rejection in Docker smoke tests.
-The release runner checks start, flag dependencies, old-run rejection, reset,
-new evidence, and cleanup for each lab. Local-only expected flags are transient
+The release runner deliberately resets the selected lab, then checks flag
+dependencies, repeated start, stop/resume without losing progress, old-run
+rejection, reset, new evidence, and cleanup. This is a destructive maintainer
+check, not a learner step. Local-only expected flags are transient
 test inputs and never part of the normal toolbox environment.

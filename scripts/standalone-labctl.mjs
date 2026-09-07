@@ -164,7 +164,10 @@ function parseFlags(path) {
 
 function readRun(lab) {
   const paths = runtimePaths(lab);
-  if (!existsSync(paths.flags) || !existsSync(paths.progress)) return undefined;
+  if (!existsSync(paths.flags) && !existsSync(paths.progress)) return undefined;
+  if (!existsSync(paths.flags) || !existsSync(paths.progress)) {
+    throw new Error(`Incomplete runtime state for ${lab.id}. Restore the missing file before continuing; start will not overwrite your progress.`);
+  }
   const values = parseFlags(paths.flags);
   const progress = JSON.parse(readFileSync(paths.progress, "utf8"));
   if (progress.labId !== lab.id || typeof progress.completed !== "object") {
@@ -255,9 +258,14 @@ if (labs) {
     if (lab && action === "start") {
       if (objectiveId || suppliedFlag) usage("start accepts only a lab-id.");
       else {
-        const run = createRun(lab);
+        const previous = readRun(lab);
+        const run = previous ?? createRun(lab);
         if (docker(lab, run.paths.flags, ["up", "-d", "--build", "--wait", "--remove-orphans"])) {
-          console.log(`Started ${lab.id} with a fresh set of per-run flags.`);
+          console.log(previous
+            ? `Resumed ${lab.id}; flags and objective progress were preserved.`
+            : `Started ${lab.id} with a fresh set of per-run flags.`);
+          printProgress(lab, run.progress);
+          console.log(`For a clean retry: node scripts/standalone-labctl.mjs reset ${lab.id}`);
           console.log(`Open a shell: node scripts/standalone-labctl.mjs shell ${lab.id}`);
         }
       }
