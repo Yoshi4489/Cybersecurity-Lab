@@ -2,7 +2,9 @@
 
 ### Beginner lab workspace
 
-After `npm run lab`, open **http://127.0.0.1:5173/labs** for the nine rebuilt investigations.
+After `npm run lab`, open **http://127.0.0.1:5173/labs** for ten beginner investigations.
+Lab 10, **The Mislabelled Secret**, adds Base64, hex, ROT13, a bounded synthetic
+MD5 dictionary exercise, and a toy XOR message to decrypt with the recovered key.
 Scenarios, tool briefings, objectives, progressive per-flag hints, and full solutions
 are readable in the portal; no local README needs to be opened. Use Start / resume,
 open the lab toolbox with the displayed shell command, and submit each discovered

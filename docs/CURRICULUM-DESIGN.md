@@ -1,8 +1,16 @@
 # Curriculum design record
 
-The audience is a complete beginner using clear English. Nine standalone labs
-retain their CLI IDs. Six earlier README drafts have been folded into this
-curriculum. The eighteen portal modules are outside this rewrite.
+The audience is a complete beginner using clear English. The original nine standalone
+labs retain their CLI IDs, and Lab 10 adds a guided message-recovery elective after
+Lab 01. Six earlier README drafts have been folded into this curriculum. Standalone
+lessons and flag submission are now integrated at `/labs`; the original eighteen
+shared-range portal modules remain separate.
+
+Lab 10 distinguishes encoding (Base64 and hex), fixed substitution (ROT13),
+dictionary guessing against an MD5 digest, and keyed decryption (toy repeating-key
+XOR). The five-word dictionary and every secret are fictional. The final SHA-256
+check verifies recovery, not authenticated encryption; the lesson explicitly
+rejects MD5 password storage and toy XOR for real applications.
 
 ## Research basis
 

@@ -80,7 +80,7 @@ export function LabWorkspace({ labs }: { labs: Lab[] }) {
 
   return <main className="standalone-workspace">
     <header className="workspace-header"><Link href="/">RECON//LAB</Link><span>AUTHORIZED TRAINING ENVIRONMENT</span><Link href="/">Original shared-range modules</Link></header>
-    <div className="workspace-intro"><p className="eyebrow green">BEGINNER INVESTIGATIONS</p><h1>Follow the evidence. Close the case.</h1><p>Nine connected investigations, with scenarios, tool briefings, per-flag hints, and complete walkthroughs right here.</p></div>
+    <div className="workspace-intro"><p className="eyebrow green">BEGINNER INVESTIGATIONS</p><h1>Follow the evidence. Close the case.</h1><p>{labs.length} investigations, with scenarios, tool briefings, per-flag hints, and complete walkthroughs right here.</p></div>
     <div className="workspace-layout">
       <nav className="workspace-nav" aria-label="Standalone labs">{labs.map((lab) => <button key={lab.id} disabled={busy} aria-current={selectedId === lab.id ? "page" : undefined} onClick={() => setSelectedId(lab.id)}><small>{lab.id.slice(0, 2)} / {lab.mode}</small><strong>{lab.title}</strong><span>{progress[lab.id]?.completedObjectives.length ?? 0}/{lab.objectives.length} flags</span></button>)}</nav>
       <article className="workspace-lesson" key={selectedId}>

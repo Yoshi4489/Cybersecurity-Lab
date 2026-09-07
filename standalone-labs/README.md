@@ -1,8 +1,9 @@
 # Northstar Shipping: Beginner Security Labs
 
-Nine independent local investigations teach you how evidence leads to the next
+Ten independent local investigations teach you how evidence leads to the next
 question and the next command. Start with the [setup guide](GETTING-STARTED.md).
-The separate portal still contains eighteen modules.
+Read these investigations and submit flags in the portal at `/labs`. The original
+shared range still contains eighteen separate modules.
 
 ## Learning path
 
@@ -19,12 +20,17 @@ Follow this order: **01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09*
 | [07](07-web-breach-chain/README.md) | Support Desk Incident | Challenge | Web discovery, XSS simulation, JWT trust |
 | [08](08-cipher-locker/README.md) | Recovered Cache | Challenge | Encoding, integrity and artifact analysis |
 | [09](09-content-discovery/README.md) | Close the Breach | Final capstone | Deployment leaks and export evidence |
+| [10](10-message-recovery/README.md) | The Mislabelled Secret | Guided elective | Base64, hex, ROT13, MD5 dictionary matching, toy XOR |
 
 Numeric prefixes remain stable IDs. The rebuilt curriculum now follows numeric
 order; 06 and 09 are the capstones. Prerequisites are recommendations, not startup
 locks. Labs 01–06 form Northstar's infrastructure review; 07–09 form the
 ApertureOps incident campaign. Each lab includes its own evidence so earlier
 targets can be stopped.
+
+Lab 10 is an optional message-recovery foundations branch available after Lab 01;
+you do not need to finish the capstones first. Encoding and hashing are explicitly
+distinguished from encryption, using only supplied synthetic training data.
 
 ## How to learn
 
