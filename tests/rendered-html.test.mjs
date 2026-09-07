@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
-async function render() {
+async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
   return worker(
-    new Request("http://127.0.0.1:5173/", { headers: { accept: "text/html" } }),
+    new Request(`http://127.0.0.1:5173${path}`, { headers: { accept: "text/html" } }),
   );
 }
 
@@ -23,6 +23,19 @@ test("server-renders the RECON//LAB portal", async () => {
   assert.match(html, /Learn in a sequence that makes sense/);
   assert.match(html, /Set up your safe local range/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/i);
+});
+
+test("rebuilt labs render inline scenarios, flag forms, individually closed hints and walkthrough", async () => {
+  const response = await render("/labs");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  const visibleText = html.replace(/<!--.*?-->/g, "");
+  for (const label of ["First Contact at Northstar Shipping", "Scenario", "What you need to know", "Start / resume lab", "Submit flag 1", "Hints for each flag", "Reveal full walkthrough", "triage-node:8080/network"]) assert.ok(visibleText.includes(label), label);
+  assert.match(html, /<form\b/);
+  assert.match(html, /<pre><code>/);
+  assert.doesNotMatch(html, /<details[^>]*\bopen(?:=|\s|>)/);
+  assert.doesNotMatch(html, /href="[^"]*(?:README\.md|SOLUTION\.md|file:\/\/)/i);
+  assert.doesNotMatch(html, /RLAB\{[a-f0-9]{32}\}/);
 });
 
 test("starter preview is removed and project metadata is production-specific", async () => {
