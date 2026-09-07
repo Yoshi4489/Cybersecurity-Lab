@@ -1,0 +1,24 @@
+{
+  "id": "10-message-recovery",
+  "title": "The Mislabelled Secret",
+  "summary": "Recover a fictional handover through Base64, hex, ROT13, an MD5 dictionary match, and a toy XOR cipher.",
+  "description": "Northstar's training archive calls everything encryption. Follow the handover and explain what each transformation actually protects.",
+  "difficulty": "beginner",
+  "minutes": 50,
+  "subnet": "172.31.10.0/24",
+  "composeFile": "docker-compose.yml",
+  "toolboxService": "toolbox",
+  "commandFamilies": ["curl", "jq", "base64", "tr", "md5sum", "python3"],
+  "services": [{"name": "message-vault", "hostname": "message-vault", "ports": [8080], "purpose": "Synthetic message recovery exercises and a five-word training dictionary"}],
+  "objectives": [
+    {"id": "base64", "title": "Decode the Base64 handover", "label": "Decode the Base64 handover", "points": 20, "flagEnv": "FLAG_L10_BASE64", "dependsOn": []},
+    {"id": "hex", "title": "Read hexadecimal bytes as text", "label": "Read hexadecimal bytes as text", "points": 20, "flagEnv": "FLAG_L10_HEX", "dependsOn": ["base64"]},
+    {"id": "rot13", "title": "Undo the ROT13 substitution", "label": "Undo the ROT13 substitution", "points": 20, "flagEnv": "FLAG_L10_ROT13", "dependsOn": ["hex"]},
+    {"id": "md5", "title": "Match a synthetic password against its MD5 hash", "label": "Match a synthetic password against its MD5 hash", "points": 20, "flagEnv": "FLAG_L10_MD5", "dependsOn": ["rot13"]},
+    {"id": "message", "title": "Decrypt the toy XOR message with the recovered key", "label": "Decrypt the toy XOR message with the recovered key", "points": 20, "flagEnv": "FLAG_L10_MESSAGE", "dependsOn": ["md5"]}
+  ],
+  "campaign": "Northstar: Message Recovery",
+  "mode": "guided",
+  "prerequisites": ["01-network-triage"],
+  "learningOutcomes": ["Distinguish encoding, hashing and encryption", "Decode Base64, hexadecimal and ROT13 text", "Recover a deliberately weak synthetic password from a supplied dictionary", "Explain why a repeating-key XOR cipher is not secure modern encryption"]
+}

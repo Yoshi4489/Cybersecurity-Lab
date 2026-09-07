@@ -25,7 +25,7 @@ function fixture(t) {
   // All manifests are needed to validate cross-lab prerequisite references.
   const ids = ["01-network-triage", "02-service-fingerprint", "03-dns-breadcrumbs",
     "04-zone-transfer", "05-linux-evidence", "06-signals-capstone",
-    "07-web-breach-chain", "08-cipher-locker", "09-content-discovery"];
+    "07-web-breach-chain", "08-cipher-locker", "09-content-discovery", "10-message-recovery"];
   for (const id of ids) cpSync(new URL(`../standalone-labs/${id}/lab.json`, import.meta.url),
     join(directory, "standalone-labs", id, "lab.json"));
   const id = ids[0];

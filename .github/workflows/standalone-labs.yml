@@ -89,6 +89,7 @@ jobs:
           - 07-web-breach-chain
           - 08-cipher-locker
           - 09-content-discovery
+          - 10-message-recovery
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

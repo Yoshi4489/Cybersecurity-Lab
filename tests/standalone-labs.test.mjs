@@ -78,8 +78,8 @@ test("the original portal catalog remains exactly 18 labs", async () => {
   assert.equal(catalog.length, 18);
 });
 
-test("nine standalone manifests have a complete, safe schema", () => {
-  assert.equal(labs.length, 9);
+test("ten standalone manifests have a complete, safe schema", () => {
+  assert.equal(labs.length, 10);
   assert.equal(new Set(labs.map((lab) => lab.id)).size, labs.length);
 
   const globalFlags = [];

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { load as loadYaml } from "js-yaml";
@@ -21,4 +21,6 @@ test("CI builds once before running the unit suite", async () => {
 
   assert.deepEqual(workflow.on.push.branches, ["main"]);
   assert.ok(Object.hasOwn(workflow.on, "pull_request"));
+  const labIds = (await readdir(join(root, "standalone-labs"))).filter((id) => /^\d\d-/.test(id)).sort();
+  assert.deepEqual([...workflow.jobs.smoke.strategy.matrix.lab].sort(), labIds, "every standalone lab must receive lifecycle coverage");
 });

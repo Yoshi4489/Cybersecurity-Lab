@@ -21,6 +21,7 @@ RUN apt-get update \
         libcap2-bin \
         netcat-openbsd \
         nmap \
+        python3 \
         sed \
         tar \
     && rm -rf /var/lib/apt/lists/* \
