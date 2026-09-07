@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 import { unmetLabPrerequisites, unmetObjectivePredecessors } from "./curriculum.mjs";
 import { hasRequiredServices } from "./runtime.mjs";
+import { standaloneAction, standaloneLabs, standaloneProgress, standaloneStatus, submitStandalone } from "./standalone.mjs";
 import { createFlag, equalSecret, isAllowedHost, isAllowedOrigin, isLoopbackAddress, parseCookies } from "./security.mjs";
 
 const controllerDir = dirname(fileURLToPath(import.meta.url));
@@ -232,6 +233,30 @@ const server = createServer(async (request, response) => {
 
   const url = new URL(request.url ?? "/", `http://${request.headers.host}`);
   try {
+    if (request.method === "GET" && url.pathname === "/") {
+      response.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      return response.end('<!doctype html><html lang="en"><title>RECON//LAB controller</title><h1>Local controller is online</h1><p>This is the local API, not the learning portal.</p><p><a href="http://127.0.0.1:5173/labs">Open the lab workspace</a></p><p>Use the portal to start labs and submit flags. Keep this controller running.</p></html>');
+    }
+    if (request.method === "GET" && url.pathname === "/api/standalone/progress") {
+      return json(response, 200, Object.fromEntries([...standaloneLabs].map(([id, lab]) => [id, standaloneProgress(lab)])), cors);
+    }
+    const standaloneMatch = url.pathname.match(/^\/api\/standalone\/([a-z0-9-]+)\/(status|start|stop|reset|objectives\/([a-z0-9-]+)\/submit)$/);
+    if (standaloneMatch) {
+      const [, labId, action, objectiveId] = standaloneMatch;
+      const lab = standaloneLabs.get(labId);
+      if (!lab) return json(response, 404, { error: "Unknown standalone lab" }, cors);
+      if (request.method === "GET" && action === "status") return json(response, 200, await standaloneStatus(lab), cors);
+      if (request.method !== "POST" || action === "status") return json(response, 405, { error: "Method not allowed" }, cors);
+      if (!authorizeMutation(request, response, cors)) return;
+      if (objectiveId) {
+        if (!lab.objectives.some((objective) => objective.id === objectiveId)) return json(response, 404, { error: "Unknown objective" }, cors);
+        const body = await readJson(request);
+        try {
+          return json(response, 200, { correct: true, progress: submitStandalone(lab, objectiveId, body.flag) }, cors);
+        } catch (error) { return json(response, 422, { correct: false, error: error.message }, cors); }
+      }
+      return json(response, 200, await standaloneAction(lab, action, root), cors);
+    }
     if (request.method === "GET" && url.pathname === "/health") {
       return json(response, 200, { ok: true, runtime: await determineRuntime() }, cors);
     }
@@ -353,3 +378,5 @@ function shutdown() {
 }
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
+// An optional supervising process can release its child without an OS-level kill.
+process.on("disconnect", shutdown);

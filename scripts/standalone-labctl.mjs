@@ -43,7 +43,11 @@ function fail(message, code = 1) {
   return false;
 }
 
-function loadLabs() {
+export function serviceNames(lab) {
+  return [...new Set(["toolbox", ...lab.services.map((service) => typeof service === "string" ? service : service.name)])];
+}
+
+export function loadLabs() {
   if (!existsSync(labsRoot)) return [];
   const labs = [];
   for (const entry of readdirSync(labsRoot, { withFileTypes: true })) {
@@ -162,7 +166,7 @@ function parseFlags(path) {
   return values;
 }
 
-function readRun(lab) {
+export function readRun(lab) {
   const paths = runtimePaths(lab);
   if (!existsSync(paths.flags) && !existsSync(paths.progress)) return undefined;
   if (!existsSync(paths.flags) || !existsSync(paths.progress)) {
@@ -179,7 +183,7 @@ function readRun(lab) {
   return { paths, values, progress };
 }
 
-function composePrefix(lab, flagsPath) {
+export function composePrefix(lab, flagsPath) {
   return [
     "compose",
     "--env-file",
@@ -191,7 +195,7 @@ function composePrefix(lab, flagsPath) {
   ];
 }
 
-function dockerEnvironment(flagsPath) {
+export function dockerEnvironment(flagsPath) {
   const environment = { ...process.env };
   for (const name of Object.keys(parseFlags(flagsPath))) delete environment[name];
   return environment;
@@ -233,114 +237,123 @@ function printProgress(lab, progress) {
   }
 }
 
-let labs;
-try {
-  labs = loadLabs();
-} catch (error) {
-  fail(error.message);
+export function verifyRun(lab, objectiveId, suppliedFlag) {
+  const objective = lab.objectives.find((candidate) => candidate.id === objectiveId);
+  if (!objective) throw new Error("Unknown objective");
+  if (typeof suppliedFlag !== "string" || suppliedFlag.length > 200) throw new Error("Enter a valid flag string.");
+  const run = readRun(lab);
+  if (!run) throw new Error(`Start ${lab.id} before verifying objectives.`);
+  const missing = (objective.dependsOn ?? []).filter((id) => !run.progress.completed[id]);
+  if (missing.length) throw new Error(`Complete dependencies first: ${missing.join(", ")}`);
+  if (!constantTimeEqual(suppliedFlag.trim(), run.values[objective.flagEnv])) throw new Error("Flag is not valid for this run.");
+  run.progress.completed[objectiveId] ??= { verifiedAt: new Date().toISOString() };
+  atomicWrite(run.paths.progress, `${JSON.stringify(run.progress, null, 2)}\n`, 0o600);
+  return run.progress;
 }
 
-if (labs) {
-  const [action = "", labId, objectiveId, suppliedFlag, ...extra] = process.argv.slice(2);
-  if (!allowedActions.has(action) || extra.length > 0) {
-    usage(action ? `Unknown action or too many arguments: ${action}` : undefined);
-  } else if (action === "list") {
-    if (labId || objectiveId || suppliedFlag) usage("list does not accept additional arguments.");
-    else {
-      console.log("Standalone labs:");
-      for (const lab of labs) {
-        console.log(`  ${lab.id.padEnd(26)} ${lab.title} [${lab.mode}]`);
-        console.log(`    Recommended first: ${lab.prerequisites?.join(", ") || "none (start here)"}`);
-      }
-    }
-  } else {
-    const lab = selectLab(labs, labId);
-    if (lab && action === "start") {
-      if (objectiveId || suppliedFlag) usage("start accepts only a lab-id.");
+function main() {
+  let labs;
+  try {
+    labs = loadLabs();
+  } catch (error) {
+    fail(error.message);
+  }
+
+  if (labs) {
+    const [action = "", labId, objectiveId, suppliedFlag, ...extra] = process.argv.slice(2);
+    if (!allowedActions.has(action) || extra.length > 0) {
+      usage(action ? `Unknown action or too many arguments: ${action}` : undefined);
+    } else if (action === "list") {
+      if (labId || objectiveId || suppliedFlag) usage("list does not accept additional arguments.");
       else {
-        const previous = readRun(lab);
-        const run = previous ?? createRun(lab);
-        if (docker(lab, run.paths.flags, ["up", "-d", "--build", "--wait", "--remove-orphans"])) {
-          console.log(previous
-            ? `Resumed ${lab.id}; flags and objective progress were preserved.`
-            : `Started ${lab.id} with a fresh set of per-run flags.`);
-          printProgress(lab, run.progress);
-          console.log(`For a clean retry: node scripts/standalone-labctl.mjs reset ${lab.id}`);
-          console.log(`Open a shell: node scripts/standalone-labctl.mjs shell ${lab.id}`);
+        console.log("Standalone labs:");
+        for (const lab of labs) {
+          console.log(`  ${lab.id.padEnd(26)} ${lab.title} [${lab.mode}]`);
+          console.log(`    Recommended first: ${lab.prerequisites?.join(", ") || "none (start here)"}`);
         }
       }
-    } else if (lab && action === "stop") {
-      if (objectiveId || suppliedFlag) usage("stop accepts only a lab-id.");
-      else {
-        const run = readRun(lab);
-        if (!run) console.log(`${lab.id} has no local runtime state.`);
-        else if (docker(lab, run.paths.flags, ["down", "--remove-orphans"])) console.log(`Stopped ${lab.id}.`);
-      }
-    } else if (lab && action === "reset") {
-      if (objectiveId || suppliedFlag) usage("reset accepts only a lab-id.");
-      else {
-        const previous = readRun(lab);
-        if (previous && !docker(lab, previous.paths.flags, ["down", "--remove-orphans", "--volumes"])) {
-          // docker() already reported the failure.
-        } else {
-          const run = createRun(lab);
+    } else {
+      const lab = selectLab(labs, labId);
+      if (lab && action === "start") {
+        if (objectiveId || suppliedFlag) usage("start accepts only a lab-id.");
+        else {
+          const previous = readRun(lab);
+          const run = previous ?? createRun(lab);
           if (docker(lab, run.paths.flags, ["up", "-d", "--build", "--wait", "--remove-orphans"])) {
-            console.log(`Reset ${lab.id}; flags and objective progress were rotated.`);
+            console.log(previous
+              ? `Resumed ${lab.id}; flags and objective progress were preserved.`
+              : `Started ${lab.id} with a fresh set of per-run flags.`);
+            printProgress(lab, run.progress);
+            console.log(`For a clean retry: node scripts/standalone-labctl.mjs reset ${lab.id}`);
+            console.log(`Open a shell: node scripts/standalone-labctl.mjs shell ${lab.id}`);
           }
         }
-      }
-    } else if (lab && action === "status") {
-      if (objectiveId || suppliedFlag) usage("status accepts only a lab-id.");
-      else {
-        const run = readRun(lab);
-        if (!run) console.log(`${lab.id}: not started`);
-        else {
-          console.log(`${lab.id}: run ${run.progress.runId}`);
-          printProgress(lab, run.progress);
-          docker(lab, run.paths.flags, ["ps"]);
-        }
-      }
-    } else if (lab && action === "verify") {
-      if (!objectiveId || suppliedFlag === undefined) usage("verify requires a lab-id, objective-id, and flag.");
-      else {
-        const objective = lab.objectives.find((candidate) => candidate.id === objectiveId);
-        if (!objective) fail(`Unknown objective for ${lab.id}: ${objectiveId}`, 2);
+      } else if (lab && action === "stop") {
+        if (objectiveId || suppliedFlag) usage("stop accepts only a lab-id.");
         else {
           const run = readRun(lab);
-          if (!run) fail(`Start ${lab.id} before verifying objectives.`);
-          else {
-            const dependencies = objective.dependsOn ?? [];
-            const missing = dependencies.filter((dependency) => !run.progress.completed[dependency]);
-            if (missing.length > 0) fail(`Complete dependencies first: ${missing.join(", ")}`);
-            else if (!constantTimeEqual(suppliedFlag, run.values[objective.flagEnv])) fail("Flag is not valid for this run.");
-            else {
-              run.progress.completed[objective.id] ??= { verifiedAt: new Date().toISOString() };
-              atomicWrite(run.paths.progress, `${JSON.stringify(run.progress, null, 2)}\n`, 0o600);
-              console.log(`Verified ${lab.id}/${objective.id}.`);
-              printProgress(lab, run.progress);
+          if (!run) console.log(`${lab.id} has no local runtime state.`);
+          else if (docker(lab, run.paths.flags, ["down", "--remove-orphans"])) console.log(`Stopped ${lab.id}.`);
+        }
+      } else if (lab && action === "reset") {
+        if (objectiveId || suppliedFlag) usage("reset accepts only a lab-id.");
+        else {
+          const previous = readRun(lab);
+          if (previous && !docker(lab, previous.paths.flags, ["down", "--remove-orphans", "--volumes"])) {
+            // docker() already reported the failure.
+          } else {
+            const run = createRun(lab);
+            if (docker(lab, run.paths.flags, ["up", "-d", "--build", "--wait", "--remove-orphans"])) {
+              console.log(`Reset ${lab.id}; flags and objective progress were rotated.`);
             }
           }
         }
-      }
-    } else if (lab && action === "smoke") {
-      if (objectiveId || suppliedFlag) usage("smoke accepts only a lab-id.");
-      else {
-        const run = readRun(lab);
-        if (!run) fail(`Start ${lab.id} before running its smoke test.`);
+      } else if (lab && action === "status") {
+        if (objectiveId || suppliedFlag) usage("status accepts only a lab-id.");
         else {
-          const injected = Object.entries(run.values).flatMap(([name, value]) => ["-e", `${name}=${value}`]);
-          if (docker(lab, run.paths.flags, ["exec", "-T", ...injected, lab.toolboxService, "sh", "/opt/lab/smoke.sh"])) {
-            console.log(`Smoke test passed for ${lab.id}.`);
+          const run = readRun(lab);
+          if (!run) console.log(`${lab.id}: not started`);
+          else {
+            console.log(`${lab.id}: run ${run.progress.runId}`);
+            printProgress(lab, run.progress);
+            docker(lab, run.paths.flags, ["ps"]);
           }
         }
-      }
-    } else if (lab && action === "shell") {
-      if (objectiveId || suppliedFlag) usage("shell accepts only a lab-id.");
-      else {
-        const run = readRun(lab);
-        if (!run) fail(`Start ${lab.id} before opening its toolbox.`);
-        else docker(lab, run.paths.flags, ["exec", lab.toolboxService, "bash", "-l"]);
+      } else if (lab && action === "verify") {
+        if (!objectiveId || suppliedFlag === undefined) usage("verify requires a lab-id, objective-id, and flag.");
+        else {
+          const objective = lab.objectives.find((candidate) => candidate.id === objectiveId);
+          if (!objective) fail(`Unknown objective for ${lab.id}: ${objectiveId}`, 2);
+          else {
+            try {
+              const progress = verifyRun(lab, objectiveId, suppliedFlag);
+              console.log(`Verified ${lab.id}/${objective.id}.`);
+              printProgress(lab, progress);
+            } catch (error) { fail(error.message); }
+          }
+        }
+      } else if (lab && action === "smoke") {
+        if (objectiveId || suppliedFlag) usage("smoke accepts only a lab-id.");
+        else {
+          const run = readRun(lab);
+          if (!run) fail(`Start ${lab.id} before running its smoke test.`);
+          else {
+            const injected = Object.entries(run.values).flatMap(([name, value]) => ["-e", `${name}=${value}`]);
+            if (docker(lab, run.paths.flags, ["exec", "-T", ...injected, lab.toolboxService, "sh", "/opt/lab/smoke.sh"])) {
+              console.log(`Smoke test passed for ${lab.id}.`);
+            }
+          }
+        }
+      } else if (lab && action === "shell") {
+        if (objectiveId || suppliedFlag) usage("shell accepts only a lab-id.");
+        else {
+          const run = readRun(lab);
+          if (!run) fail(`Start ${lab.id} before opening its toolbox.`);
+          else docker(lab, run.paths.flags, ["exec", lab.toolboxService, "bash", "-l"]);
+        }
       }
     }
   }
 }
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();
