@@ -16,9 +16,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ?? "http://127.0.0.1:5173",
   ),
-  title: "RECON//LAB — Safe Exploit Training",
+  title: "RECON//LAB — Beginner Security Investigations",
   description:
-    "สนามฝึก Web Exploitation และ Recon แบบแยกวงสำหรับการเรียนรู้อย่างปลอดภัย",
+    "Learn terminal basics, follow fictional evidence, and explain your findings in isolated local security labs.",
   openGraph: {
     title: "RECON//LAB",
     description: "Safe. Local. Repeatable.",

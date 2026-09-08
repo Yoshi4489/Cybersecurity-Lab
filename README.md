@@ -1,93 +1,118 @@
 # RECON//LAB
 
-### Beginner lab workspace
+A local, beginner-first security curriculum. Start with terminal practice, then
+follow connected investigations with scenarios, evidence, progressive hints,
+understanding checks and hidden walkthroughs.
 
-After `npm run lab`, open **http://127.0.0.1:5173/labs** for ten beginner investigations.
-Lab 10, **The Mislabelled Secret**, adds Base64, hex, ROT13, a bounded synthetic
-MD5 dictionary exercise, and a toy XOR message to decrypt with the recovered key.
-Scenarios, tool briefings, objectives, progressive per-flag hints, and full solutions
-are readable in the portal; no local README needs to be opened. Use Start / resume,
-open the lab toolbox with the displayed shell command, and submit each discovered
-flag into its matching form. Portal and CLI share the same per-run progress.
-Only Reset clears that lab's flags and submissions. The original 18-module shared
-range remains available from the home page and has separate flags and progress.
+This is a **single-user, local-only** product, not a production multi-user service.
 
-Port **3030 is the controller API**, not the portal. If a controller route is not
-found after updating, restart the old process with `npm run lab:stop` followed by
-`npm run lab` (stopping also shuts down the original shared range). On PowerShell,
-use `npm.cmd` if script execution policy blocks `npm`. Standalone targets should
-be stopped using their workspace Stop button or `npm run labs:stop -- <lab-id>`;
-`lab:stop` does not stop those independent projects.
+## Start here
 
-RECON//LAB is a single-user, local-only guided teaching range, not a production multi-user service. สนามฝึก Web Exploitation และ Recon สำหรับผู้เรียนระดับกลางถึงสูง เป้าหมายและข้อมูลทั้งหมดเป็นของจำลอง อยู่ใน Docker networks ที่ไม่มี outbound internet และ reset ได้จากหน้าเว็บ
+Install Node.js 22.13+ and Docker Desktop with Linux containers (or Docker Engine
+and Compose v2 on Linux). Start Docker and wait for its engine, then run these
+commands from this project folder:
 
-## เริ่มใช้งาน
-
-ต้องมี Node.js 22.13+ และ Docker Desktop/Engine ที่กำลังทำงาน
-
-ตรวจสอบเครื่องแบบไม่แก้ไขระบบก่อนติดตั้งหรือเริ่ม range:
-
-```bash
+```sh
 npm run doctor
-```
-
-```bash
 npm install
 npm run lab
 ```
 
-เปิด `http://127.0.0.1:5173` แล้วกด **START LAB** การ build toolbox ครั้งแรกอาจใช้เวลาหลายนาที หลังจากนั้นเปิด terminal ได้ในหน้า Lab Workspace ที่ `http://127.0.0.1:7681`
+On Windows PowerShell use `npm.cmd` instead of `npm` if execution policy blocks
+npm.ps1. Open **http://127.0.0.1:5173/**. The current curriculum is the home page;
+`/labs` remains a compatible link to the same workspace.
 
-All 18 portal modules share the same local target range. Portal lifecycle controls (start, stop, and reset) affect every portal module, not only the lesson currently selected.
+Begin with **Lab 00 — Your First Shift: Terminal Practice**. Click **Start / resume
+lab**, run the displayed shell command in your host terminal, and keep the portal
+open beside the toolbox. The portal contains the lesson and solution; you do not
+need to open local Markdown files.
 
-หยุดทุก service ด้วย:
+For detailed setup help, see [Getting started](standalone-labs/GETTING-STARTED.md).
 
-```bash
-npm run lab:stop
+## One current learning path
+
+The current curriculum has **11 labs**: a short terminal orientation, nine
+connected investigations, and a message-recovery elective.
+
+- **00:** prompts, commands, arguments, files, pipes and copying practice flags.
+- **01–05:** networks, service identification, DNS and Linux evidence.
+- **06:** infrastructure investigation capstone.
+- **07–09:** the ApertureOps web incident, recovered artifacts and final case.
+- **10:** optional Base64, hex, ROT13, MD5 candidate matching and toy XOR, after 01.
+
+[Curriculum details](standalone-labs/README.md) describe skills and recommended
+prerequisites. Earlier targets need not remain running: each case supplies its
+own evidence. Use only each lesson's fictional, explicitly authorized scope.
+
+## How a task works
+
+Each task card keeps its question, starting evidence, expected observation,
+three closed hints, understanding check and flag field together. Try the task,
+open one hint if stuck, explain your reasoning in the check, then submit the flag.
+The full solution stays separately hidden.
+
+Flags are generated for each run and verified by the local controller.
+The portal and CLI share that saved flag progress. Understanding checks are
+formative practice, not secure exams: they give immediate explanations and are
+saved on this browser per run. They are required for the portal submission flow,
+but the maintainer/CLI verifier still checks flags independently. Existing flag
+progress is preserved; you can complete checks for previously verified tasks.
+
+## Start, stop and resume
+
+- **Start / resume:** creates a first run or preserves existing flags and submissions.
+- **Stop lab:** removes that lab's containers, preserving submissions and flags.
+  Toolbox `/tmp` files are lost; download evidence again on resume.
+- **Reset this lab:** explicitly deletes that lab's progress and volumes and creates
+  fresh flags. It does not reset other investigations.
+- **Reconnect / Refresh status:** retries controller connectivity or reads runtime state.
+
+Stop active investigations using their **Stop lab** buttons before running
+`npm run lab:stop`. That command stops the portal, controller and legacy shared
+range; it does not stop independent current-curriculum containers.
+
+The controller is an API at `http://127.0.0.1:3030/health`, not the lesson portal.
+It accepts only loopback access, trusted origins and protected lifecycle actions.
+Do not publish it, the portal, or training containers to the internet.
+
+## Legacy modules
+
+The original **18 shared-range modules** are retained at
+**http://127.0.0.1:5173/legacy** for returning learners. They are not part of the
+recommended beginner path. Their original scores, notes, flags and shared runtime
+remain separate and unchanged; no progress has been migrated or deleted. Their
+browser toolbox belongs to that legacy range, not to the current investigations.
+All 18 portal modules share the same local target range: legacy start, stop and
+reset actions affect every portal module in that range. Its browser toolbox is
+at http://127.0.0.1:7681 and is only for those legacy modules.
+
+## CLI and development
+
+The historical `standalone-labs/` directory and CLI names remain stable for
+compatibility; these labs are integrated into the default portal.
+
+```sh
+npm run labs:list
+node scripts/standalone-labctl.mjs start 00-terminal-basics
+node scripts/standalone-labctl.mjs shell 00-terminal-basics
 ```
 
-สถานะและ logs อยู่ใน `.lab/` ซึ่งถูก ignore จาก Git ความคืบหน้า, notes และคะแนนเก็บใน `.lab/reconlab.sqlite`
+Run investigation commands only inside the toolbox. In another host terminal,
+optional verification uses `node scripts/standalone-labctl.mjs verify <lab-id>
+<objective-id> 'RLAB{...}'`.
 
-## ขอบเขตความปลอดภัย
-
-- ใช้เครื่องมือกับ `gateway`, `recon-node` และ routes ที่บทเรียนระบุเท่านั้น
-- ห้ามนำ payload หรือ scanner ไปใช้กับระบบสาธารณะ ระบบองค์กร หรือเป้าหมายที่ไม่ได้รับอนุญาต
-- targets ใช้ non-root users, read-only filesystems, dropped capabilities และสอง Docker networks ที่ตั้งเป็น `internal`
-- command injection, file upload, traversal และฐานข้อมูลเป็น simulator ภายใน container: ไม่มีการ execute คำสั่ง OS, เขียนไฟล์ผู้ใช้ หรือเชื่อมฐานข้อมูลจริง
-- SSRF fetcher เรียกได้เฉพาะสอง internal routes ที่กำหนดไว้ใน code
-- Portal, controller, target browser port และ terminal bind เฉพาะ `127.0.0.1`
-
-โมเดล trust และข้อจำกัดของ flags อธิบายไว้ใน [local range threat model](docs/THREAT-MODEL.md): flags ใช้รักษาความสอดคล้องของ progress ไม่ใช่ความลับจากเจ้าของเครื่อง
-
-## โครงหลักสูตร
-
-มี 18 labs: Rules of Engagement, passive/active recon, DNS, HTTP fingerprinting, content discovery, authentication enumeration, IDOR/BOLA, SQL injection, command injection simulation, XSS, CSRF, SSRF, traversal/LFI, upload validation, JWT/mass assignment, business logic และ capstone แบบ chaining
-
-ทุก lab มี Mission brief, scope, objectives/flags, hints ที่หักคะแนน, solution และ field notes พร้อม Playbooks ที่เชื่อม attack flow กับ detection/remediation
-
-## คำสั่งสำหรับผู้พัฒนา
-
-```bash
-npm run dev             # portal เท่านั้น
-npm run lab:controller  # controller เท่านั้น
-npm test                # build + unit/manifest/render tests
+```sh
+npm run dev
+npm run lab:controller
+npm test
 npm run lint
 ```
 
-Controller ยอมรับ lifecycle actions จาก allowlisted lab IDs เท่านั้น และเรียก Docker Compose ด้วย argument คงที่ ไม่รับ container names หรือ shell commands จาก browser
+Maintainers can run `node scripts/verify-standalone.mjs <lab-id>` for a full
+Docker lifecycle check. This deliberately resets the selected lab; do not use it
+on progress you want to keep.
 
-## Standalone Recon & Linux Labs
-
-ชุดฝึก command line รอบใหม่ถูกแยกออกจาก portal โดยสมบูรณ์ อยู่ใต้ `standalone-labs/` และไม่เพิ่มจำนวนใน catalog 18 labs เดิม แต่ละ lab มี manifest, Docker Compose project, internal subnet, dynamic flags, progress และ reset lifecycle ของตัวเอง
-
-> **เพิ่งเริ่มต้น?** อ่าน [คู่มือ setup สำหรับมือใหม่](standalone-labs/GETTING-STARTED.md) (ภาษาอังกฤษ) ก่อน — พาติดตั้ง Node.js และ Docker, อธิบายการทำงานแบบสอง terminal และเล่น lab แรกแบบ step by step
-
-```bash
-npm run labs:list
-npm run labs:start -- 01-network-triage
-npm run labs:shell -- 01-network-triage
-npm run labs:verify -- 01-network-triage network-baseline 'RLAB{...}'
-npm run labs:stop -- 01-network-triage
-```
-
-มี 9 chained scenarios: network triage, service fingerprinting, DNS breadcrumbs, zone transfer, Linux evidence hunt, capstone ที่เชื่อม DNS → Nmap → HTTP artifact → log correlation, web breach chain (recon → XSS → JWT), การถอดรหัส artifact แบบหลายชั้น และ web content discovery ดูรายละเอียดและ safety boundary ที่ [`standalone-labs/README.md`](standalone-labs/README.md)
+See the [threat model](docs/THREAT-MODEL.md) and
+[curriculum design](docs/CURRICULUM-DESIGN.md). All targets and evidence are
+synthetic. Local flags track learning progress; they are not secrets from the
+owner of the computer.

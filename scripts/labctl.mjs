@@ -57,9 +57,9 @@ if (action === "start") {
   writeFileSync(pidsFile, JSON.stringify({ controller, portal, startedAt: new Date().toISOString() }, null, 2));
   console.log("RECON//LAB is starting locally.");
   console.log("Portal:     http://127.0.0.1:5173");
-  console.log("Beginner labs: http://127.0.0.1:5173/labs");
+  console.log("Current curriculum starts at Lab 00. Legacy modules: http://127.0.0.1:5173/legacy");
   console.log("Controller API (not the portal): http://127.0.0.1:3030/health");
-  console.log("Use START LAB in the portal to build and launch the isolated targets.");
+  console.log("Use Start / resume lab in the portal to build and launch the isolated targets.");
 } else if (action === "stop") {
   const current = readPids();
   stopTree(current.portal);
@@ -71,7 +71,8 @@ if (action === "start") {
     env: { ...process.env, COMPOSE_PROJECT_NAME: "reconlab" },
   });
   writeFileSync(pidsFile, JSON.stringify({ stoppedAt: new Date().toISOString() }, null, 2));
-  console.log("RECON//LAB portal, controller, and targets are stopped.");
+  console.log("RECON//LAB portal, controller, and legacy shared range are stopped.");
+  console.log("Current-curriculum lab containers are independent. Stop any active lab with: node scripts/standalone-labctl.mjs stop <lab-id>");
 } else if (action === "status") {
   const current = readPids();
   console.log(`Portal: ${isAlive(current.portal) ? "running" : "stopped"}`);
