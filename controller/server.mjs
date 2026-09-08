@@ -262,9 +262,13 @@ const server = createServer(async (request, response) => {
     }
     if (request.method === "GET" && url.pathname === "/api/session") {
       if (origin && !isAllowedOrigin(origin, allowedOrigins)) return json(response, 403, { error: "Origin is not allowed" });
-      const sessionId = randomBytes(24).toString("hex");
-      const csrfToken = randomBytes(24).toString("hex");
-      sessions.set(sessionId, { csrfToken, createdAt: Date.now() });
+      // Tabs share this cookie. Preserve its token so connecting another tab
+      // does not invalidate the token already held by an open workspace.
+      const existingId = parseCookies(request.headers.cookie).rlab_session;
+      const existingSession = sessions.get(existingId);
+      const sessionId = existingSession ? existingId : randomBytes(24).toString("hex");
+      const csrfToken = existingSession?.csrfToken ?? randomBytes(24).toString("hex");
+      if (!existingSession) sessions.set(sessionId, { csrfToken, createdAt: Date.now() });
       return json(response, 200, { csrfToken, runtime: await determineRuntime() }, {
         ...cors,
         "Set-Cookie": `rlab_session=${sessionId}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800`,

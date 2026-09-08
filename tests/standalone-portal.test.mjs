@@ -21,10 +21,18 @@ test("portal status includes every actual Compose service across both manifest f
 
 test("portal learning content covers every rebuilt lab without exposing runtime or flag keys", () => {
   const labs = readLearningMaterial();
-  assert.equal(labs.length, 10);
+  assert.equal(labs.length, 11);
   for (const lab of labs) {
     for (const field of ["scenario", "basics", "objectivesText", "solution", "takeaway"]) assert.ok(lab[field].length > 100, `${lab.id} ${field}`);
     assert.equal(lab.hints.length, lab.objectives.length);
+    for (const objective of lab.objectives) {
+      for (const field of ["description", "evidence", "observation"]) assert.ok(objective[field].length > 20, `${lab.id}/${objective.id} ${field}`);
+      assert.equal(objective.hints.length, 3);
+      assert.equal(objective.checkpoint.choices.length, 3);
+      assert.ok(objective.checkpoint.choices[objective.checkpoint.answer]);
+      assert.ok(objective.checkpoint.explanation.length > 30);
+      assert.doesNotMatch(objective.description, /node scripts\/standalone-labctl.mjs verify/);
+    }
     for (const [index, group] of lab.hints.entries()) {
       assert.ok(group.title.includes(lab.objectives[index].id));
       assert.equal(group.hints.length, 3);
@@ -86,6 +94,21 @@ test("standalone HTTP API shares CLI state, rejects invalid proofs, and keeps mu
   const id = "01-network-triage";
   const path = `/api/standalone/${id}`;
   const post = (suffix, body = {}, customHeaders = headers) => fetch(`${base}${path}/${suffix}`, { method: "POST", headers: customHeaders, body: JSON.stringify(body) });
+  await t.test("new tabs and reconnects reuse the shared cookie and CSRF token", async () => {
+    const tabs = await Promise.all(Array.from({ length: 3 }, () => fetch(`${base}/api/session`, { headers: { Origin: origin, Cookie: headers.Cookie } })));
+    for (const tab of tabs) {
+      assert.equal(tab.status, 200);
+      assert.equal(tab.headers.get("set-cookie").split(";")[0], headers.Cookie);
+      assert.equal((await tab.json()).csrfToken, session.csrfToken);
+    }
+    // The first tab's token still authorizes the request; only its proof is invalid.
+    assert.equal((await post("objectives/network-baseline/submit", { flag: "invalid" })).status, 422);
+    assert.equal((await post("start", {}, { ...headers, "X-CSRF-Token": "wrong-token" })).status, 403);
+    const unknown = await fetch(`${base}/api/session`, { headers: { Origin: origin, Cookie: "rlab_session=unknown" } });
+    assert.notEqual(unknown.headers.get("set-cookie").split(";")[0], "rlab_session=unknown");
+    assert.notEqual((await unknown.json()).csrfToken, session.csrfToken);
+    assert.equal((await fetch(`${base}/api/session`, { headers: { Origin: "https://untrusted.example", Cookie: headers.Cookie } })).status, 403);
+  });
   assert.equal((await post("start", {}, { Origin: origin })).status, 403);
   assert.equal((await post("start", {}, { ...headers, Origin: "https://untrusted.example" })).status, 403);
   assert.equal((await fetch(`${base}${path}/start`)).status, 405);
