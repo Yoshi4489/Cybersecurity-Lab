@@ -1,0 +1,72 @@
+{
+  "base64": {
+    "evidence": "The `/brief` record declares its payload format.",
+    "observation": "Decoded text contains a flag and a tokenized next path.",
+    "checkpoint": {
+      "question": "Why did this decoding need no password?",
+      "choices": [
+        "Base64 is a public reversible encoding, not encryption.",
+        "The decoder guessed the encryption password.",
+        "All encrypted data is readable without keys."
+      ],
+      "answer": 0,
+      "explanation": "Base64 represents bytes as text. It provides no secret key or confidentiality."
+    }
+  },
+  "hex": {
+    "evidence": "The next exhibit declares a hex payload.",
+    "observation": "Hex pairs become bytes and then readable UTF-8 text.",
+    "checkpoint": {
+      "question": "What does one pair of hexadecimal digits represent?",
+      "choices": [
+        "One encryption password.",
+        "A complete MD5 digest.",
+        "One byte."
+      ],
+      "answer": 2,
+      "explanation": "Two hex digits represent a value from 0 to 255. Recover the bytes before interpreting their text encoding."
+    }
+  },
+  "rot13": {
+    "evidence": "The hex exhibit links to a ROT13 record.",
+    "observation": "The fixed alphabet substitution restores a flag and dictionary path.",
+    "checkpoint": {
+      "question": "Why does ROT13 provide no strong secrecy?",
+      "choices": [
+        "Its key is securely stored in the hostname.",
+        "Its fixed public substitution is reversible without a secret.",
+        "It verifies the sender's digital signature."
+      ],
+      "answer": 1,
+      "explanation": "The mapping is public and applying it twice restores the original letters."
+    }
+  },
+  "md5": {
+    "evidence": "The dictionary record supplies one digest, five synthetic candidates and a case token.",
+    "observation": "One candidate's exact-byte MD5 matches; the unlock reply includes ciphertext.",
+    "checkpoint": {
+      "question": "Did you decode the MD5 value, or compare guesses?",
+      "choices": [
+        "Compared the digest of each supplied candidate with the target digest.",
+        "Decoded MD5 back into its original text.",
+        "Found a collision to decrypt the ciphertext."
+      ],
+      "answer": 0,
+      "explanation": "This is a bounded dictionary match. MD5 is not decoded; candidate bytes are hashed and compared, and a newline changes those bytes."
+    }
+  },
+  "message": {
+    "evidence": "The unlock reply contains hex ciphertext, a reference plaintext digest, and you have the recovered key.",
+    "observation": "Keyed XOR restores the message and its digest matches the supplied reference.",
+    "checkpoint": {
+      "question": "Which step removes encryption rather than encoding?",
+      "choices": [
+        "Hex decoding alone decrypts the message.",
+        "SHA-256 comparison decrypts the message.",
+        "XOR with the repeating key; hex decoding only restores ciphertext bytes."
+      ],
+      "answer": 2,
+      "explanation": "Separate representation (hex), keyed transformation (toy XOR), and integrity comparison (SHA-256). This toy cipher is not secure modern encryption."
+    }
+  }
+}

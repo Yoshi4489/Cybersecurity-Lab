@@ -1,0 +1,58 @@
+{
+  "robots": {
+    "evidence": "The archive's public clues identify a status route.",
+    "observation": "Case metadata, a deployment finding and a status token.",
+    "checkpoint": {
+      "question": "What supports a deployment-exposure finding?",
+      "choices": [
+        "Sensitive deployment evidence is retrievable through the public route.",
+        "A crawler file exists, regardless of its contents.",
+        "A page uses a dark theme."
+      ],
+      "answer": 0,
+      "explanation": "Base the finding on accessible sensitive content, not the mere existence or appearance of a public file."
+    }
+  },
+  "gitleak": {
+    "evidence": "The status handover points to exposed repository configuration.",
+    "observation": "Repository evidence names a backup and its encoding.",
+    "checkpoint": {
+      "question": "Why is exposed repository configuration useful to an investigator?",
+      "choices": [
+        "It always contains a valid administrator password.",
+        "It guarantees all historical commits are available.",
+        "It can reveal internal paths and deployment artifacts."
+      ],
+      "answer": 2,
+      "explanation": "Describe what this configuration actually discloses. Do not assume credentials or a complete repository leak."
+    }
+  },
+  "backup": {
+    "evidence": "The repository clue names the migration backup and encoding.",
+    "observation": "Decoded configuration provides artifact location, reference hash and case evidence.",
+    "checkpoint": {
+      "question": "Does Base64 protect a backup from disclosure?",
+      "choices": [
+        "Yes; it verifies the author's identity.",
+        "No; anyone with the text can decode it without a secret.",
+        "Yes; it is password-based encryption."
+      ],
+      "answer": 1,
+      "explanation": "Base64 is a reversible representation. Access controls and appropriate encryption address different needs."
+    }
+  },
+  "final": {
+    "evidence": "The decoded configuration provides an artifact and its reference digest.",
+    "observation": "Verified log bytes identify which actor successfully retrieved which export.",
+    "checkpoint": {
+      "question": "Which observation supports a successful export conclusion?",
+      "choices": [
+        "A matching actor, export and successful event in the verified log.",
+        "An unsuccessful request to any export path.",
+        "The largest file in the archive."
+      ],
+      "answer": 0,
+      "explanation": "Correlate identity, resource and outcome in the actual evidence; a failed attempt does not establish a download."
+    }
+  }
+}

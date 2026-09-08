@@ -42,6 +42,7 @@ test("standalone documentation publishes the recommended learning order", async 
     read("../standalone-labs/GETTING-STARTED.md"),
   ]);
   for (const document of [standaloneReadme, gettingStarted]) {
+    assert.match(document, /00\s*→\s*01/u);
     assert.match(document, /01\s*→\s*02\s*→\s*03\s*→\s*04\s*→\s*05\s*→\s*06\s*→\s*07\s*→\s*08\s*→\s*09/u);
     assert.match(document, /numeric prefixes?[\s\S]*stable IDs?/i);
     assert.match(document, /06[\s\S]*09[\s\S]*capstones/i);

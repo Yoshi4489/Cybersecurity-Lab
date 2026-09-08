@@ -72,7 +72,7 @@
   ],
   "campaign": "Northstar: Infrastructure Review",
   "mode": "guided",
-  "prerequisites": [],
+  "prerequisites": ["00-terminal-basics"],
   "learningOutcomes": [
     "Explain hosts, ports and protocols",
     "Resolve a named asset",

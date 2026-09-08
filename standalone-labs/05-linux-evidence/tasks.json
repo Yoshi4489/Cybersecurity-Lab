@@ -1,0 +1,58 @@
+{
+  "filesystem": {
+    "evidence": "The case server provides a manifest and archive for EV-55.",
+    "observation": "An original archive hash, extracted inventory and encoded handoff note.",
+    "checkpoint": {
+      "question": "Why hash the archive before extracting a working copy?",
+      "choices": [
+        "To record the exact original bytes used in the investigation.",
+        "To decrypt the archive automatically.",
+        "To prove who authored the archive."
+      ],
+      "answer": 0,
+      "explanation": "A digest supports byte-for-byte comparison; it does not establish authorship or decrypt content."
+    }
+  },
+  "logs": {
+    "evidence": "The extracted access log records source IPs and requested paths.",
+    "observation": "A counted dominant source and the proof path it requested.",
+    "checkpoint": {
+      "question": "What supports the claim that one source is dominant?",
+      "choices": [
+        "The first IP printed in the file.",
+        "The longest URL in the log.",
+        "Counts grouped by source across the relevant log."
+      ],
+      "answer": 2,
+      "explanation": "Aggregate relevant records instead of inferring frequency from position or appearance."
+    }
+  },
+  "binary": {
+    "evidence": "The case names `session.bin` as suspicious evidence.",
+    "observation": "Printable `binary_proof` text recovered without running the artifact.",
+    "checkpoint": {
+      "question": "Why inspect printable strings instead of executing the artifact?",
+      "choices": [
+        "Executing a file is required to compute its hash.",
+        "You can collect embedded evidence without running untrusted code.",
+        "Strings proves that a file is harmless."
+      ],
+      "answer": 1,
+      "explanation": "Static inspection reduces execution risk. Printable content alone does not prove safety."
+    }
+  },
+  "final": {
+    "evidence": "You have three proofs, the dominant source, original hash and case ID.",
+    "observation": "The report is accepted with consistent case evidence.",
+    "checkpoint": {
+      "question": "Which hash belongs in the report?",
+      "choices": [
+        "The hash of the original downloaded archive.",
+        "A hash of any file with the same name.",
+        "A hash copied from a different case."
+      ],
+      "answer": 0,
+      "explanation": "The report must identify the exact artifact analyzed. File names and unrelated digests are not substitutes."
+    }
+  }
+}

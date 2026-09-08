@@ -1,0 +1,58 @@
+{
+  "address-trail": {
+    "evidence": "Begin with `entry.recon.test` and the lab's DNS service.",
+    "observation": "An alias chain, address records and related TXT evidence.",
+    "checkpoint": {
+      "question": "What is the difference between a CNAME and an A record?",
+      "choices": [
+        "CNAME names another hostname; A gives an IPv4 address.",
+        "CNAME always provides a TCP port.",
+        "A records store email priority."
+      ],
+      "answer": 0,
+      "explanation": "Follow the alias, then resolve its destination. Different record types answer different questions."
+    }
+  },
+  "mail-trail": {
+    "evidence": "The domain `recon.test` has a mail-routing question to answer.",
+    "observation": "An MX destination, its resolved address and its TXT proof.",
+    "checkpoint": {
+      "question": "What does an MX record identify?",
+      "choices": [
+        "A guarantee that a mailbox password is valid.",
+        "The web page for the domain.",
+        "The host designated to receive mail for a domain."
+      ],
+      "answer": 2,
+      "explanation": "MX describes mail routing, not credentials or a web endpoint; resolve the named host separately."
+    }
+  },
+  "service-trail": {
+    "evidence": "Search for the `_ops._tcp` SRV record.",
+    "observation": "A target hostname and port, with forward/reverse records and a service token.",
+    "checkpoint": {
+      "question": "Which record can disclose both a service target and a port?",
+      "choices": [
+        "CNAME.",
+        "SRV.",
+        "A."
+      ],
+      "answer": 1,
+      "explanation": "SRV carries target and port fields. A provides an address, and CNAME provides an alias."
+    }
+  },
+  "dns-proof": {
+    "evidence": "The three DNS trails provide tokens plus the hidden HTTP destination.",
+    "observation": "A final HTTP response accepting the DNS-derived evidence.",
+    "checkpoint": {
+      "question": "Why use the discovered port rather than assume port 80?",
+      "choices": [
+        "DNS service evidence specifies the destination port.",
+        "Every DNS server is also an HTTP server.",
+        "Reverse DNS forces all services onto port 80."
+      ],
+      "answer": 0,
+      "explanation": "Use the endpoint actually disclosed by the records rather than substituting a conventional default."
+    }
+  }
+}

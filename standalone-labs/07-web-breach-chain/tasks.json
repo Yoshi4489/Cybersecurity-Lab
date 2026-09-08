@@ -1,0 +1,72 @@
+{
+  "recon-sweep": {
+    "evidence": "The authorized edge host exposes more than HTTP.",
+    "observation": "A non-HTTP banner provides a recon token and HTTP destination.",
+    "checkpoint": {
+      "question": "What justifies the next HTTP request?",
+      "choices": [
+        "The inspected banner advertises that destination.",
+        "Any URL on the internet is automatically in scope.",
+        "All ports return interchangeable content."
+      ],
+      "answer": 0,
+      "explanation": "A specific scoped lead connects reconnaissance to the next request."
+    }
+  },
+  "surface-map": {
+    "evidence": "Inspect the disclosed HTTP destination's headers, source and crawler guidance.",
+    "observation": "A developer handover explains the support-report flow.",
+    "checkpoint": {
+      "question": "Does robots.txt protect a path from access?",
+      "choices": [
+        "Yes; listed paths require administrator access.",
+        "Yes; browsers enforce its rules as permissions.",
+        "No; it is crawler guidance, not authorization."
+      ],
+      "answer": 2,
+      "explanation": "Robots guidance can disclose paths but does not replace server-side access control."
+    }
+  },
+  "web-foothold": {
+    "evidence": "The developer handover points to the support preview and simulated reviewer.",
+    "observation": "The training reviewer returns a session and foothold token for the demonstration.",
+    "checkpoint": {
+      "question": "What does this reviewer response demonstrate in this lab?",
+      "choices": [
+        "Operating-system root access was obtained.",
+        "A labeled simulation of session exposure through unsafe markup handling.",
+        "A real victim browser was compromised."
+      ],
+      "answer": 1,
+      "explanation": "The reviewer is a controlled simulation. State that boundary instead of claiming a real-world victim or OS exploit."
+    }
+  },
+  "privilege-escalation": {
+    "evidence": "The simulated reviewer returned a JWT with a subject and session ID.",
+    "observation": "The training application accepts altered unsigned role claims.",
+    "checkpoint": {
+      "question": "Why is accepting an unsigned admin role a trust failure?",
+      "choices": [
+        "The server trusts a client-controlled claim without verifying its integrity.",
+        "Base64 encoding makes the role secret.",
+        "Every decoded JWT is automatically authentic."
+      ],
+      "answer": 0,
+      "explanation": "Encoding is not signature verification. Authorization must use authenticated claims and enforce policy server-side."
+    }
+  },
+  "root-proof": {
+    "evidence": "Stage tokens and the forged training bearer token complete the incident chain.",
+    "observation": "An application-level final proof; no operating-system root shell.",
+    "checkpoint": {
+      "question": "What access level did this exercise demonstrate?",
+      "choices": [
+        "Operating-system root on the host computer.",
+        "Access to external user accounts.",
+        "Application admin access in a synthetic target."
+      ],
+      "answer": 2,
+      "explanation": "The legacy objective ID says root-proof, but the actual demonstrated boundary is application authorization."
+    }
+  }
+}

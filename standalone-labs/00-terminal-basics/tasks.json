@@ -1,0 +1,30 @@
+{
+  "read-note": {
+    "evidence": "The supplied folder `/practice` contains your desk handover.",
+    "observation": "`pwd` shows `/practice`; the note contains case PRACTICE-00 and a practice flag.",
+    "checkpoint": {
+      "question": "In `cat handover.txt`, what is `handover.txt`?",
+      "choices": [
+        "A filename argument telling cat what to read.",
+        "A second command run after cat.",
+        "The terminal prompt."
+      ],
+      "answer": 0,
+      "explanation": "Spaces separate the command from its arguments. cat reads the file named by its argument."
+    }
+  },
+  "filter-log": {
+    "evidence": "The handover names `events.log`, with four training entries.",
+    "observation": "Only one READY entry is displayed by the pipe; reading the original log still shows four entries.",
+    "checkpoint": {
+      "question": "Which observation shows that grep did not delete lines?",
+      "choices": [
+        "Only one entry was displayed by grep.",
+        "The terminal prompt contains a dollar sign.",
+        "Reading events.log again still shows all four entries."
+      ],
+      "answer": 2,
+      "explanation": "The second full read is the comparison that tests your conclusion. Filtering output is different from editing a file."
+    }
+  }
+}

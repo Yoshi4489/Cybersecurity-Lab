@@ -1,0 +1,21 @@
+{
+  "id": "00-terminal-basics",
+  "title": "Your First Shift: Terminal Practice",
+  "summary": "Practice prompts, commands, arguments, files, pipes and copying evidence before networking.",
+  "description": "A harmless desk handover in an isolated Linux toolbox. Read a note, filter a log, and submit two practice flags.",
+  "difficulty": "beginner",
+  "minutes": 15,
+  "subnet": "172.28.0.0/24",
+  "composeFile": "docker-compose.yml",
+  "toolboxService": "toolbox",
+  "commandFamilies": ["pwd", "ls", "cd", "cat", "grep", "printf"],
+  "services": ["training-desk"],
+  "campaign": "Start here: Terminal foundations",
+  "mode": "guided",
+  "prerequisites": [],
+  "learningOutcomes": ["Distinguish a prompt from a command and its arguments", "Navigate and read a supplied file", "Explain how a pipe filters output without modifying a file", "Copy only the requested evidence into a submission"],
+  "objectives": [
+    {"id": "read-note", "title": "Read your desk handover", "label": "Read your desk handover", "points": 10, "flagEnv": "FLAG_L00_NOTE", "dependsOn": []},
+    {"id": "filter-log", "title": "Filter and copy the practice evidence", "label": "Filter and copy the practice evidence", "points": 10, "flagEnv": "FLAG_L00_PIPE", "dependsOn": ["read-note"]}
+  ]
+}

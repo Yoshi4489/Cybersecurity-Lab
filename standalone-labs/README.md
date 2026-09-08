@@ -1,16 +1,18 @@
 # Northstar Shipping: Beginner Security Labs
 
-Ten independent local investigations teach you how evidence leads to the next
+Eleven local labs teach you how evidence leads to the next
 question and the next command. Start with the [setup guide](GETTING-STARTED.md).
-Read these investigations and submit flags in the portal at `/labs`. The original
-shared range still contains eighteen separate modules.
+Read the lessons and submit flags in the default portal at `/` (`/labs` also works).
+Returning learners can access the eighteen original modules under **Legacy** at
+`/legacy`; their progress remains unchanged.
 
 ## Learning path
 
-Follow this order: **01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09**.
+Follow this order: **00 → 01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09**.
 
 | Lab | Investigation | Mode | You learn |
 | --- | --- | --- | --- |
+| [00](00-terminal-basics/README.md) | Your First Shift | Guided | Prompts, arguments, files, pipes and copying flags |
 | [01](01-network-triage/README.md) | First Contact | Guided | Hosts, ports, HTTP, and raw TCP |
 | [02](02-service-fingerprint/README.md) | Unmanaged Service Farm | Guided | Inventory, versions, saved evidence |
 | [03](03-dns-breadcrumbs/README.md) | Ghost Service in DNS | Guided | Aliases, addresses, mail and service records |
@@ -37,7 +39,11 @@ distinguished from encryption, using only supplied synthetic training data.
 Every README gives a scenario, concepts, objectives, three hints for each flag,
 a complete solution, and defensive takeaways. Read concepts first. Try an
 objective, reveal one hint if needed, and consult the solution after an attempt.
-A correct flag is a progress checkpoint; also write down what the evidence means.
+A correct flag is a progress checkpoint; also explain what the evidence means.
+The portal groups each objective with its starting evidence, expected observation,
+hints, understanding check and submission field. Checks provide explanations and
+are saved on this browser per run, separately from controller-verified flags.
+They are formative practice, not a secure assessment or a claim of mastery.
 
 ## Commands
 
@@ -64,7 +70,8 @@ curriculum. Old directory IDs and objective IDs still work.
 Use Node 22.13+ and Docker Desktop/Engine with Compose v2. Targets remain
 unprivileged, capability-dropped, read-only, and on internal networks without
 published target ports. They receive only flags needed for their own stage or
-report validation. The normal learner toolbox receives no expected flags.
+report validation. The normal learner toolbox receives no expected flags in its
+environment. Lab 00 supplies synthetic practice files through a read-only mount.
 
 The [local range threat model](../docs/THREAT-MODEL.md) explains why local flags
 support progress consistency rather than secrecy from the owner of the machine.

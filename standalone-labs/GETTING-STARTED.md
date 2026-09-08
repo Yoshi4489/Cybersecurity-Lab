@@ -36,14 +36,14 @@ failure before starting a range.
 ## Read and submit in the portal
 
 Run `npm run lab` (or `npm.cmd run lab` in PowerShell), then open
-**http://127.0.0.1:5173/labs**. Choose a lab and use Start / resume. The portal
+**http://127.0.0.1:5173/**. Begin with Lab 00 and use Start / resume. The portal
 contains the scenario, objective descriptions, individual hints, and complete
 walkthrough, so you do not need to open a local Markdown file.
 
 Use the displayed shell command to enter that lab's toolbox and investigate.
 Paste each discovered flag into its matching portal form. CLI verification is
 still supported, and both interfaces use the same saved progress and per-run flags.
-The original shared-range modules use separate flags; do not mix the two ranges.
+Returning learners can find the original modules under Legacy at `/legacy`; their saved progress is unchanged.
 
 ## Two terminals with different jobs
 
@@ -57,16 +57,16 @@ pipelines and quoting in the README belong here, not in PowerShell.
 A hostname such as triage-node only resolves inside its lab network. If curl or
 getent cannot resolve it, check which terminal you are using.
 
-## Your first investigation
+## Practice before your first investigation
 
-Read [Lab 01](01-network-triage/README.md), including its concept briefing, before
-running the investigation commands.
+Choose **Lab 00 — Your First Shift: Terminal Practice** in the portal. Its
+[written lesson](00-terminal-basics/README.md) is also available for CLI users.
 
 In the host terminal:
 
 ```sh
-npm run labs:start -- 01-network-triage
-node scripts/standalone-labctl.mjs shell 01-network-triage
+npm run labs:start -- 00-terminal-basics
+node scripts/standalone-labctl.mjs shell 00-terminal-basics
 ```
 
 The second command enters the toolbox. Start with its prompt and a simple command:
@@ -75,15 +75,16 @@ The second command enters the toolbox. Start with its prompt and a simple comman
 pwd
 ```
 
-This prints your current Linux folder. Continue Lab 01's first objective:
-resolve the named server, discover its ports, and read its network handover.
-The README explains each tool and provides optional hints.
+This prints your current Linux folder. Follow Lab 00's first task: move into
+`/practice`, list the files, and read `handover.txt`. The second task filters a log
+through a pipe and checks that the source file did not change. Continue to Lab 01
+only after you are comfortable entering commands and copying their output.
 
-When the target displays `objective_flag=RLAB{...}`, copy only the complete
+When the note displays `practice_flag=RLAB{...}`, copy only the complete
 `RLAB{...}` value. In a **second host terminal**:
 
 ```sh
-node scripts/standalone-labctl.mjs verify 01-network-triage network-baseline 'RLAB{...}'
+node scripts/standalone-labctl.mjs verify 00-terminal-basics read-note 'RLAB{...}'
 ```
 
 Replace the dots with the flag you found. The controller reports success and a
@@ -106,14 +107,14 @@ The CLI recommends prior labs but allows you to start any lab independently.
 When finished, exit the toolbox and stop the lab from a host terminal:
 
 ```sh
-node scripts/standalone-labctl.mjs status 01-network-triage
-node scripts/standalone-labctl.mjs stop 01-network-triage
+node scripts/standalone-labctl.mjs status 00-terminal-basics
+node scripts/standalone-labctl.mjs stop 00-terminal-basics
 ```
 
 For a clean retry:
 
 ```sh
-node scripts/standalone-labctl.mjs reset 01-network-triage
+node scripts/standalone-labctl.mjs reset 00-terminal-basics
 ```
 
 To resume later, run the same start and shell commands. Stop preserves submitted
@@ -141,3 +142,4 @@ Numeric prefixes remain stable IDs. Labs 06 and 09 are the capstones. See the
 - Changed artifact hash: stop and reacquire the original before analyzing it.
 - Unknown command: confirm whether it is a host command or a Linux toolbox command.
 - First build is slow: Docker downloads the pinned base images and toolbox tools.
+The current learning path starts with **00 → 01**: terminal practice before networking.

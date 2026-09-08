@@ -1,0 +1,58 @@
+{
+  "network-baseline": {
+    "evidence": "Operations names `triage-node`; your toolbox is the starting point.",
+    "observation": "A resolved address, open TCP ports, and the HTTP network handover with a segment token.",
+    "checkpoint": {
+      "question": "Does Nmap's default SERVICE name prove the actual protocol?",
+      "choices": [
+        "No; confirm it using the service response and handover.",
+        "Yes; port numbers enforce which protocol runs.",
+        "Yes; every open port is HTTP."
+      ],
+      "answer": 0,
+      "explanation": "Port labels are conventional guesses. A response or explicit handover is stronger protocol evidence."
+    }
+  },
+  "service-beacon": {
+    "evidence": "The network handover identifies a raw-text service among the discovered ports.",
+    "observation": "A plain-text beacon banner with its service token and objective flag.",
+    "checkpoint": {
+      "question": "Why use nc instead of curl here?",
+      "choices": [
+        "nc decrypts all TCP traffic automatically.",
+        "curl cannot connect to numbered ports.",
+        "The service sends a plain TCP banner, not an HTTP response."
+      ],
+      "answer": 2,
+      "explanation": "nc reads the raw connection. curl expects HTTP syntax; the handover and banner justify changing clients."
+    }
+  },
+  "operator-console": {
+    "evidence": "The remaining HTTP listener is described in the earlier service map.",
+    "observation": "An operator page containing its operator token and flag.",
+    "checkpoint": {
+      "question": "Why is curl appropriate for the operator page?",
+      "choices": [
+        "curl is needed to read local Linux files.",
+        "The listener serves HTTP, including a page path.",
+        "Every open port must be queried with curl."
+      ],
+      "answer": 1,
+      "explanation": "The protocol is HTTP, so a URL-aware HTTP client fits the evidence."
+    }
+  },
+  "triage-proof": {
+    "evidence": "You have segment, beacon and operator tokens from three services.",
+    "observation": "The final route accepts the combined evidence and returns the case proof.",
+    "checkpoint": {
+      "question": "What supports a complete service map?",
+      "choices": [
+        "Correlated tokens from each of the three inspected services.",
+        "A single open port from the first scan.",
+        "The conventional service name on one port."
+      ],
+      "answer": 0,
+      "explanation": "Each token ties the conclusion to an inspected service; a scan alone does not establish the whole chain."
+    }
+  }
+}

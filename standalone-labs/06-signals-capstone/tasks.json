@@ -1,0 +1,58 @@
+{
+  "dns-chain": {
+    "evidence": "The briefing gives a synthetic DNS zone and an authorized network.",
+    "observation": "A transfer reveals the relay route, case ID and DNS proof.",
+    "checkpoint": {
+      "question": "Does a successful zone transfer prove application compromise?",
+      "choices": [
+        "No; it proves DNS disclosure, which supplies the next lead.",
+        "Yes; it grants operating-system root.",
+        "Yes; it validates every application credential."
+      ],
+      "answer": 0,
+      "explanation": "Keep conclusions proportional: the observed disclosure is evidence for further investigation, not proof of unrelated access."
+    }
+  },
+  "service-map": {
+    "evidence": "The DNS evidence identifies the relay address.",
+    "observation": "Open relay services and metadata naming an artifact path.",
+    "checkpoint": {
+      "question": "Why scan the disclosed relay rather than unrelated addresses?",
+      "choices": [
+        "All reachable systems automatically become authorized.",
+        "Random addresses provide stronger evidence.",
+        "It follows the evidence and stays within the authorized scope."
+      ],
+      "answer": 2,
+      "explanation": "Technical reachability is not permission. Follow only the scoped evidence trail."
+    }
+  },
+  "http-artifact": {
+    "evidence": "Relay metadata provides the bundle location.",
+    "observation": "A saved archive hash and HTTP proof inside its manifest.",
+    "checkpoint": {
+      "question": "What should you compare to detect changed download bytes?",
+      "choices": [
+        "Only the server's display name.",
+        "The artifact's digest against the relevant reference.",
+        "Only the file extension."
+      ],
+      "answer": 1,
+      "explanation": "Matching the right reference digest checks bytes. It is not independently proof of a trusted author."
+    }
+  },
+  "final": {
+    "evidence": "The bundle contains relay logs to correlate with earlier proofs.",
+    "observation": "The busiest actor's successful event and a coherent case report.",
+    "checkpoint": {
+      "question": "Why distinguish successful from failed events?",
+      "choices": [
+        "Repeated attempts alone do not establish a successful action.",
+        "Every logged attempt is successful.",
+        "The busiest actor must have succeeded."
+      ],
+      "answer": 0,
+      "explanation": "Frequency and outcome are different facts. Correlate the actor with the explicit successful event."
+    }
+  }
+}

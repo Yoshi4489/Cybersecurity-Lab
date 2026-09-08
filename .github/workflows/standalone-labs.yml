@@ -80,6 +80,7 @@ jobs:
       max-parallel: 2
       matrix:
         lab:
+          - 00-terminal-basics
           - 01-network-triage
           - 02-service-fingerprint
           - 03-dns-breadcrumbs

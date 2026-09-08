@@ -1,0 +1,58 @@
+{
+  "authority": {
+    "evidence": "The acquired company's synthetic zone is `range.test`.",
+    "observation": "SOA/NS authority information and an `_authority` TXT proof.",
+    "checkpoint": {
+      "question": "What does an SOA response help establish?",
+      "choices": [
+        "The zone's authority metadata, including its serial.",
+        "That zone transfer is necessarily allowed.",
+        "That every disclosed application is vulnerable."
+      ],
+      "answer": 0,
+      "explanation": "Authority information supports the next DNS question; transfer permission must be tested independently."
+    }
+  },
+  "axfr": {
+    "evidence": "You have identified the authoritative DNS server.",
+    "observation": "A transferred zone containing the exact `_axfr-proof` record and route metadata.",
+    "checkpoint": {
+      "question": "What demonstrates the exposure?",
+      "choices": [
+        "The zone has an SOA record.",
+        "The domain resolves to an address.",
+        "The server returns the full zone to this unauthorized training client."
+      ],
+      "answer": 2,
+      "explanation": "Ordinary DNS answers are expected; an unrestricted full transfer exposes a broader inventory."
+    }
+  },
+  "vhost": {
+    "evidence": "The transferred records disclose a virtual-host name and proof path.",
+    "observation": "The named archive page responds when the HTTP Host matches the disclosed application.",
+    "checkpoint": {
+      "question": "Why can the same IP show a different page with another Host header?",
+      "choices": [
+        "Host is an encryption password.",
+        "Virtual hosting selects the application using the requested hostname.",
+        "Changing Host changes the server's IP address."
+      ],
+      "answer": 1,
+      "explanation": "Multiple applications can share one IP. The hostname in the HTTP request tells the server which one is intended."
+    }
+  },
+  "final": {
+    "evidence": "Authority, AXFR, virtual-host proof and case metadata are now collected.",
+    "observation": "The final archive route accepts the complete assessment.",
+    "checkpoint": {
+      "question": "Which remediation directly addresses this DNS exposure?",
+      "choices": [
+        "Restrict transfers to authorized secondary servers.",
+        "Remove all ordinary A records.",
+        "Rename the evidence file on your toolbox."
+      ],
+      "answer": 0,
+      "explanation": "Transfer access controls address the cause. Hiding your local evidence does not fix server behavior."
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "manifest": {
+    "evidence": "The incident handover points to a manifest with an encoded payload.",
+    "observation": "A decoded flag and a next-artifact path.",
+    "checkpoint": {
+      "question": "Does decoding the manifest prove its contents are trustworthy?",
+      "choices": [
+        "No; decoding changes representation, not trust.",
+        "Yes; encoded text must come from the incident lead.",
+        "Yes; decoding verifies a digital signature."
+      ],
+      "answer": 0,
+      "explanation": "Treat decoded content as evidence to verify. Encoding alone provides neither secrecy nor authenticity."
+    }
+  },
+  "bundle": {
+    "evidence": "The manifest provides an archive and reference SHA-256.",
+    "observation": "A matching digest and an exporter note explaining the wrapped payload.",
+    "checkpoint": {
+      "question": "What does a matching digest establish here?",
+      "choices": [
+        "The exporter was definitely a trusted person.",
+        "The archive is impossible to modify.",
+        "The downloaded bytes match the supplied reference."
+      ],
+      "answer": 2,
+      "explanation": "Integrity comparison depends on the reference; it does not by itself establish who created the file."
+    }
+  },
+  "carve": {
+    "evidence": "The exporter note names a session artifact.",
+    "observation": "Printable proof and token recovered through inspection.",
+    "checkpoint": {
+      "question": "Why avoid executing the session artifact?",
+      "choices": [
+        "A binary filename guarantees a safe program.",
+        "Its embedded text can be inspected without running unknown code.",
+        "Executing it is the only way to see printable text."
+      ],
+      "answer": 1,
+      "explanation": "Use read-only analysis for this evidence. A file's name says little about its behavior."
+    }
+  },
+  "final": {
+    "evidence": "You have three recovered tokens and the downloaded archive's digest.",
+    "observation": "The cache review accepts correlated tokens and the correct archive hash.",
+    "checkpoint": {
+      "question": "Why include the archive hash with the tokens?",
+      "choices": [
+        "To tie the report to the exact downloaded artifact.",
+        "To encrypt the tokens in the report.",
+        "To replace all earlier observations."
+      ],
+      "answer": 0,
+      "explanation": "The digest identifies the bytes analyzed, while tokens record the evidence chain."
+    }
+  }
+}

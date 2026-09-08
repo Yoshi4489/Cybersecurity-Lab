@@ -1,0 +1,55 @@
+name: cybersecurity-lab-00-terminal-basics
+services:
+  toolbox:
+    build:
+      context: ../_shared/toolbox
+    command: ["sleep", "infinity"]
+    hostname: toolbox
+    stdin_open: true
+    tty: true
+    read_only: true
+    tmpfs: ["/tmp:size=32m,mode=1777", "/run:size=8m,mode=0755"]
+    volumes:
+      - practice_evidence:/practice:ro
+      - ./smoke.sh:/opt/lab/smoke.sh:ro
+    networks:
+      practice_net:
+        ipv4_address: 172.28.0.10
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 96
+    mem_limit: 192m
+    cpus: "0.50"
+    depends_on:
+      training-desk:
+        condition: service_healthy
+  training-desk:
+    build:
+      context: ./target
+    environment:
+      FLAG_L00_NOTE: "${FLAG_L00_NOTE:?run via standalone-labctl}"
+      FLAG_L00_PIPE: "${FLAG_L00_PIPE:?run via standalone-labctl}"
+    volumes:
+      - practice_evidence:/evidence
+    read_only: true
+    networks:
+      practice_net:
+        ipv4_address: 172.28.0.20
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 32
+    mem_limit: 64m
+    cpus: "0.25"
+    healthcheck:
+      test: ["CMD", "python", "-c", "from pathlib import Path; assert Path('/evidence/events.log').is_file()"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+networks:
+  practice_net:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
+volumes:
+  practice_evidence:

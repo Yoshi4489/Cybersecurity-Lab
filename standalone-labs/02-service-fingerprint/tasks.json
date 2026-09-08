@@ -1,0 +1,58 @@
+{
+  "full-port-map": {
+    "evidence": "The authorized service farm may use high-numbered ports.",
+    "observation": "Saved scan files and a web inventory containing the port token.",
+    "checkpoint": {
+      "question": "Why scan all TCP ports in this inventory task?",
+      "choices": [
+        "A service may listen outside the common default port set.",
+        "All-port scans prove that every service is secure.",
+        "Port scanning reveals every application password."
+      ],
+      "answer": 0,
+      "explanation": "Coverage matters: a default scan can miss a high-port listener. Open ports are findings, not proof of a vulnerability."
+    }
+  },
+  "version-ledger": {
+    "evidence": "Your saved port map identifies listeners to inspect more closely.",
+    "observation": "A versioned plain-text ledger banner and a version token.",
+    "checkpoint": {
+      "question": "Which observation is stronger than a port-name guess?",
+      "choices": [
+        "The port number alone.",
+        "The filename chosen for a scan report.",
+        "The actual banner returned by the listener."
+      ],
+      "answer": 2,
+      "explanation": "A banner is observed service behavior; even banners can be misleading, so record it as evidence, not absolute identity."
+    }
+  },
+  "http-metadata": {
+    "evidence": "The identified HTTP service exposes response headers as well as a body.",
+    "observation": "The metadata token and objective flag appear in named HTTP headers.",
+    "checkpoint": {
+      "question": "Why inspect headers as well as the page body?",
+      "choices": [
+        "HTTP headers are a kind of DNS record.",
+        "Headers can contain metadata that is absent from the body.",
+        "Headers are automatically more trustworthy than content."
+      ],
+      "answer": 1,
+      "explanation": "Headers and body are distinct parts of the response. This task places its evidence in headers."
+    }
+  },
+  "fingerprint-proof": {
+    "evidence": "Port, version and HTTP metadata tokens form your inventory evidence.",
+    "observation": "The final inventory endpoint accepts all three tokens.",
+    "checkpoint": {
+      "question": "Why preserve the scan output with the report?",
+      "choices": [
+        "It lets you trace the report back to observations.",
+        "Saving output makes every version string accurate.",
+        "A saved report prevents future configuration changes."
+      ],
+      "answer": 0,
+      "explanation": "Reproducible observations support your conclusion; saving them does not guarantee identity or freeze the target."
+    }
+  }
+}
