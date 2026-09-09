@@ -53,18 +53,21 @@ Log in through the fixed path. Prove the identifier rotates, the new cookie has 
 <summary>Hint 1 — where to look</summary>
 
 Inspect both the case's `fixation_session` and the vulnerable response's `Set-Cookie` header.
+
 </details>
 
 <details>
 <summary>Hint 2 — what to try</summary>
 
 Use `curl -i` and explicitly send `Cookie: session=...`; headers appear before the JSON body.
+
 </details>
 
 <details>
 <summary>Hint 3 — concrete help</summary>
 
 The finding expects `accepted_supplied_id: true` and the ordered list `Secure`, `HttpOnly`, `SameSite`.
+
 </details>
 
 ### Flag 2 — session-lifecycle
@@ -73,18 +76,21 @@ The finding expects `accepted_supplied_id: true` and the ordered list `Secure`, 
 <summary>Hint 1 — where to look</summary>
 
 The fixed `Set-Cookie` header should contain a new value plus `Secure`, `HttpOnly`, and `SameSite=Strict`.
+
 </details>
 
 <details>
 <summary>Hint 2 — what to try</summary>
 
 Probe `/fixed/session` once with the supplied ID and once with the rotated ID, then repeat the rotated probe after logout.
+
 </details>
 
 <details>
 <summary>Hint 3 — concrete help</summary>
 
 The remediation controls are `secure`, `http_only`, `same_site`, `rotate_on_login`, and `invalidate_on_logout`.
+
 </details>
 
 ## Solution

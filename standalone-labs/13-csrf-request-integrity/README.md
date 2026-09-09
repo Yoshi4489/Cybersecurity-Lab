@@ -53,18 +53,21 @@ Show that another session's token fails, then send the matching session token an
 <summary>Hint 1 — where to look</summary>
 
 The case response has `Set-Cookie`, `csrf_token`, and `trusted_origin`; save both headers and body.
+
 </details>
 
 <details>
 <summary>Hint 2 — what to try</summary>
 
 Send `Origin: http://untrusted.invalid` and the session cookie to each endpoint, first without `X-CSRF-Token`.
+
 </details>
 
 <details>
 <summary>Hint 3 — concrete help</summary>
 
 The finding records statuses 200, 403, and 403 for vulnerable cross-site, fixed missing-token, and fixed wrong-Origin requests.
+
 </details>
 
 ### Flag 2 — request-integrity
@@ -73,18 +76,21 @@ The finding records statuses 200, 403, and 403 for vulnerable cross-site, fixed 
 <summary>Hint 1 — where to look</summary>
 
 Create a second case to obtain a token that is valid in isolation but bound to a different session.
+
 </details>
 
 <details>
 <summary>Hint 2 — what to try</summary>
 
 Keep the first session cookie while trying the second token; expect `csrf-token`. Then retry with the first token and exact trusted Origin.
+
 </details>
 
 <details>
 <summary>Hint 3 — concrete help</summary>
 
 Submit four true controls: `require_session_cookie`, `require_csrf_token`, `bind_token_to_session`, and `validate_origin`.
+
 </details>
 
 ## Solution
