@@ -1,0 +1,17 @@
+{
+  "integrity-gap": {
+    "evidence": "A case creates one synthetic session and token. The vulnerable preference endpoint accepts that cookie from an untrusted Origin without the token.",
+    "observation": "The harmless theme changes at the vulnerable endpoint, while fixed requests missing a token or carrying an untrusted Origin return 403.",
+    "checkpoint": {"question":"Why does a valid session cookie not prove request intent?","choices":["Browsers may attach cookies automatically to requests the application did not initiate.","Cookies contain no bytes.","Origin headers encrypt request bodies."],"answer":0,"explanation":"Authentication identifies a session. A state-changing request also needs evidence that it came through an intended application flow."}
+  },
+  "request-integrity": {
+    "evidence": "The fixed endpoint checks the session, a session-bound CSRF token, and the exact trusted Origin before changing the synthetic preference.",
+    "observation": "Missing, cross-session, and wrong-Origin evidence fails; the matching token and trusted Origin succeeds and the new theme is readable.",
+    "checkpoint": {"question":"Which result proves the control remains usable?","choices":["Every preference request returns 403.","The request with the matching session token and trusted Origin succeeds after invalid cases fail.","The vulnerable endpoint still accepts an untrusted Origin."],"answer":1,"explanation":"Negative and positive validation proves fail-closed handling without breaking the intended state change."},
+    "findingPrompt":"State the request-integrity finding and distinguish authentication from intent.",
+    "evidencePrompt":"Cite the vulnerable success, fixed rejection reasons, session-binding test, and accepted fixed request.",
+    "impactPrompt":"Describe only the harmless synthetic preference impact and how the pattern generalizes to sensitive state changes.",
+    "confidencePrompt":"Choose High, Medium, or Low and justify it from direct status, reason, and preference evidence.",
+    "remediationPrompt":"Recommend a session-bound unpredictable CSRF token plus strict Origin validation and name both negative and positive regression tests."
+  }
+}

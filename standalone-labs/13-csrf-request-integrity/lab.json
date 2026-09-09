@@ -1,0 +1,22 @@
+{
+  "id": "13-csrf-request-integrity",
+  "title": "A Preference, Not Permission",
+  "summary": "Use a session-bound CSRF token and Origin validation to protect a harmless preference change.",
+  "description": "Compare vulnerable and fixed preference endpoints with direct synthetic HTTP requests; no real browser victim is involved.",
+  "difficulty": "intermediate",
+  "difficultyBand": "intermediate-foundations",
+  "minutes": 60,
+  "subnet": "172.31.13.0/24",
+  "composeFile": "docker-compose.yml",
+  "toolboxService": "toolbox",
+  "commandFamilies": ["curl", "jq", "shell variables"],
+  "services": [{"name":"integrity-review","hostname":"integrity-review","ports":[8080],"purpose":"Synthetic session, CSRF token, Origin, and harmless preference service"}],
+  "objectives": [
+    {"id":"integrity-gap","title":"Measure the request-integrity gap","label":"Compare cross-site-style requests at vulnerable and fixed endpoints","points":50,"flagEnv":"FLAG_L13_GAP","dependsOn":[]},
+    {"id":"request-integrity","title":"Prove layered request integrity","label":"Validate session binding, CSRF token, Origin, and legitimate preference change","points":50,"flagEnv":"FLAG_L13_INTEGRITY","dependsOn":["integrity-gap"]}
+  ],
+  "campaign": "ApertureOps: Identity and Authorization",
+  "mode": "guided",
+  "prerequisites": ["12-cookie-session-security"],
+  "learningOutcomes": ["Explain why an ambient session cookie does not prove user intent", "Validate a CSRF token bound to the active session", "Use strict Origin validation as an additional request-integrity control", "Prove remediation with rejected invalid requests and an accepted valid request"]
+}
