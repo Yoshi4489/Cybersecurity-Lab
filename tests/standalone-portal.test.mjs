@@ -21,8 +21,9 @@ test("portal status includes every actual Compose service across both manifest f
 
 test("portal learning content covers every rebuilt lab without exposing runtime or flag keys", () => {
   const labs = readLearningMaterial();
-  assert.equal(labs.length, 12);
+  assert.equal(labs.length, loadLabs().length);
   for (const lab of labs) {
+    assert.ok(lab.difficultyBand?.length > 3, `${lab.id} difficultyBand`);
     for (const field of ["scenario", "basics", "objectivesText", "solution", "takeaway"]) assert.ok(lab[field].length > 100, `${lab.id} ${field}`);
     assert.equal(lab.hints.length, lab.objectives.length);
     for (const objective of lab.objectives) {
