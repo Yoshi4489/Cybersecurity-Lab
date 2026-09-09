@@ -1,0 +1,55 @@
+name: cybersecurity-lab-17-authorization-capstone
+services:
+  toolbox:
+    build:
+      context: ../_shared/toolbox
+    command: ["sleep", "infinity"]
+    hostname: toolbox
+    stdin_open: true
+    tty: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+      - /run:size=8m,mode=0755
+    volumes:
+      - ./smoke.sh:/opt/lab/smoke.sh:ro
+    networks:
+      authz_net:
+        ipv4_address: 172.31.17.10
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 96
+    mem_limit: 192m
+    cpus: "0.50"
+    depends_on:
+      authz-review:
+        condition: service_healthy
+  authz-review:
+    build:
+      context: ./target
+    hostname: authz-review
+    environment:
+      FLAG_L17_CORRELATION: "${FLAG_L17_CORRELATION:?run via standalone-labctl}"
+      FLAG_L17_HARDENING: "${FLAG_L17_HARDENING:?run via standalone-labctl}"
+    expose: ["8080"]
+    read_only: true
+    tmpfs: ["/tmp:size=16m,mode=1777"]
+    networks:
+      authz_net:
+        ipv4_address: 172.31.17.20
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 64
+    mem_limit: 112m
+    cpus: "0.40"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2)"]
+      interval: 3s
+      timeout: 5s
+      retries: 15
+networks:
+  authz_net:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.31.17.0/24

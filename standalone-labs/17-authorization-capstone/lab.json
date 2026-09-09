@@ -1,0 +1,22 @@
+{
+  "id": "17-authorization-capstone",
+  "title": "One Request, Five Boundaries",
+  "summary": "Correlate JWT, cookie, CSRF, object, role, and replay evidence, then validate layered authorization controls.",
+  "description": "ApertureOps needs one defensible incident narrative assembled from four related sources and one plausible decoy.",
+  "difficulty": "intermediate",
+  "difficultyBand": "intermediate-capstone",
+  "minutes": 100,
+  "subnet": "172.31.17.0/24",
+  "composeFile": "docker-compose.yml",
+  "toolboxService": "toolbox",
+  "commandFamilies": ["curl", "jq", "cross-source correlation"],
+  "services": [{"name":"authz-review","hostname":"authz-review","ports":[8080],"purpose":"Synthetic evidence and hardened authorization validation service"}],
+  "objectives": [
+    {"id":"incident-correlation","title":"Correlate the authorization incident","label":"Join identity, session, request, object, and decoy evidence","points":50,"flagEnv":"FLAG_L17_CORRELATION","dependsOn":[]},
+    {"id":"layered-control-proof","title":"Validate layered controls","label":"Run positive and negative authorization probes","points":50,"flagEnv":"FLAG_L17_HARDENING","dependsOn":["incident-correlation"]}
+  ],
+  "campaign": "ApertureOps: Identity and Authorization",
+  "mode": "capstone",
+  "prerequisites": ["16-session-replay"],
+  "learningOutcomes": ["Correlate JWT, cookie, CSRF, BOLA, role, and replay evidence across sources", "Exclude a plausible but unrelated event", "Validate hardened controls with one allowed path and multiple denied paths", "Write a scoped evidence, impact, confidence, and remediation conclusion"]
+}
