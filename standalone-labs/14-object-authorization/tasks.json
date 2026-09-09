@@ -1,0 +1,22 @@
+{
+  "exposure-report": {
+    "evidence": "`POST /case` creates two fictional users and one ticket per user inside this lab only.",
+    "observation": "The vulnerable route returns 200 when Mina reads and changes Noah's object; the fixed route denies both operations.",
+    "checkpoint": {"question":"Why does authentication alone not protect Noah's ticket?","choices":["Ticket IDs are secret credentials.","The server must authorize the current user for the requested object and operation.","PATCH requests never need authorization."],"answer":1,"explanation":"Authentication identifies Mina. Object-level authorization must separately decide whether Mina may read or modify Noah's ticket."},
+    "findingPrompt":"State the cross-owner read/write finding in one sentence.",
+    "evidencePrompt":"Cite the vulnerable and fixed HTTP status evidence for both methods.",
+    "impactPrompt":"Describe ticket confidentiality and integrity impact only.",
+    "confidencePrompt":"Choose High, Medium, or Low and justify it from repeated real HTTP results.",
+    "remediationPrompt":"Describe owner-scoped lookups and per-operation server checks."
+  },
+  "remediation-proof": {
+    "evidence": "The fixed route checks the authenticated owner on every GET and PATCH request.",
+    "observation": "Cross-owner requests return 403 while Noah's own GET and PATCH requests return 200.",
+    "checkpoint": {"question":"Which test set best verifies the fix?","choices":["Only a denied cross-owner GET.","Only an allowed owner PATCH.","Denied cross-owner GET/PATCH plus allowed owner GET/PATCH."],"answer":2,"explanation":"Negative cases prove forbidden access is blocked; positive cases prove intended owner access still works."},
+    "findingPrompt":"State what boundary the fixed endpoint enforces.",
+    "evidencePrompt":"Cite all four fixed positive and negative status results.",
+    "impactPrompt":"Explain which confidentiality and integrity paths are now blocked.",
+    "confidencePrompt":"Justify confidence without generalizing beyond this synthetic service.",
+    "remediationPrompt":"Name query scoping, read authorization, write authorization, and default denial."
+  }
+}

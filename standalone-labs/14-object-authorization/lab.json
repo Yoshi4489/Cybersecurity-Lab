@@ -1,0 +1,22 @@
+{
+  "id": "14-object-authorization",
+  "title": "Ticket Boundaries",
+  "summary": "Prove and remediate broken object-level authorization across reads and writes.",
+  "description": "ApertureOps needs evidence that ticket IDs never substitute for server-side ownership checks.",
+  "difficulty": "intermediate",
+  "difficultyBand": "intermediate-foundations",
+  "minutes": 70,
+  "subnet": "172.31.14.0/24",
+  "composeFile": "docker-compose.yml",
+  "toolboxService": "toolbox",
+  "commandFamilies": ["curl", "jq", "HTTP methods"],
+  "services": [{"name":"ticket-api","hostname":"ticket-api","ports":[8080],"purpose":"Synthetic ticket ownership and BOLA evidence service"}],
+  "objectives": [
+    {"id":"exposure-report","title":"Prove cross-owner object access","label":"Compare vulnerable reads and writes with owner behavior","points":50,"flagEnv":"FLAG_L14_EXPOSURE","dependsOn":[]},
+    {"id":"remediation-proof","title":"Verify ownership enforcement","label":"Report fixed positive and negative ownership cases","points":50,"flagEnv":"FLAG_L14_REMEDIATION","dependsOn":["exposure-report"]}
+  ],
+  "campaign": "ApertureOps: Identity and Authorization",
+  "mode": "guided",
+  "prerequisites": ["13-csrf-request-integrity"],
+  "learningOutcomes": ["Explain why an authenticated object ID is not authorization", "Test read and write ownership with positive and negative cases", "Recommend server-side owner scoping and per-operation checks"]
+}
