@@ -62,6 +62,17 @@ if (action === "start") {
   console.log("Use Start / resume lab in the portal to build and launch the isolated targets.");
 } else if (action === "stop") {
   const current = readPids();
+  const accountFile = join(stateDir, "accounts.sqlite");
+  if (existsSync(accountFile) && isAlive(current.controller)) {
+    const { openAccounts } = await import("../controller/accounts.mjs");
+    const accounts = openAccounts(accountFile);
+    const admin = accounts.db.prepare("SELECT id FROM users WHERE role='admin' ORDER BY id LIMIT 1").get();
+    accounts.db.close();
+    if (admin) {
+      const response = await fetch(`http://127.0.0.1:${process.env.LAB_CONTROLLER_PORT ?? 3030}/api/maintenance`, { method: "POST", headers: { Origin: "http://127.0.0.1:5173", "Content-Type": "application/json", "X-Maintenance-Key": readFileSync(join(stateDir, "maintenance-key"), "utf8").trim() }, body: JSON.stringify({ userId: admin.id, action: "shutdown-instances" }) });
+      if (!response.ok) throw new Error("Could not stop account instances. Keep the controller running and stop them from the admin area.");
+    }
+  }
   stopTree(current.portal);
   stopTree(current.controller);
   spawnSync("docker", ["compose", "-f", join(root, "docker-compose.yml"), "down", "--remove-orphans"], {
@@ -72,7 +83,7 @@ if (action === "start") {
   });
   writeFileSync(pidsFile, JSON.stringify({ stoppedAt: new Date().toISOString() }, null, 2));
   console.log("RECON//LAB portal, controller, and legacy shared range are stopped.");
-  console.log("Current-curriculum lab containers are independent. Stop any active lab with: node scripts/standalone-labctl.mjs stop <lab-id>");
+  console.log("Account instances were stopped through the controller when available. Pre-account CLI containers remain independent; stop them with: node scripts/standalone-labctl.mjs stop <lab-id>");
 } else if (action === "status") {
   const current = readPids();
   console.log(`Portal: ${isAlive(current.portal) ? "running" : "stopped"}`);
