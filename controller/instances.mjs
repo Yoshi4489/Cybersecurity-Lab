@@ -63,10 +63,25 @@ export function materialize(root, lab, run) {
     service.labels = { "reconlab.managed": "true", "reconlab.owner": String(run.user_id), "reconlab.run": run.id, "reconlab.lab": lab.id };
     if (service.volumes) service.volumes = service.volumes.map((volume) => volume.startsWith("./") ? resolve(source, volume.slice(0, volume.indexOf(":"))).replaceAll("\\", "/") + volume.slice(volume.indexOf(":")) : volume);
     // No unvalidated service port is published. Browser entrypoints are opt-in.
-    service.ports = (lab.browserEntrypoints ?? []).filter((entry) => entry.service === name)
-      .map((entry) => ({ target: entry.containerPort, host_ip: "127.0.0.1", protocol: "tcp" }));
+    service.ports = [];
   }
-  const scope = [`Run: ${run.id}`, `Subnet: ${run.subnet}`, "Authorized services:", ...Object.entries(compose.services).map(([name, service]) => `${name}: ${Object.values(service.networks).map((network) => network.ipv4_address).join(", ")}`)].join("\n");
+  for (const target of lab.browserEntrypoints ?? []) {
+    const network = Object.keys(compose.services[target.service].networks)[0];
+    const ingress = `browser-${target.id}`;
+    compose.networks[ingress] = {};
+    compose.services[ingress] = {
+      build: { context: join(root, "standalone-labs", "_shared", "browser-ingress").replaceAll("\\", "/") },
+      image: "reconlab-browser-ingress:local-v1",
+      environment: { TARGET_HOST: target.service, TARGET_PORT: String(target.containerPort) },
+      networks: { [network]: {}, [ingress]: {} },
+      ports: [{ target: 8082, host_ip: "127.0.0.1", protocol: "tcp" }],
+      cap_drop: ["ALL"], security_opt: ["no-new-privileges:true"], read_only: true,
+      pids_limit: 32, mem_limit: "64m", cpus: "0.25",
+      depends_on: { [target.service]: { condition: "service_healthy" } },
+      labels: { "reconlab.managed": "true", "reconlab.owner": String(run.user_id), "reconlab.run": run.id, "reconlab.lab": lab.id },
+    };
+  }
+  const scope = [`Run: ${run.id}`, `Subnet: ${run.subnet}`, "Authorized services:", ...Object.entries(compose.services).filter(([name]) => !name.startsWith("browser-")).map(([name, service]) => `${name}: ${Object.values(service.networks).map((network) => network.ipv4_address).join(", ")}`)].join("\n");
   writeFileSync(join(directory, "scope.txt"), scope + "\n");
   compose.services.toolbox.volumes ??= [];
   compose.services.toolbox.volumes.push(join(directory, "scope.txt").replaceAll("\\", "/") + ":/opt/cyberlab/instance-scope.txt:ro");
@@ -172,6 +187,7 @@ export function createInstances(accounts, labs, root, options = {}) {
             db.prepare("UPDATE instance_runs SET runtime='running',expires_at=?,extended=0,error=NULL WHERE id=?").run(Date.now() + 3600000, run.id);
             event(user, "instance_started", run.id);
           } catch (error) {
+            console.error(`Instance startup failed (${labId}): ${String(error.stderr || error.message).replace(/RLAB\{[^}]*\}/g, "[redacted flag]").slice(-6000)}`);
             try { await stop(run); setState(run.id, "stopped", "Instance startup failed. Check Docker, then resume."); } catch { setState(run.id, "stopping", "Cleanup pending; Docker is unavailable."); }
             throw error;
           } finally { if (run.id !== existing.id) operations.delete(run.id); }

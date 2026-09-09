@@ -8,11 +8,12 @@ import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 import { unmetLabPrerequisites, unmetObjectivePredecessors } from "./curriculum.mjs";
 import { hasRequiredServices } from "./runtime.mjs";
-import { standaloneAction, standaloneLabs, standaloneProgress, standaloneStatus, submitStandalone } from "./standalone.mjs";
-import { createFlag, equalSecret, isAllowedHost, isAllowedOrigin, isLoopbackAddress, parseCookies } from "./security.mjs";
+import { standaloneLabs } from "./standalone.mjs";
+import { createAccountApi } from "./account-api.mjs";
+import { createFlag, equalSecret, isAllowedHost, isAllowedOrigin, isLoopbackAddress } from "./security.mjs";
 
 const controllerDir = dirname(fileURLToPath(import.meta.url));
-const root = resolve(controllerDir, "..");
+const root = process.env.LAB_PROJECT_ROOT ? resolve(process.env.LAB_PROJECT_ROOT) : resolve(controllerDir, "..");
 const stateDir = join(root, ".lab");
 const composeFile = join(root, "docker-compose.yml");
 const flagsFile = join(stateDir, "flags.json");
@@ -22,7 +23,7 @@ const port = String(process.env.LAB_CONTROLLER_PORT ?? "3030");
 const requiredServices = ["gateway", "recon-node", "internal", "toolbox", "toolbox-ingress"];
 const allowedOrigins = (process.env.LAB_ALLOWED_ORIGINS ?? "http://127.0.0.1:5173,http://localhost:5173")
   .split(",").map((value) => value.trim()).filter(Boolean);
-const sessions = new Map();
+const accountApi = createAccountApi(root, standaloneLabs, allowedOrigins);
 let runtimeState = "stopped";
 let operation = Promise.resolve();
 
@@ -208,8 +209,7 @@ function authorizeMutation(request, response, cors) {
     json(response, 403, { error: "Origin is not allowed" }, cors);
     return false;
   }
-  const sessionId = parseCookies(request.headers.cookie).rlab_session;
-  const session = sessions.get(sessionId);
+  const session = accountApi.sessionFor(request);
   if (!session || !equalSecret(request.headers["x-csrf-token"] ?? "", session.csrfToken)) {
     json(response, 403, { error: "Invalid session or CSRF token" }, cors);
     return false;
@@ -220,6 +220,7 @@ function authorizeMutation(request, response, cors) {
 const server = createServer(async (request, response) => {
   const origin = request.headers.origin ?? "";
   const cors = corsHeaders(origin);
+  if (origin && !isAllowedOrigin(origin, allowedOrigins)) return json(response, 403, { error: "Origin is not allowed" });
   if (!isLoopbackAddress(request.socket.remoteAddress) || !isAllowedHost(request.headers.host, port)) {
     json(response, 403, { error: "Controller is loopback-only" }, cors);
     return;
@@ -233,46 +234,19 @@ const server = createServer(async (request, response) => {
 
   const url = new URL(request.url ?? "/", `http://${request.headers.host}`);
   try {
+    if (url.pathname.startsWith("/api/")) {
+      let sent = false;
+      await accountApi.route(request, url, () => readJson(request), (status, value, headers = {}) => {
+        sent = true; json(response, status, value, { ...cors, ...headers });
+      });
+      if (sent) return;
+    }
     if (request.method === "GET" && url.pathname === "/") {
       response.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       return response.end('<!doctype html><html lang="en"><title>RECON//LAB controller</title><h1>Local controller is online</h1><p>This is the local API, not the learning portal.</p><p><a href="http://127.0.0.1:5173/labs">Open the lab workspace</a></p><p>Use the portal to start labs and submit flags. Keep this controller running.</p></html>');
     }
-    if (request.method === "GET" && url.pathname === "/api/standalone/progress") {
-      return json(response, 200, Object.fromEntries([...standaloneLabs].map(([id, lab]) => [id, standaloneProgress(lab)])), cors);
-    }
-    const standaloneMatch = url.pathname.match(/^\/api\/standalone\/([a-z0-9-]+)\/(status|start|stop|reset|objectives\/([a-z0-9-]+)\/submit)$/);
-    if (standaloneMatch) {
-      const [, labId, action, objectiveId] = standaloneMatch;
-      const lab = standaloneLabs.get(labId);
-      if (!lab) return json(response, 404, { error: "Unknown standalone lab" }, cors);
-      if (request.method === "GET" && action === "status") return json(response, 200, await standaloneStatus(lab), cors);
-      if (request.method !== "POST" || action === "status") return json(response, 405, { error: "Method not allowed" }, cors);
-      if (!authorizeMutation(request, response, cors)) return;
-      if (objectiveId) {
-        if (!lab.objectives.some((objective) => objective.id === objectiveId)) return json(response, 404, { error: "Unknown objective" }, cors);
-        const body = await readJson(request);
-        try {
-          return json(response, 200, { correct: true, progress: submitStandalone(lab, objectiveId, body.flag) }, cors);
-        } catch (error) { return json(response, 422, { correct: false, error: error.message }, cors); }
-      }
-      return json(response, 200, await standaloneAction(lab, action, root), cors);
-    }
     if (request.method === "GET" && url.pathname === "/health") {
       return json(response, 200, { ok: true, runtime: await determineRuntime() }, cors);
-    }
-    if (request.method === "GET" && url.pathname === "/api/session") {
-      if (origin && !isAllowedOrigin(origin, allowedOrigins)) return json(response, 403, { error: "Origin is not allowed" });
-      // Tabs share this cookie. Preserve its token so connecting another tab
-      // does not invalidate the token already held by an open workspace.
-      const existingId = parseCookies(request.headers.cookie).rlab_session;
-      const existingSession = sessions.get(existingId);
-      const sessionId = existingSession ? existingId : randomBytes(24).toString("hex");
-      const csrfToken = existingSession?.csrfToken ?? randomBytes(24).toString("hex");
-      if (!existingSession) sessions.set(sessionId, { csrfToken, createdAt: Date.now() });
-      return json(response, 200, { csrfToken, runtime: await determineRuntime() }, {
-        ...cors,
-        "Set-Cookie": `rlab_session=${sessionId}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800`,
-      });
     }
     if (request.method === "GET" && url.pathname === "/api/progress") {
       const result = Object.fromEntries(labs.map((lab) => [lab.id, progressFor(lab.id)]));
@@ -369,15 +343,17 @@ const server = createServer(async (request, response) => {
 
     return json(response, 404, { error: "Not found" }, cors);
   } catch (error) {
-    json(response, 500, { error: error instanceof Error ? error.message : "Internal controller error" }, cors);
+    json(response, error.status ?? 500, { error: error.status ? error.message : "Controller operation failed. Check the controller log and Docker status." }, cors);
   }
 });
 
+accountApi.attach(server, Number(port));
 server.listen(Number(port), "127.0.0.1", () => {
   console.log(`RECON//LAB controller: http://127.0.0.1:${port}`);
 });
 
-function shutdown() {
+async function shutdown() {
+  await accountApi.close();
   server.close(() => { db.close(); process.exit(0); });
 }
 process.on("SIGINT", shutdown);

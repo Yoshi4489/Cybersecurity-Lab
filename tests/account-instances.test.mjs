@@ -86,8 +86,9 @@ test("generated definitions preserve containment and replace fixed addresses for
   for (const lab of loadLabs()) {
     const run = await instances.create(a.user.id, lab);
     const compose = load(readFileSync(join(root, ".lab", "instances", run.id, "compose.yml"), "utf8"));
-    assert.ok(Object.values(compose.networks).every((network) => network.internal));
-    for (const service of Object.values(compose.services)) {
+    assert.ok(Object.entries(compose.networks).every(([name, network]) => name.startsWith("browser-") || network.internal));
+    for (const [name, service] of Object.entries(compose.services)) {
+      if (!name.startsWith("browser-")) assert.ok(Object.keys(service.networks).every((network) => compose.networks[network].internal));
       assert.deepEqual(service.cap_drop, ["ALL"]);
       assert.ok(service.security_opt.includes("no-new-privileges:true"));
       assert.equal(service.labels["reconlab.run"], run.id);

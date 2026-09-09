@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
-import { spawn, spawnSync } from "node:child_process";
+import { mkdtempSync, rmSync, readFileSync } from "node:fs";
 import { once } from "node:events";
-import { cpSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { createServer } from "node:net";
+import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { readLearningMaterial } from "../controller/learning-material.mjs";
 import { loadLabs, serviceNames } from "../scripts/standalone-labctl.mjs";
 import { load as loadYaml } from "js-yaml";
+import { createAccountApi } from "../controller/account-api.mjs";
 
 test("portal status includes every actual Compose service across both manifest formats", () => {
   for (const lab of loadLabs()) {
@@ -41,101 +41,57 @@ test("portal learning content covers every rebuilt lab without exposing runtime 
   }
 });
 
-const dockerStub = "data:text/javascript," + encodeURIComponent(`
-  import childProcess from 'node:child_process';
-  import { syncBuiltinESMExports } from 'node:module';
-  import { EventEmitter } from 'node:events';
-  import { PassThrough } from 'node:stream';
-  const originalSpawn = childProcess.spawn;
-  const originalSync = childProcess.spawnSync;
-  childProcess.spawnSync = (command, ...args) => command === 'docker'
-    ? { status: 0, stdout: '', stderr: '' } : originalSync(command, ...args);
-  childProcess.spawn = (command, ...args) => {
-    if (command !== 'docker') return originalSpawn(command, ...args);
-    const child = new EventEmitter();
-    child.stdout = new PassThrough(); child.stderr = new PassThrough();
-    child.kill = () => {};
-    process.nextTick(() => { child.stdout.end('toolbox\\ntriage-node\\n'); child.emit('exit', 0); });
-    return child;
-  };
-  syncBuiltinESMExports();
-`);
 
-test("standalone HTTP API shares CLI state, rejects invalid proofs, and keeps mutations local", { timeout: 40000 }, async (t) => {
-  const directory = mkdtempSync(join(tmpdir(), "cyberlab-portal-"));
-  let child;
-  t.after(async () => {
-    if (child && child.exitCode === null && child.signalCode === null) {
-      const exited = once(child, "exit");
-      child.disconnect();
-      await exited;
-    }
-    rmSync(directory, { recursive: true, force: true });
-  });
-  for (const name of ["server", "security", "runtime", "curriculum", "standalone"]) cpSync(new URL(`../controller/${name}.mjs`, import.meta.url), join(directory, "controller", `${name}.mjs`));
-  for (const name of ["standalone-labctl", "standalone-curriculum"]) cpSync(new URL(`../scripts/${name}.mjs`, import.meta.url), join(directory, "scripts", `${name}.mjs`));
-  cpSync(new URL("../data/labs.json", import.meta.url), join(directory, "data", "labs.json"));
-  for (const lab of readLearningMaterial()) cpSync(new URL(`../standalone-labs/${lab.id}/lab.json`, import.meta.url), join(directory, "standalone-labs", lab.id, "lab.json"));
-  const portProbe = createServer();
-  portProbe.listen(0, "127.0.0.1"); await once(portProbe, "listening");
-  const port = portProbe.address().port;
-  await new Promise((resolve) => portProbe.close(resolve));
-  const env = { ...process.env, LAB_CONTROLLER_PORT: String(port), NODE_OPTIONS: `--import=${dockerStub}` };
-  child = spawn(process.execPath, [join(directory, "controller", "server.mjs")], { env, windowsHide: true, stdio: ["ignore", "pipe", "pipe", "ipc"] });
-  let errors = "";
-  child.stderr.on("data", (chunk) => { errors += chunk; });
-  await Promise.race([once(child.stdout, "data"), once(child, "exit").then(() => { throw new Error(errors); })]);
-  const base = `http://127.0.0.1:${port}`;
+test("account HTTP API enforces identity, CSRF, checks and per-user progress", async (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "reconlab-api-"));
   const origin = "http://127.0.0.1:5173";
-  assert.match(await (await fetch(base)).text(), /Open the lab workspace/);
-  const sessionResponse = await fetch(`${base}/api/session`, { headers: { Origin: origin } });
-  const session = await sessionResponse.json();
-  const headers = { Origin: origin, Cookie: sessionResponse.headers.get("set-cookie").split(";")[0], "X-CSRF-Token": session.csrfToken, "Content-Type": "application/json" };
-  const id = "01-network-triage";
-  const path = `/api/standalone/${id}`;
-  const post = (suffix, body = {}, customHeaders = headers) => fetch(`${base}${path}/${suffix}`, { method: "POST", headers: customHeaders, body: JSON.stringify(body) });
-  await t.test("new tabs and reconnects reuse the shared cookie and CSRF token", async () => {
-    const tabs = await Promise.all(Array.from({ length: 3 }, () => fetch(`${base}/api/session`, { headers: { Origin: origin, Cookie: headers.Cookie } })));
-    for (const tab of tabs) {
-      assert.equal(tab.status, 200);
-      assert.equal(tab.headers.get("set-cookie").split(";")[0], headers.Cookie);
-      assert.equal((await tab.json()).csrfToken, session.csrfToken);
-    }
-    // The first tab's token still authorizes the request; only its proof is invalid.
-    assert.equal((await post("objectives/network-baseline/submit", { flag: "invalid" })).status, 422);
-    assert.equal((await post("start", {}, { ...headers, "X-CSRF-Token": "wrong-token" })).status, 403);
-    const unknown = await fetch(`${base}/api/session`, { headers: { Origin: origin, Cookie: "rlab_session=unknown" } });
-    assert.notEqual(unknown.headers.get("set-cookie").split(";")[0], "rlab_session=unknown");
-    assert.notEqual((await unknown.json()).csrfToken, session.csrfToken);
-    assert.equal((await fetch(`${base}/api/session`, { headers: { Origin: "https://untrusted.example", Cookie: headers.Cookie } })).status, 403);
+  const api = createAccountApi(directory, new Map(loadLabs().map(lab => [lab.id, lab])), [origin], {
+    networks: async () => [], docker: async () => "toolbox\ntraining-desk"
   });
-  assert.equal((await post("start", {}, { Origin: origin })).status, 403);
-  assert.equal((await post("start", {}, { ...headers, Origin: "https://untrusted.example" })).status, 403);
-  assert.equal((await fetch(`${base}${path}/start`)).status, 405);
-  assert.equal((await post("objectives/network-baseline/submit", { flag: "RLAB{not-started}" })).status, 422);
-  assert.equal((await post("start")).status, 200);
-  const runtime = join(directory, "standalone-labs", ".runtime", id);
-  const flags = () => Object.fromEntries(readFileSync(join(runtime, "flags.env"), "utf8").trim().split("\n").map((line) => line.split("=")));
-  const originalFlags = flags();
-  assert.equal((await post("objectives/no-such-objective/submit", { flag: "x" })).status, 404);
-  assert.equal((await post("objectives/network-baseline/submit", { flag: {} })).status, 422);
-  assert.equal((await post("objectives/network-baseline/submit", { flag: "RLAB{wrong}" })).status, 422);
-  const premature = await post("objectives/service-beacon/submit", { flag: originalFlags.FLAG_L01_SERVICE_BEACON });
-  assert.equal(premature.status, 422); assert.match((await premature.json()).error, /dependencies/);
-  const verified = await post("objectives/network-baseline/submit", { flag: originalFlags.FLAG_L01_NETWORK_BASELINE });
-  assert.equal(verified.status, 200);
-  assert.deepEqual((await verified.json()).progress.completedObjectives, ["network-baseline"]);
-  const cli = spawnSync(process.execPath, [join(directory, "scripts", "standalone-labctl.mjs"), "verify", id, "service-beacon", originalFlags.FLAG_L01_SERVICE_BEACON], { env, encoding: "utf8", windowsHide: true });
-  assert.equal(cli.status, 0, cli.stderr);
-  const readProgress = async () => (await (await fetch(`${base}/api/standalone/progress`)).json())[id];
-  assert.deepEqual((await readProgress()).completedObjectives, ["network-baseline", "service-beacon"]);
-  for (const action of ["start", "stop", "start"]) assert.equal((await post(action)).status, 200);
-  assert.deepEqual(flags(), originalFlags);
-  assert.equal((await readProgress()).completedObjectives.length, 2);
-  const responseText = await (await fetch(`${base}/api/standalone/progress`)).text();
-  for (const flag of Object.values(originalFlags)) assert.ok(!responseText.includes(flag));
-  assert.equal((await post("reset")).status, 200);
-  assert.deepEqual((await readProgress()).completedObjectives, []);
-  assert.notDeepEqual(flags(), originalFlags);
-  assert.equal((await post("objectives/network-baseline/submit", { flag: originalFlags.FLAG_L01_NETWORK_BASELINE })).status, 422);
+  const server = createServer(async (request, response) => {
+    const send = (status, value, headers = {}) => { response.writeHead(status, { "Content-Type": "application/json", ...headers }); response.end(JSON.stringify(value)); };
+    try {
+      await api.route(request, new URL(request.url, origin), async () => {
+        let body = ""; for await (const chunk of request) body += chunk; return body ? JSON.parse(body) : {};
+      }, send);
+    } catch (error) { send(error.status ?? 500, { error: error.message }); }
+  });
+  server.listen(0, "127.0.0.1"); await once(server, "listening");
+  t.after(async () => { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); await api.close(); rmSync(directory, { recursive: true, force: true }); });
+  const base = "http://127.0.0.1:" + server.address().port;
+  const a = api.accounts.createUser("alice", "admin");
+  const b = api.accounts.createUser("bob");
+  const post = (path, body, headers = {}) => fetch(base + path, { method: "POST", headers: { Origin: origin, "Content-Type": "application/json", ...headers }, body: JSON.stringify(body ?? {}) });
+  assert.equal((await fetch(base + "/api/standalone/progress")).status, 401);
+  async function signIn(created) {
+    const login = await post("/api/auth/login", { username: created.user.username, password: created.temporaryPassword });
+    const value = await login.json();
+    const headers = { Cookie: login.headers.get("set-cookie").split(";")[0], "X-CSRF-Token": value.csrfToken };
+    assert.equal((await post("/api/standalone/00-terminal-basics/start", {}, headers)).status, 403);
+    assert.equal((await post("/api/auth/password", { currentPassword: created.temporaryPassword, newPassword: "new-long-password" }, headers)).status, 200);
+    const second = await post("/api/auth/login", { username: created.user.username, password: "new-long-password" });
+    const session = await second.json();
+    return { Cookie: second.headers.get("set-cookie").split(";")[0], "X-CSRF-Token": session.csrfToken };
+  }
+  const first = await signIn(a); const second = await signIn(b);
+  const path = "/api/standalone/00-terminal-basics";
+  const snapshots = await Promise.all([1,2,3].map(() => fetch(base + "/api/session", { headers: first }).then(r => r.json())));
+  assert.ok(snapshots.every(snapshot => snapshot.csrfToken === first["X-CSRF-Token"]));
+  assert.equal((await post(path + "/start", {}, { ...first, "X-CSRF-Token": "wrong" })).status, 403);
+  assert.equal((await post(path + "/start", {}, { ...first, Origin: "https://untrusted.example" })).status, 403);
+  assert.equal((await post(path + "/start", {}, first)).status, 202); await api.instances.settle();
+  assert.equal((await post(path + "/start", {}, second)).status, 202); await api.instances.settle();
+  const run = api.instances.get(a.user.id, "00-terminal-basics");
+  const proof = JSON.parse(run.flags).FLAG_L00_NOTE;
+  assert.equal((await post(path + "/objectives/read-note/submit", { runId: run.id, flag: proof }, first)).status, 422);
+  const answer = readLearningMaterial()[0].objectives[0].checkpoint.answer;
+  assert.equal((await post(path + "/objectives/read-note/check", { runId: run.id, answer }, first)).status, 200);
+  assert.equal((await post(path + "/objectives/read-note/submit", { runId: run.id, flag: proof }, first)).status, 200);
+  assert.equal((await post(path + "/objectives/read-note/submit", { runId: run.id, flag: proof }, second)).status, 409);
+  const progress = await (await fetch(base + "/api/standalone/progress", { headers: second })).json();
+  assert.deepEqual(progress["00-terminal-basics"].completedObjectives, []);
+  assert.equal(JSON.stringify(progress).includes(proof), false);
+  assert.equal((await fetch(base + "/api/admin/users", { headers: second })).status, 403);
+  assert.equal((await post("/api/auth/logout", {}, first)).status, 200);
+  assert.equal((await fetch(base + "/api/standalone/progress", { headers: first })).status, 401);
 });
