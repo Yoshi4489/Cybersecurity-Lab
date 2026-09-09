@@ -9,6 +9,10 @@ not a production multi-user service.
 
 ## Start here
 
+New to the project? Read the [Beginner’s Guide](BEGINNER-GUIDE.md) first. It
+explains the purpose of the lab, the learning path, and what to expect in a
+session without assuming prior security knowledge.
+
 Install Node.js 22.13+ and Docker Desktop with Linux containers (or Docker Engine
 and Compose v2 on Linux). Start Docker and wait for its engine, then run these
 commands from this project folder:
