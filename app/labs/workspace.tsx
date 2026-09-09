@@ -259,7 +259,7 @@ export function LabWorkspace({ labs }: { labs: Lab[] }) {
               <h4>Expected observation</h4><Markdown text={objective.observation} />
               <div className="workspace-task-hints"><h4>Hints for this flag</h4><p>Open one at a time; stop when you know what to try.</p>{objective.hints.map((hint) => <details key={hint.title}><summary>{hint.title}</summary><Markdown text={hint.body} /></details>)}</div>
               <Checkpoint key={understandingKey} id={understandingKey} question={objective.checkpoint} passed={understood} onPass={() => void passCheck(objective.id, objective.checkpoint.answer)} />
-              {status?.runId && objective.findingPrompt && <EvidenceReport labId={selectedId} objective={objective} runId={status.runId} csrf={csrf} disabled={operating} />}
+              {status?.runId && objective.findingPrompt && <EvidenceReport key={`${status.runId}/${objective.id}`} labId={selectedId} objective={objective} runId={status.runId} csrf={csrf} disabled={operating} />}
               <form className="workspace-flag" onSubmit={(event) => { event.preventDefault(); void submit(objective.id); }}>
                 <label htmlFor={key}>Submit flag {index + 1}: {objective.title}</label>
                 {!done && <><input id={key} autoComplete="off" spellCheck={false} maxLength={200} value={flags[key] ?? ""} onChange={(event) => setFlags((current) => ({ ...current, [key]: event.target.value }))} placeholder="RLAB{...}" /><button type="submit" disabled={busy || !csrf || !status?.runId || missing.length > 0 || !understood || !flags[key]?.trim()}>Submit flag {index + 1}</button>

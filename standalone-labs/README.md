@@ -48,8 +48,26 @@ solution after an attempt.
 A correct flag is a progress checkpoint; also explain what the evidence means.
 The portal groups each objective with its starting evidence, expected observation,
 hints, understanding check and submission field. Checks provide explanations and
-are saved on this browser per run, separately from controller-verified flags.
+are saved to your account per run, separately from controller-verified flags.
 They are formative practice, not a secure assessment or a claim of mastery.
+
+## Evidence-quality reports
+
+Later investigations add a formative report beside the flag. The report is saved
+per account and run, is not auto-graded, and uses this standard:
+
+- **Finding:** name the affected service, asset, or control in one sentence.
+- **Evidence source:** cite the command, endpoint, file, log line, artifact, or
+  response that supports the finding.
+- **Impact:** state the demonstrated boundary; do not claim access the evidence
+  does not establish.
+- **Confidence:** choose High, Medium, or Low and justify it from corroboration or
+  evidence limitations.
+- **Recommended remediation:** name the control and the positive/negative request
+  or evidence check that would prove the fix.
+
+The flag remains a separate progress checkpoint. A token without an explanation
+is not a complete investigative conclusion.
 
 ## Commands
 
