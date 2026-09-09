@@ -9,7 +9,11 @@ const labs = await Promise.all(ids.map(async (id) => JSON.parse(await readFile(n
 
 test("curriculum references are valid and modes gradually introduce independent investigations", () => {
   validateCurriculum(labs);
-  assert.deepEqual(labs.map((lab) => lab.mode), ["guided", "guided", "guided", "guided", "guided", "guided", "capstone", "challenge", "challenge", "capstone", "guided", "guided"]);
+  assert.deepEqual(
+    labs.slice(0, 12).map((lab) => lab.mode),
+    ["guided", "guided", "guided", "guided", "guided", "guided", "capstone", "challenge", "challenge", "capstone", "guided", "guided"],
+  );
+  assert.ok(labs.slice(12).every((lab) => ["guided", "capstone"].includes(lab.mode)));
   assert.deepEqual(labs[0].prerequisites, []);
 });
 
