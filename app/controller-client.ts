@@ -17,6 +17,7 @@ export async function controllerRequest<T>(path: string, options: RequestInit = 
     throw new Error(`The controller URL returned a web page (HTTP ${response.status}). Check that NEXT_PUBLIC_LAB_CONTROLLER_URL points to the API on port 3030, not the portal on 5173.`);
   }
   const result = await response.json();
+  if (response.status === 401 && typeof window !== "undefined" && path !== "/api/auth/login") window.dispatchEvent(new Event("reconlab:session-ended"));
   if (!response.ok) throw new Error(response.status === 404
     ? "Controller route not found. Restart the local controller to load the updated lab API (npm run lab:stop, then npm run lab)."
     : result.error ?? `Controller request failed (${response.status}).`);

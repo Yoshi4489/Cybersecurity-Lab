@@ -11,7 +11,7 @@ export function readLearningMaterial() {
     const tasks = JSON.parse(readFileSync(join(lab.directory, "tasks.json"), "utf8"));
     if (Object.keys(tasks).length !== lab.objectives.length) throw new Error(`Task coverage mismatch: ${lab.id}`);
     return {
-      id: lab.id, title: lab.title, campaign: lab.campaign, mode: lab.mode, minutes: lab.minutes,
+      id: lab.id, title: lab.title, campaign: lab.campaign, mode: lab.mode, minutes: lab.minutes, subnet: lab.subnet,
       prerequisites: lab.prerequisites, learningOutcomes: lab.learningOutcomes,
       scope: `${lab.services.map((service) => typeof service === "string" ? service : service.hostname).filter((name) => name !== "toolbox").join(", ")} (${lab.subnet})`,
       scenario: sections.Scenario, basics: sections["What you need to know"],

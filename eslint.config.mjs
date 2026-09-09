@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    ".lab/**",
+    "standalone-labs/.runtime/**",
   ]),
   eslint.configs.recommended,
   ...tseslint.configs.recommended,

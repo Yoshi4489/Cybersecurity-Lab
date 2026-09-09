@@ -102,7 +102,7 @@ function workspace(tab, request) {
   const component = loadClient("workspace.tsx", {
     react, "react/jsx-runtime": { jsx, jsxs: jsx }, "next/link": { default: "Link" },
     "../controller-client": { controllerRequest: request }, "./markdown": { Markdown: "Markdown" },
-    "./checkpoint": { Checkpoint: "Checkpoint" }, "./checkpoint-storage": persistence,
+    "./checkpoint": { Checkpoint: "Checkpoint" }, "./terminal": { LabTerminal: "LabTerminal" },
     "./progress-requests": { createProgressRequests }, "./workspace.css": {},
   }, {
     localStorage: tab.storage,
@@ -131,7 +131,7 @@ function workspace(tab, request) {
 }
 
 function api() {
-  let status = { runId: "run-1", completedObjectives: [], runtime: "running" };
+  let status = { runId: "run-1", completedObjectives: [], checks: [], runtime: "running" };
   const pending = new Map();
   const calls = [];
   return {
@@ -145,6 +145,7 @@ function api() {
       if (path.endsWith("/status")) return plain(status);
       if (path.endsWith("/reset")) { status = { runId: "run-2", completedObjectives: [], runtime: "running" }; return plain(status); }
       if (path.endsWith("/submit")) { status.completedObjectives = ["read-note"]; return { progress: plain(status) }; }
+      if (path.endsWith("/check")) { status.checks = [...new Set([...status.checks, path.split("/").at(-2)])]; return { progress: plain(status) }; }
       throw new Error(`Unexpected request: ${path}`);
     },
   };
@@ -164,37 +165,26 @@ async function passAndEnterFlag(tab) {
   await tab.settle();
 }
 
-test("independent checkpoint keys survive simultaneous tab saves and synchronize live", async (t) => {
+test("independent legacy checkpoint keys survive simultaneous tab saves for account import", () => {
   const storage = browserStorage();
-  const { tab: a } = await ready(t, storage);
-  const { tab: b } = await ready(t, storage);
-  a.check(0).props.onPass();
-  b.check(1).props.onPass(); // Deliberately before either tab sees a storage event.
-  storage.flushEvents();
-  await a.settle(); await b.settle();
-  for (const tab of [a, b]) {
-    assert.equal(tab.check(0).props.passed, true);
-    assert.equal(tab.check(1).props.passed, true);
-  }
-  const { tab: reloaded } = await ready(t, storage);
-  assert.equal(reloaded.check(0).props.passed, true);
-  assert.equal(reloaded.check(1).props.passed, true);
+  persistence.saveCheckpoint(storage.tab().storage, keyFor("read-note"));
+  persistence.saveCheckpoint(storage.tab().storage, keyFor("filter-log"));
+  assert.equal(Object.keys(persistence.readCheckpoints(storage.tab().storage)).length, 2);
 });
 
-test("v1 checkpoint migration preserves valid passes and cannot clobber v2 results", async (t) => {
+test("account import reads v1 and v2 without changing source browser storage", () => {
   const old = JSON.stringify({ [keyFor("read-note")]: true, [keyFor("filter-log")]: false });
   const storage = browserStorage({ [persistence.legacyCheckpointKey]: old });
-  const { tab } = await ready(t, storage);
-  assert.equal(tab.check(0).props.passed, true);
-  assert.equal(tab.check(1).props.passed, false);
+  const passes = persistence.readCheckpoints(storage.tab().storage);
+  assert.equal(passes[keyFor("read-note")], true);
+  assert.equal(passes[keyFor("filter-log")], undefined);
   assert.equal(storage.values.get(persistence.legacyCheckpointKey), old);
-  assert.equal(storage.values.get(persistence.checkpointPrefix + keyFor("read-note")), "true");
+  persistence.saveCheckpoint(storage.tab().storage, keyFor("read-note"));
   storage.values.set(persistence.legacyCheckpointKey, "{broken json");
-  const { tab: reloaded } = await ready(t, storage);
-  assert.equal(reloaded.check(0).props.passed, true);
+  assert.equal(persistence.readCheckpoints(storage.tab().storage)[keyFor("read-note")], true);
 });
 
-test("unavailable checkpoint persistence keeps the current visit usable", async (t) => {
+test("server checkpoint persistence works when browser storage is unavailable", async (t) => {
   const browser = browserStorage();
   const local = browser.tab();
   local.storage.setItem = () => { throw new Error("Storage quota exceeded"); };
@@ -204,7 +194,7 @@ test("unavailable checkpoint persistence keeps the current visit usable", async 
   await tab.settle();
   tab.check(0).props.onPass(); await tab.settle();
   assert.equal(tab.check(0).props.passed, true);
-  assert.match(tab.message(), /will not survive a reload/);
+  assert.ok(backend.calls.some((path) => path.endsWith("/check")));
 });
 
 test("a delayed status response cannot undo a verified flag or relock its successor", async (t) => {

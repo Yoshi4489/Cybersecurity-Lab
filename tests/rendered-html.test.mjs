@@ -1,6 +1,31 @@
 import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
+import { createRequire } from "node:module";
+import { runInNewContext } from "node:vm";
+import { readFileSync } from "node:fs";
+import { renderToStaticMarkup } from "react-dom/server";
+import { createElement } from "react";
+import ts from "typescript";
+import { readLearningMaterial } from "../controller/learning-material.mjs";
+
+// Render the real workspace independently of the intentional signed-out gate.
+const require = createRequire(import.meta.url);
+function loadWorkspaceModule(name) {
+  const exports = {};
+  const source = ts.transpileModule(readFileSync(new URL(`../app/labs/${name}`, import.meta.url), "utf8"), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
+  }).outputText;
+  runInNewContext(source, { exports, require(id) {
+    if (id.endsWith(".css")) return {};
+    if (id === "next/link") return { default: (props) => createElement("a", props) };
+    if (id === "../controller-client") return { controllerRequest: () => { throw new Error("SSR must not fetch"); } };
+    if (id === "./terminal") return { LabTerminal: () => null };
+    if (id.startsWith("./")) return loadWorkspaceModule(`${id.slice(2)}.${id === "./progress-requests" ? "ts" : "tsx"}`);
+    return require(id);
+  } });
+  return exports;
+}
 
 async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -17,10 +42,8 @@ test("server-renders the RECON//LAB portal", async () => {
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
   assert.match(html, /<title>RECON\/\/LAB — Beginner Security Investigations<\/title>/i);
-  assert.match(html, /AUTHORIZED TRAINING ENVIRONMENT/);
-  assert.match(html, /Your First Shift: Terminal Practice/);
-  assert.match(html, /Current curriculum/);
-  assert.match(html, /href="\/legacy"/);
+  assert.match(html, /Sign in to your lab/);
+  assert.match(html, /Connecting to your local lab/);
   assert.doesNotMatch(html, /Start orientation/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/i);
 });
@@ -28,7 +51,11 @@ test("server-renders the RECON//LAB portal", async () => {
 test("rebuilt labs render inline scenarios, flag forms, individually closed hints and walkthrough", async () => {
   const response = await render("/labs");
   assert.equal(response.status, 200);
-  const html = await response.text();
+  const gated = (await response.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "");
+  assert.match(gated, /Sign in to your lab/);
+  assert.doesNotMatch(gated, /class="workspace-task"/);
+  const { LabWorkspace } = loadWorkspaceModule("workspace.tsx");
+  const html = renderToStaticMarkup(createElement(LabWorkspace, { labs: readLearningMaterial() }));
   const visibleText = html.replace(/<!--.*?-->/g, "");
   for (const label of ["Your First Shift: Terminal Practice", "Scenario", "What you need to know", "Start / resume lab", "Submit flag 1", "Hints for this flag", "Reveal full walkthrough", "cat events.log", "Check your understanding", "Starting evidence", "Expected observation"]) assert.ok(visibleText.includes(label), label);
   assert.match(html, /<form\b/);
