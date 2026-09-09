@@ -57,7 +57,7 @@ flags are fictional. Keep examples inside the explicitly stated lab scope.
 
 RECON//LAB has two curriculum generations:
 
-- The **current curriculum** is the default account-based path of Labs 00–10.
+- The **current curriculum** is the default account-based path of Labs 00–11.
 - The **legacy curriculum** is the original eighteen-module shared range at `/legacy`, retained for returning learners.
 
 ### Frontend
@@ -105,7 +105,7 @@ message size, and terminal dimensions.
 
 ### Curriculum data
 
-The current lab source is under `standalone-labs/00-*` through `10-*`.
+The current lab source is under `standalone-labs/00-*` through `11-*`.
 Each lab generally contains a manifest, `tasks.json`, `README.md`, a Compose
 file, target services, a toolbox smoke script, and fictional evidence. Hints
 and solutions are embedded in `README.md` as the single source of truth;

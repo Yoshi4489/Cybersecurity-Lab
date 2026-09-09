@@ -64,14 +64,16 @@ For migration, admin controls, leases and configuration, see [Local instances](d
 
 ## One current learning path
 
-The current curriculum has **11 labs**: a short terminal orientation, nine
-connected investigations, and a message-recovery elective.
+The current curriculum has **12 labs**: a short terminal orientation, nine
+connected investigations, a message-recovery elective, and an identity-validation
+follow-up.
 
 - **00:** prompts, commands, arguments, files, pipes and copying practice flags.
 - **01–05:** networks, service identification, DNS and Linux evidence.
 - **06:** infrastructure investigation capstone.
 - **07–09:** the ApertureOps web incident — ApertureOps is Northstar's outsourced support vendor — with recovered artifacts and final case.
 - **10:** optional Base64, hex, ROT13, MD5 candidate matching and toy XOR, after 01.
+- **11:** JWT signature, claim, key-rotation, and authorization validation after 07.
 
 [Curriculum details](standalone-labs/README.md) describe skills and recommended
 prerequisites. Earlier targets need not remain running: each case supplies its

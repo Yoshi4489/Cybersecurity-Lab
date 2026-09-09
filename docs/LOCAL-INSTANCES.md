@@ -95,9 +95,10 @@ reference, not an automatically loaded controller configuration file.
 ## Verification
 
 `npm test`, `npm run lint`, and TypeScript check the portal and API contracts.
-`node scripts/verify-instances.mjs` tests all 11 labs with disposable state and
-containers, including smoke, stop/resume and reset. An optional starting numeric
-prefix resumes the suite, for example `node scripts/verify-instances.mjs 03`.
+`node scripts/verify-instances.mjs` tests all current labs with disposable state and
+containers, including smoke, stop/resume and reset. Pass exact lab IDs to verify a
+subset, for example `node scripts/verify-instances.mjs 07-web-breach-chain
+11-jwt-validation`.
 `node scripts/verify-instance-browser.mjs` uses headless Edge with temporary
 accounts and a separate preview on ports 5174/3032/3033. It does not migrate or
 reset the user's saved runs.

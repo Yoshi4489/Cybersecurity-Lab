@@ -57,7 +57,7 @@ need them.
 
 ## The learning path
 
-The recommended current path contains eleven small investigations:
+The recommended current path contains twelve small investigations:
 
 | Lab | Plain-English purpose |
 | --- | --- |
@@ -72,6 +72,7 @@ The recommended current path contains eleven small investigations:
 | 08 — Recovered Cache | Analyze encoded data, integrity evidence, and recovered artifacts. |
 | 09 — Close the Breach | Correlate deployment leaks, an exposed backup, and export evidence. |
 | 10 — The Mislabelled Secret | Optional practice with Base64, hex, ROT13, MD5 candidate matching, and toy XOR. |
+| 11 — Claims Under Oath | Verify JWT signatures, claims, key rotation, and server-side authorization after Lab 07. |
 
 Lab 10 is an optional branch after Lab 01. You do not have to finish every
 capstone before trying it.
@@ -152,7 +153,7 @@ RECON//LAB is not a real penetration-testing target, a public competition
 platform, or a guarantee that a learner has mastered security. It is a guided
 practice course. Its flags are progress markers, not secrets from the owner of
 the computer. The older eighteen-module portal is retained under **Legacy** for
-returning learners; new learners should use the eleven-lab current curriculum.
+returning learners; new learners should use the twelve-lab current curriculum.
 
 ## Where to read next
 

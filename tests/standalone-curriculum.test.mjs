@@ -9,7 +9,7 @@ const labs = await Promise.all(ids.map(async (id) => JSON.parse(await readFile(n
 
 test("curriculum references are valid and modes gradually introduce independent investigations", () => {
   validateCurriculum(labs);
-  assert.deepEqual(labs.map((lab) => lab.mode), ["guided", "guided", "guided", "guided", "guided", "guided", "capstone", "challenge", "challenge", "capstone", "guided"]);
+  assert.deepEqual(labs.map((lab) => lab.mode), ["guided", "guided", "guided", "guided", "guided", "guided", "capstone", "challenge", "challenge", "capstone", "guided", "guided"]);
   assert.deepEqual(labs[0].prerequisites, []);
 });
 
@@ -29,7 +29,10 @@ test("every objective has discoverable hints, a solution, and a host verificatio
   for (const lab of labs) {
     const text = await readFile(new URL(`${lab.id}/README.md`, root), "utf8");
     const headings = [...text.matchAll(/^## (.+)$/gm)].map((match) => match[1]);
-    assert.deepEqual(headings, ["Scenario", "What you need to know", "Start the lab", "Objectives", "Hints", "Solution", "What this taught you", "Stop or reset"], lab.id);
+    const core = ["Scenario", "What you need to know", "Start the lab", "Objectives", "Hints", "Solution", "What this taught you", "Stop or reset"];
+    // Optional orientation/follow-up sections may surround, but never replace,
+    // duplicate or reorder the core lesson sections used below.
+    assert.deepEqual(headings.filter((heading) => core.includes(heading)), core, lab.id);
     const objectives = text.split("## Objectives")[1].split("## Hints")[0];
     const hints = text.split("## Hints")[1].split("## Solution")[0];
     const solution = text.split("## Solution")[1].split("## What this taught you")[0];

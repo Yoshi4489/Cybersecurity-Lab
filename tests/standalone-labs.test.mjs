@@ -78,8 +78,8 @@ test("the original portal catalog remains exactly 18 labs", async () => {
   assert.equal(catalog.length, 18);
 });
 
-test("eleven current-curriculum manifests have a complete, safe schema", () => {
-  assert.equal(labs.length, 11);
+test("twelve current-curriculum manifests have a complete, safe schema", () => {
+  assert.equal(labs.length, 12);
   assert.equal(new Set(labs.map((lab) => lab.id)).size, labs.length);
 
   const globalFlags = [];

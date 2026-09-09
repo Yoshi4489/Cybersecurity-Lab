@@ -1,6 +1,6 @@
 # Northstar Shipping: Beginner Security Labs
 
-Eleven local labs teach you how evidence leads to the next
+Twelve local labs teach you how evidence leads to the next
 question and the next command. Start with the [setup guide](GETTING-STARTED.md).
 Read the lessons and submit flags in the default portal at `/` (`/labs` also works).
 Returning learners can access the eighteen original modules under **Legacy** at
@@ -8,7 +8,9 @@ Returning learners can access the eighteen original modules under **Legacy** at
 
 ## Learning path
 
-Follow this order: **00 → 01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09**.
+Follow the core order: **00 → 01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09**.
+Lab 10 is an elective after Lab 01; Lab 11 is the first identity-validation
+follow-up after Lab 07.
 
 | Lab | Investigation | Mode | You learn |
 | --- | --- | --- | --- |
@@ -23,6 +25,7 @@ Follow this order: **00 → 01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 
 | [08](08-cipher-locker/README.md) | Recovered Cache | Challenge | Encoding, integrity and artifact analysis |
 | [09](09-content-discovery/README.md) | Close the Breach | Capstone | Deployment leaks and export evidence |
 | [10](10-message-recovery/README.md) | The Mislabelled Secret | Guided | Base64, hex, ROT13, MD5 dictionary matching, toy XOR |
+| [11](11-jwt-validation/README.md) | Claims Under Oath | Guided | JWT signature, claims, key rotation, authorization, remediation |
 
 Numeric prefixes remain stable IDs. The rebuilt curriculum now follows numeric
 order; 06 and 09 are the capstones. Prerequisites are recommendations, not startup

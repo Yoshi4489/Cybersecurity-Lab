@@ -1,0 +1,17 @@
+{
+  "validation-matrix": {
+    "evidence": "`POST /case` returns one case ID, the validation policy, and named synthetic token fixtures.",
+    "observation": "`GET /fixed` returns one explicit reason per fixture; only `valid` is accepted.",
+    "checkpoint": {"question":"Why is decoding a JWT insufficient?","choices":["Claims are authentic after Base64url decoding.","The server must verify integrity and policy before trusting claims.","A visible role always came from the issuer."],"answer":1,"explanation":"Base64url is public representation. Signature, algorithm, key, claims, and authorization policy are separate checks."}
+  },
+  "remediation-proof": {
+    "evidence": "The completed matrix identifies the controls needed to make the fixed endpoint fail closed.",
+    "observation": "The service accepts the full control set only after the matrix and returns a separate remediation flag.",
+    "checkpoint": {"question":"What proves remediation without blocking legitimate use?","choices":["Every token is rejected.","Invalid fixtures are rejected for the expected reasons and the valid fixture succeeds.","The payload is hidden from learners."],"answer":1,"explanation":"A control is verified by negative and positive cases: fail invalid trust conditions while preserving intended access."},
+    "findingPrompt":"State the JWT trust-boundary finding in one sentence.",
+    "evidencePrompt":"Cite the accepted valid fixture and at least two independently rejected fixtures.",
+    "impactPrompt":"Describe the application authorization impact without claiming operating-system access.",
+    "confidencePrompt":"Choose High, Medium, or Low and justify it from the matrix.",
+    "remediationPrompt":"Name the validation controls and state how the positive and negative requests verify them."
+  }
+}

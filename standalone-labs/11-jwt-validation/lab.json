@@ -1,0 +1,22 @@
+{
+  "id": "11-jwt-validation",
+  "title": "Claims Under Oath",
+  "summary": "Test JWT signatures, algorithms, claims, key rotation, and server-side authorization.",
+  "description": "ApertureOps replaced unsigned tokens, but its reviewers need proof that every trust check is enforced.",
+  "difficulty": "intermediate",
+  "difficultyBand": "intermediate-foundations",
+  "minutes": 75,
+  "subnet": "172.31.11.0/24",
+  "composeFile": "docker-compose.yml",
+  "toolboxService": "toolbox",
+  "commandFamilies": ["curl", "jq", "shell variables"],
+  "services": [{"name":"jwt-review","hostname":"jwt-review","ports":[8080],"purpose":"Synthetic JWT validation policy and evidence service"}],
+  "objectives": [
+    {"id":"validation-matrix","title":"Build the JWT validation matrix","label":"Classify accepted and rejected token fixtures","points":50,"flagEnv":"FLAG_L11_MATRIX","dependsOn":[]},
+    {"id":"remediation-proof","title":"Prove the trust controls","label":"Submit and validate the complete remediation set","points":50,"flagEnv":"FLAG_L11_REMEDIATION","dependsOn":["validation-matrix"]}
+  ],
+  "campaign": "ApertureOps: Identity and Authorization",
+  "mode": "guided",
+  "prerequisites": ["07-web-breach-chain"],
+  "learningOutcomes": ["Distinguish decoding from signature verification", "Validate algorithm, key, issuer, audience, expiry, and role independently", "Verify that remediation rejects invalid tokens while accepting a valid token"]
+}
