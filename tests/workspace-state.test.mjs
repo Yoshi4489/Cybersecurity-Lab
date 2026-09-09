@@ -263,3 +263,15 @@ test("failed mutations release polling and obsolete read errors do not replace f
   assert.ok(backend.calls.filter((path) => path === statusPath).length > reads);
   assert.equal(tab.button("Start / resume lab").props.disabled, false);
 });
+
+test("startup feedback becomes ready when the asynchronous instance finishes", async (t) => {
+  const { tab, backend } = await ready(t);
+  const start = backend.delay(`/api/standalone/${labId}/start`);
+  tab.button("Start / resume lab").props.onClick(); await tab.settle();
+  start.resolve({ runId: "run-1", completedObjectives: [], runtime: "building" }); await tab.settle();
+  assert.match(tab.message(), /Preparing your instance/);
+  const status = backend.delay(statusPath);
+  tab.button("Refresh status").props.onClick(); await tab.settle();
+  status.resolve({ runId: "run-1", completedObjectives: [], runtime: "running" }); await tab.settle();
+  assert.equal(tab.message(), "Your instance is ready. Investigate in the terminal below.");
+});

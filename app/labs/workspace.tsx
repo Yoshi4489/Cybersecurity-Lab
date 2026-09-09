@@ -46,6 +46,7 @@ export function LabWorkspace({ labs }: { labs: Lab[] }) {
 
   function selectLab(id: string) {
     setSelectedId(id);
+    setMessage("Start or resume this lab to investigate in its toolbox.");
     try { localStorage.setItem("reconlab.selectedLab", id); } catch { /* Device preference only. */ }
   }
 
@@ -80,6 +81,11 @@ export function LabWorkspace({ labs }: { labs: Lab[] }) {
       if (!requests.current.current(selectedId, read)) return;
       setProgress((current) => requests.current.current(selectedId, read) ? { ...current, [selectedId]: result } : current);
       if (result.error) setMessage(result.error);
+      else setMessage((current) => {
+        if (current === "Preparing your instance. The terminal appears when the lab is ready." && result.runtime === "running") return "Your instance is ready. Investigate in the terminal below.";
+        if (current.startsWith("Stopping the lab.") && result.runtime === "stopped") return "Lab stopped. Your flags and progress are saved.";
+        return current;
+      });
     } catch (error) { if (requests.current.current(selectedId, read)) setMessage((error as Error).message); }
   }, [selectedId]);
   useEffect(() => {
@@ -94,7 +100,7 @@ export function LabWorkspace({ labs }: { labs: Lab[] }) {
     const id = selectedId;
     if (!requests.current.beginMutation(id)) return;
     let failed = false;
-    setBusy(true); setMessage(`${action === "start" ? "Starting or resuming" : action === "stop" ? "Stopping" : "Resetting"} ${selected.title}. A first build can take several minutes; keep this page open.`);
+    setBusy(true); setMessage(`${action === "start" ? "Starting or resuming" : action === "stop" ? "Stopping" : action === "extend" ? "Extending" : "Resetting"} ${selected.title}. A first build can take several minutes; keep this page open.`);
     try {
       const result = await controllerRequest<Status>(`/api/standalone/${id}/${action}`, { method: "POST", headers: { "X-CSRF-Token": csrf } });
       setProgress((current) => ({ ...current, [id]: result }));
