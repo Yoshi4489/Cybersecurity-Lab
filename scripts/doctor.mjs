@@ -147,7 +147,14 @@ export async function runDoctor() {
       dockerNetworkCidrs(),
       hostRouteCidrs(),
     ]);
+    const instancePool = process.env.LAB_INSTANCE_POOL_CIDR ?? "10.240.0.0/16";
     const collisions = findCidrOverlaps(declared, [...dockerNetworks, ...routes]);
+    const pool = parseCidr(instancePool);
+    const available = pool && pool.prefix >= 16 && pool.prefix <= 24 && Array.from({ length: 2 ** (24 - pool.prefix) }, (_, index) => {
+      const start = pool.start + index * 256;
+      return [24, 16, 8, 0].map((shift) => Math.floor(start / 2 ** shift) % 256).join(".") + "/24";
+    }).some((subnet) => ![...dockerNetworks, ...routes].some((route) => cidrsOverlap(subnet, route)));
+    results.push(report("Instance address pool has an available /24", Boolean(available), instancePool));
     results.push(report(
       "Standalone lab subnets do not overlap Docker networks or host routes",
       collisions.length === 0,

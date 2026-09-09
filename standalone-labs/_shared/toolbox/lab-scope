@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ -f /opt/cyberlab/instance-scope.txt ]]; then
+  cat /opt/cyberlab/instance-scope.txt
+fi
+
 cat <<'SCOPE'
 
 SCOPE

@@ -6,6 +6,7 @@
   "difficulty": "intermediate",
   "minutes": 75,
   "subnet": "172.31.9.0/24",
+  "browserEntrypoints": [{"id":"archive","label":"Northstar archive","service":"web-archive","containerPort":8080,"path":"/"}],
   "composeFile": "docker-compose.yml",
   "toolboxService": "toolbox",
   "commandFamilies": [

@@ -6,6 +6,7 @@
   "difficulty": "intermediate",
   "minutes": 75,
   "subnet": "172.31.7.0/24",
+  "browserEntrypoints": [{"id":"portal","label":"ApertureOps portal","service":"edge-gateway","containerPort":8080,"path":"/"}],
   "composeFile": "docker-compose.yml",
   "toolboxService": "toolbox",
   "commandFamilies": [
