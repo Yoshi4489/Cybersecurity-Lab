@@ -4,7 +4,8 @@ A local, beginner-first security curriculum. Start with terminal practice, then
 follow connected investigations with scenarios, evidence, progressive hints,
 understanding checks and hidden walkthroughs.
 
-This is a **single-user, local-only** product, not a production multi-user service.
+This is an **account-based, local-only** product for trusted learners on one computer,
+not a production multi-user service.
 
 ## Start here
 
@@ -15,6 +16,7 @@ commands from this project folder:
 ```sh
 npm run doctor
 npm install
+npm run admin:create -- admin
 npm run lab
 ```
 
@@ -23,11 +25,12 @@ npm.ps1. Open **http://127.0.0.1:5173/**. The current curriculum is the home pag
 `/labs` remains a compatible link to the same workspace.
 
 Begin with **Lab 00 — Your First Shift: Terminal Practice**. Click **Start / resume
-lab**, run the displayed shell command in your host terminal, and keep the portal
-open beside the toolbox. The portal contains the lesson and solution; you do not
+lab** after signing in and changing your temporary password. The investigation
+terminal opens inside the portal. Use Administration to create learner accounts. The portal contains the lesson and solution; you do not
 need to open local Markdown files.
 
 For detailed setup help, see [Getting started](standalone-labs/GETTING-STARTED.md).
+For migration, admin controls, leases and configuration, see [Local instances](docs/LOCAL-INSTANCES.md).
 
 ## One current learning path
 
@@ -52,24 +55,24 @@ open one hint if stuck, explain your reasoning in the check, then submit the fla
 The full solution stays separately hidden.
 
 Flags are generated for each run and verified by the local controller.
-The portal and CLI share that saved flag progress. Understanding checks are
+The portal and CLI share your account's saved flag progress. Understanding checks are
 formative practice, not secure exams: they give immediate explanations and are
-saved on this browser per run. They are required for the portal submission flow,
-but the maintainer/CLI verifier still checks flags independently. Existing flag
+saved to your account per run. They are required for the portal submission flow,
+and the maintainer/CLI verifier checks flags independently. Existing flag
 progress is preserved; you can complete checks for previously verified tasks.
 
 ## Start, stop and resume
 
 - **Start / resume:** creates a first run or preserves existing flags and submissions.
-- **Stop lab:** removes that lab's containers, preserving submissions and flags.
+- **Stop lab / expiry:** removes that lab's containers, preserving submissions and flags.
   Toolbox `/tmp` files are lost; download evidence again on resume.
 - **Reset this lab:** explicitly deletes that lab's progress and volumes and creates
   fresh flags. It does not reset other investigations.
 - **Reconnect / Refresh status:** retries controller connectivity or reads runtime state.
 
-Stop active investigations using their **Stop lab** buttons before running
-`npm run lab:stop`. That command stops the portal, controller and legacy shared
-range; it does not stop independent current-curriculum containers.
+Each account may run one lab; the host default is two. A lease lasts 60 minutes,
+with one 30-minute extension. Resume grants a new lease on the same run.
+`npm run lab:stop` stops account instances before the portal, controller and legacy range.
 
 The controller is an API at `http://127.0.0.1:3030/health`, not the lesson portal.
 It accepts only loopback access, trusted origins and protected lifecycle actions.
@@ -94,7 +97,7 @@ compatibility; these labs are integrated into the default portal.
 ```sh
 npm run labs:list
 node scripts/standalone-labctl.mjs start 00-terminal-basics
-node scripts/standalone-labctl.mjs shell 00-terminal-basics
+node scripts/standalone-labctl.mjs shell 00-terminal-basics --user admin
 ```
 
 Run investigation commands only inside the toolbox. In another host terminal,

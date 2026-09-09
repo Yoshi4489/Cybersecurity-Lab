@@ -2,7 +2,7 @@
 
 ## Intended environment
 
-RECON//LAB is a single-user local teaching range. Its security controls are for
+RECON//LAB is an account-based, same-computer local teaching range. Its security controls are for
 containment: they protect the host and external networks from the synthetic
 exercise environment. They are not designed to establish a secrecy boundary
 between a learner and a range running on that learner's own machine.
@@ -30,8 +30,24 @@ The controllers still limit unnecessary flag distribution:
 
 ## Non-goals and reporting
 
-This project does not provide multi-user isolation, anti-cheat controls, secret
+This project provides account and container separation for trusted local learners.
+It does not provide hostile multi-tenant isolation, anti-cheat controls, secret
 protection from a host owner, or a platform for attacks against real systems. If
 a change creates a host escape, external network path, non-loopback published
 port, or unintended cross-exercise route exposure, treat it as a safety defect and
 report it rather than relying on the local-only threat model.
+
+Account sessions and every current-lab request enforce ownership. Terminal
+connections enforce origin and ownership both at upgrade and during use. The
+Docker daemon is accessible only to the host controller, never mounted into a
+toolbox. Target gateways use separate hostnames and revoke grants when the
+account session or instance expires. The host owner can inspect published
+loopback ports and runtime records; this is outside the account boundary.
+
+Browser entrypoints use a fixed-destination HTTP relay on an ingress bridge,
+following the legacy toolbox ingress pattern. Only that relay joins the ingress
+bridge; targets and toolboxes remain on internal networks. Client URLs and Host
+headers cannot change its configured upstream. The relay has no Docker socket,
+shell interface, or privileged capabilities.
+
+See [local instances](LOCAL-INSTANCES.md) for leases, recovery and migration.

@@ -36,11 +36,13 @@ failure before starting a range.
 ## Read and submit in the portal
 
 Run `npm run lab` (or `npm.cmd run lab` in PowerShell), then open
-**http://127.0.0.1:5173/**. Begin with Lab 00 and use Start / resume. The portal
+**http://127.0.0.1:5173/**. First create the administrator with
+`npm run admin:create -- admin`, sign in and change the temporary password.
+Begin with Lab 00 and use Start / resume. The portal
 contains the scenario, objective descriptions, individual hints, and complete
 walkthrough, so you do not need to open a local Markdown file.
 
-Use the displayed shell command to enter that lab's toolbox and investigate.
+Use the embedded terminal to investigate in that lab's toolbox.
 Paste each discovered flag into its matching portal form. CLI verification is
 still supported, and both interfaces use the same saved progress and per-run flags.
 Returning learners can find the original modules under Legacy at `/legacy`; their saved progress is unchanged.
@@ -50,7 +52,7 @@ Returning learners can find the original modules under Legacy at `/legacy`; thei
 **Host terminal:** your ordinary computer, in this project directory. It runs
 the lab controller to start, submit flags, check progress, and stop.
 
-**Toolbox terminal:** after the shell command, you are in the lab's Linux
+**Toolbox terminal:** the portal's embedded terminal is in the lab's Linux
 container as student. It has the commands needed for investigation. Linux
 pipelines and quoting in the README belong here, not in PowerShell.
 
@@ -62,14 +64,8 @@ getent cannot resolve it, check which terminal you are using.
 Choose **Lab 00 — Your First Shift: Terminal Practice** in the portal. Its
 [written lesson](00-terminal-basics/README.md) is also available for CLI users.
 
-In the host terminal:
-
-```sh
-npm run labs:start -- 00-terminal-basics
-node scripts/standalone-labctl.mjs shell 00-terminal-basics
-```
-
-The second command enters the toolbox. Start with its prompt and a simple command:
+Click **Start / resume lab** and wait for the embedded terminal. Start with its
+prompt and a simple command:
 
 ```sh
 pwd
@@ -104,7 +100,9 @@ Submit current flags in dependency order. A wrong
 flag, an old run's flag, or an incomplete prerequisite objective is rejected.
 The CLI recommends prior labs but allows you to start any lab independently.
 
-When finished, exit the toolbox and stop the lab from a host terminal:
+When finished, click **Stop lab**. The 60-minute lease also stops it automatically;
+you may extend it by 30 minutes once. Optional host commands (first admin by default,
+or append `--user <username>`):
 
 ```sh
 node scripts/standalone-labctl.mjs status 00-terminal-basics
@@ -143,3 +141,7 @@ Numeric prefixes remain stable IDs. Labs 06 and 09 are the capstones. See the
 - Unknown command: confirm whether it is a host command or a Linux toolbox command.
 - First build is slow: Docker downloads the pinned base images and toolbox tools.
 The current learning path starts with **00 → 01**: terminal practice before networking.
+
+See [local instances](../docs/LOCAL-INSTANCES.md) for account creation, migration,
+private target tabs and maintenance. Account instances use allocated addresses;
+read the portal's current instructions and run `lab-scope` inside the toolbox.

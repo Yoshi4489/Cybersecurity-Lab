@@ -1,10 +1,10 @@
 # Curriculum design record
 
-The audience is a complete beginner using clear English. The original nine standalone
-labs retain their CLI IDs, and Lab 10 adds a guided message-recovery elective after
-Lab 01. Six earlier README drafts have been folded into this curriculum. Standalone
-lessons and flag submission are now integrated at `/labs`; the original eighteen
-shared-range portal modules remain separate.
+The audience is a complete beginner using clear English. The current 11-lab path
+starts at Lab 00, with account progress and embedded terminals on one computer.
+Lab 10 adds a guided message-recovery elective after Lab 01. Scenarios, objectives,
+hints, checks, and flag submission are integrated at `/labs`; eighteen older
+shared-range modules are explicitly labeled legacy at `/legacy`.
 
 Lab 10 distinguishes encoding (Base64 and hex), fixed substitution (ROT13),
 dictionary guessing against an MD5 digest, and keyed decryption (toy repeating-key

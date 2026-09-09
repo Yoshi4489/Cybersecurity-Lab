@@ -4,11 +4,11 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
-test("design record describes the single-user local range", async () => {
+test("design record describes account-owned local instances and legacy compatibility", async () => {
   const design = await read("../DESIGN.md");
-  assert.match(design, /single-user local range/i);
+  assert.match(design, /account-based local-only range/i);
   assert.match(design, /portal shared range/i);
-  assert.match(design, /standalone labs:[\s\S]*independent compose project/i);
+  assert.match(design, /current curriculum[\s\S]*private compose project/i);
   assert.match(design, /multi-user hosting/i);
   assert.match(design, /anti-cheat/i);
   assert.doesNotMatch(design, /playlist|album|now-playing/i);

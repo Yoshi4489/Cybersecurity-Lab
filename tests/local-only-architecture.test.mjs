@@ -23,7 +23,7 @@ test("local-only architecture excludes hosted persistence and deployment scaffol
   assert.doesNotMatch(viteConfig, forbiddenScaffolding);
 });
 
-test("documentation defines RECON//LAB as a single-user local-only product", () => {
-  assert.match(readme, /single-user, local-only/i);
+test("documentation defines RECON//LAB as an account-based local-only product", () => {
+  assert.match(readme, /account-based, local-only/i);
   assert.match(readme, /not a production multi-user service/i);
 });
