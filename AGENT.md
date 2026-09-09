@@ -106,9 +106,11 @@ message size, and terminal dimensions.
 ### Curriculum data
 
 The current lab source is under `standalone-labs/00-*` through `10-*`.
-Each lab generally contains a manifest, `tasks.json`, `README.md`, `HINTS.md`,
-`SOLUTION.md`, a Compose file, target services, a toolbox smoke script, and
-fictional evidence. `controller/standalone.mjs` discovers these manifests.
+Each lab generally contains a manifest, `tasks.json`, `README.md`, a Compose
+file, target services, a toolbox smoke script, and fictional evidence. Hints
+and solutions are embedded in `README.md` as the single source of truth;
+separate `HINTS.md` and `SOLUTION.md` files are not required. `controller/standalone.mjs`
+discovers these manifests.
 
 The older shared-range catalog and progress database remain under `data/` and
 the legacy portal paths. Do not silently merge legacy progress into learner

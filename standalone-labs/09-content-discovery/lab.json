@@ -4,6 +4,7 @@
   "summary": "Discover exposed deployment artifacts; Decode a leaked configuration; Correlate a successful export and its actor; Submit evidence and remediation.",
   "description": "Northstar: ApertureOps Incident. Apply earlier lessons with optional per-flag hints. Discover exposed deployment artifacts; Decode a leaked configuration; Correlate a successful export and its actor; Submit evidence and remediation.",
   "difficulty": "intermediate",
+  "difficultyBand": "intermediate-capstone",
   "minutes": 75,
   "subnet": "172.31.9.0/24",
   "browserEntrypoints": [{"id":"archive","label":"Northstar archive","service":"web-archive","containerPort":8080,"path":"/"}],

@@ -40,9 +40,32 @@ must answer an investigation question. A flag indicates a checkpoint; it does
 not prove that a learner ran a particular command. Final endpoints validate case
 evidence, while local CLI verification enforces objective dependencies.
 
-The manifest fields campaign, mode, prerequisites, and learningOutcomes describe
-the curriculum. Prerequisites recommend preparation without blocking independent
-lab startup. Modes are guided, challenge, and capstone.
+The manifest fields campaign, mode, prerequisites, learningOutcomes, difficulty,
+and difficultyBand describe the curriculum. Prerequisites recommend preparation
+without blocking independent lab startup. Modes are guided, challenge, and
+capstone. The broad `difficulty` value remains `beginner`, `intermediate`, or
+`advanced` for compatibility; `difficultyBand` records the teaching tier below.
+
+## Difficulty rubric
+
+- **beginner:** 0–2 new concepts, one primary tool family, no more than two
+  independent decisions, no prerequisite beyond terminal orientation, and a
+  directly observable flag in roughly 15–35 minutes.
+- **beginner-plus:** 2–4 concepts building on one prior lab, two or three tool
+  families, one meaningful tool or interpretation choice, and a distinction
+  such as banner versus proof in roughly 30–60 minutes.
+- **intermediate-foundations:** 4–7 concepts in one domain, at least three tools
+  or one protocol plus an evidence format, and two combined observations with
+  at least one indirect clue in roughly 45–90 minutes.
+- **intermediate-capstone:** reuses at least three prior skills, correlates
+  multiple sources, includes ambiguity or a competing interpretation, and ends
+  with evidence, impact, confidence, and remediation in roughly 60–120 minutes.
+- **intermediate-crypto-foundations:** requires byte or encoding reasoning,
+  distinguishes encoding, hashing, encryption, integrity, and authenticity,
+  and explains why any intentionally weak primitive is not production-safe.
+- **advanced:** reserves more than 120 minutes for non-linear investigation,
+  multiple defensible approaches, substantial ambiguity, or cross-domain work.
+  Length or number of commands alone never makes a lab advanced.
 
 The first campaign covers infrastructure and evidence, ending at Lab 06. The
 second covers ApertureOps and ends at Lab 09. Case artifacts are self-contained;

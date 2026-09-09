@@ -4,6 +4,7 @@
   "summary": "Practice prompts, commands, arguments, files, pipes and copying evidence before networking.",
   "description": "A harmless desk handover in an isolated Linux toolbox. Read a note, filter a log, and submit two practice flags.",
   "difficulty": "beginner",
+  "difficultyBand": "beginner",
   "minutes": 15,
   "subnet": "172.28.0.0/24",
   "composeFile": "docker-compose.yml",

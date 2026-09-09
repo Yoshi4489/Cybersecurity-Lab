@@ -1,5 +1,28 @@
 # Getting Started
 
+## Where commands run
+
+### HOST
+
+Your Windows/macOS/Linux machine, in the project directory. Run `npm`,
+`node scripts/standalone-labctl.mjs`, Docker lifecycle commands and flag
+verification here. The `shell` command opens TOOLBOX; keep a second HOST
+terminal for verification. `reset` is destructive, not routine cleanup.
+
+### TOOLBOX
+
+The isolated Linux investigation shell, opened by the controller or the portal's
+embedded terminal. Run reconnaissance and evidence commands here, not in
+PowerShell. Lab service hostnames resolve only inside the selected lab network.
+Use `lab-scope` and the portal's current instructions for allocated target addresses.
+
+### PORTAL
+
+The browser application at `http://127.0.0.1:5173/`: sign in, select the lab,
+start/resume, read tasks and hints, answer checks and submit flags. The embedded
+terminal is TOOLBOX even though it appears in PORTAL. Controller health at
+`http://127.0.0.1:3030/health` is an API, not a lesson or a target.
+
 These labs assume you are new to the terminal and networking. You investigate
 fictional Northstar Shipping incidents — including a breach at ApertureOps, its
 outsourced support vendor — on your own computer.
@@ -15,6 +38,8 @@ Open PowerShell or Windows Terminal on Windows, or Terminal on macOS/Linux.
 A terminal accepts text commands; Enter runs a command. Change into the downloaded
 project directory using `cd`, for example:
 
+**HOST — lifecycle and verification**
+
 ```powershell
 cd C:\Users\win\Downloads\Projects\WebApps\Cybersecurity-Lab
 node -v
@@ -23,6 +48,8 @@ docker compose version
 ```
 
 Check your computer before installation or startup:
+
+**HOST — lifecycle and verification**
 
 ```sh
 npm run doctor
@@ -68,6 +95,8 @@ Choose **Lab 00 — Your First Shift: Terminal Practice** in the portal. Its
 Click **Start / resume lab** and wait for the embedded terminal. Start with its
 prompt and a simple command:
 
+**TOOLBOX — investigation**
+
 ```sh
 pwd
 ```
@@ -79,6 +108,8 @@ only after you are comfortable entering commands and copying their output.
 
 When the note displays `practice_flag=RLAB{...}`, copy only the complete
 `RLAB{...}` value. In a **second host terminal**:
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 00-terminal-basics read-note 'RLAB{...}'
@@ -105,12 +136,16 @@ When finished, click **Stop lab**. The 60-minute lease also stops it automatical
 you may extend it by 30 minutes once. Optional host commands (first admin by default,
 or append `--user <username>`):
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs status 00-terminal-basics
 node scripts/standalone-labctl.mjs stop 00-terminal-basics
 ```
 
 For a clean retry:
+
+**HOST — destructive reset (clears this lab’s progress)**
 
 ```sh
 node scripts/standalone-labctl.mjs reset 00-terminal-basics

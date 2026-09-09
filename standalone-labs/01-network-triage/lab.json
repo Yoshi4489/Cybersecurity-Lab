@@ -4,6 +4,7 @@
   "summary": "Explain hosts, ports and protocols; Resolve a named asset; Choose HTTP or raw TCP clients from evidence.",
   "description": "Northstar: Infrastructure Review. Learn each concept before trying it. Explain hosts, ports and protocols; Resolve a named asset; Choose HTTP or raw TCP clients from evidence.",
   "difficulty": "beginner",
+  "difficultyBand": "beginner",
   "minutes": 35,
   "subnet": "172.28.1.0/24",
   "composeFile": "docker-compose.yml",

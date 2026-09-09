@@ -4,6 +4,7 @@
   "summary": "Connect DNS and network evidence; Acquire and verify a disclosed bundle; Correlate an actor and event.",
   "description": "Northstar: Infrastructure Review. Apply earlier lessons with optional per-flag hints. Connect DNS and network evidence; Acquire and verify a disclosed bundle; Correlate an actor and event.",
   "difficulty": "intermediate",
+  "difficultyBand": "intermediate-capstone",
   "minutes": 90,
   "subnet": "172.30.66.0/24",
   "composeFile": "docker-compose.yml",

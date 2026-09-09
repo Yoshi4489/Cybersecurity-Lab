@@ -4,6 +4,7 @@
   "summary": "Preserve archive integrity; Inventory file metadata; Correlate logs and printable artifacts.",
   "description": "Northstar: Infrastructure Review. Learn each concept before trying it. Preserve archive integrity; Inventory file metadata; Correlate logs and printable artifacts.",
   "difficulty": "intermediate",
+  "difficultyBand": "intermediate-foundations",
   "minutes": 60,
   "subnet": "172.30.55.0/24",
   "composeFile": "docker-compose.yml",

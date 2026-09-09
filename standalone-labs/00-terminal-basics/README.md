@@ -1,6 +1,31 @@
 # Lab 00 — Your First Shift: Terminal Practice
 
-**Level:** Complete beginner · **Mode:** Guided · **Time:** 15 minutes
+## Where commands run
+
+### HOST
+
+Your Windows/macOS/Linux machine, in the project directory. Run `npm`,
+`node scripts/standalone-labctl.mjs`, Docker lifecycle commands and flag
+verification here. The `shell` command opens TOOLBOX; keep a second HOST
+terminal for verification. `reset` is destructive, not routine cleanup.
+
+### TOOLBOX
+
+The isolated Linux investigation shell, opened by the controller or the portal's
+embedded terminal. Run reconnaissance and evidence commands here, not in
+PowerShell. Lab service hostnames resolve only inside the selected lab network.
+Use `lab-scope` and the portal's current instructions for allocated target addresses.
+
+### PORTAL
+
+The browser application at `http://127.0.0.1:5173/`: sign in, select the lab,
+start/resume, read tasks and hints, answer checks and submit flags. The embedded
+terminal is TOOLBOX even though it appears in PORTAL. Controller health at
+`http://127.0.0.1:3030/health` is an API, not a lesson or a target.
+
+**Level:** Beginner · **Mode:** Guided · **Time:** 15 minutes
+
+**Difficulty band:** beginner
 
 ## Scenario
 
@@ -43,6 +68,8 @@ surrounding quotes in your flag submission.
 Open the portal at http://127.0.0.1:5173 and choose Lab 00. Click Start / resume,
 then run the displayed shell command in your **host terminal** in the project folder.
 If using the CLI instead, run:
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs start 00-terminal-basics
@@ -125,6 +152,8 @@ toolbox; they do not need administrator privileges and do not edit your evidence
 
 **Toolbox:**
 
+**TOOLBOX — investigation**
+
 ```sh
 pwd
 ls
@@ -142,6 +171,8 @@ the first portal field. A flag is evidence, not a command to run.
 
 **Host terminal — optional alternative to the portal field:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 00-terminal-basics read-note 'RLAB{...}'
 ```
@@ -149,6 +180,8 @@ node scripts/standalone-labctl.mjs verify 00-terminal-basics read-note 'RLAB{...
 ### Filter the log (`filter-log`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 cd /practice
@@ -165,6 +198,8 @@ status because there is no match; that is not a broken terminal.
 
 **Host terminal — optional alternative:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 00-terminal-basics filter-log 'RLAB{...}'
 ```
@@ -180,6 +215,8 @@ uses this same prompt and copying workflow to inspect a fictional network.
 
 **Host terminal — finish without clearing submissions:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs status 00-terminal-basics
 node scripts/standalone-labctl.mjs stop 00-terminal-basics
@@ -189,6 +226,8 @@ On start/resume, flags and submitted progress stay the same. Supplied practice
 files are recreated from the same run; any toolbox /tmp work is lost on stop.
 
 **Optional clean retry — deletes this lab's progress and creates new flags:**
+
+**HOST — destructive reset (clears this lab’s progress)**
 
 ```sh
 node scripts/standalone-labctl.mjs reset 00-terminal-basics

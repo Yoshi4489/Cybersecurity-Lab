@@ -4,6 +4,7 @@
   "summary": "Distinguish encoding from encryption; Verify an artifact against a reference hash; Recover printable evidence without executing it.",
   "description": "Northstar: ApertureOps Incident. Apply earlier lessons with optional per-flag hints. Distinguish encoding from encryption; Verify an artifact against a reference hash; Recover printable evidence without executing it.",
   "difficulty": "intermediate",
+  "difficultyBand": "intermediate-capstone",
   "minutes": 35,
   "subnet": "172.31.8.0/24",
   "composeFile": "docker-compose.yml",

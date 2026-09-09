@@ -1,5 +1,28 @@
 # RECON//LAB
 
+## Where commands run
+
+### HOST
+
+Your Windows/macOS/Linux machine, in the project directory. Run `npm`,
+`node scripts/standalone-labctl.mjs`, Docker lifecycle commands and flag
+verification here. The `shell` command opens TOOLBOX; keep a second HOST
+terminal for verification. `reset` is destructive, not routine cleanup.
+
+### TOOLBOX
+
+The isolated Linux investigation shell, opened by the controller or the portal's
+embedded terminal. Run reconnaissance and evidence commands here, not in
+PowerShell. Lab service hostnames resolve only inside the selected lab network.
+Use `lab-scope` and the portal's current instructions for allocated target addresses.
+
+### PORTAL
+
+The browser application at `http://127.0.0.1:5173/`: sign in, select the lab,
+start/resume, read tasks and hints, answer checks and submit flags. The embedded
+terminal is TOOLBOX even though it appears in PORTAL. Controller health at
+`http://127.0.0.1:3030/health` is an API, not a lesson or a target.
+
 A local, beginner-first security curriculum. Start with terminal practice, then
 follow connected investigations with scenarios, evidence, progressive hints,
 understanding checks and hidden walkthroughs.
@@ -16,6 +39,8 @@ session without assuming prior security knowledge.
 Install Node.js 22.13+ and Docker Desktop with Linux containers (or Docker Engine
 and Compose v2 on Linux). Start Docker and wait for its engine, then run these
 commands from this project folder:
+
+**HOST — lifecycle and verification**
 
 ```sh
 npm run doctor
@@ -99,6 +124,8 @@ at http://127.0.0.1:7681 and is only for those legacy modules.
 The historical `standalone-labs/` directory and CLI names remain stable for
 compatibility; these labs are integrated into the default portal.
 
+**HOST — lifecycle and verification**
+
 ```sh
 npm run labs:list
 node scripts/standalone-labctl.mjs start 00-terminal-basics
@@ -108,6 +135,8 @@ node scripts/standalone-labctl.mjs shell 00-terminal-basics --user admin
 Run investigation commands only inside the toolbox. In another host terminal,
 optional verification uses `node scripts/standalone-labctl.mjs verify <lab-id>
 <objective-id> 'RLAB{...}'`.
+
+**HOST — lifecycle and verification**
 
 ```sh
 npm run dev

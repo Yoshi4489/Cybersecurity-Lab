@@ -1,6 +1,31 @@
 # Lab 05 — Incident EV-55: Linux Evidence Hunt
 
-**Level:** Beginner–intermediate
+## Where commands run
+
+### HOST
+
+Your Windows/macOS/Linux machine, in the project directory. Run `npm`,
+`node scripts/standalone-labctl.mjs`, Docker lifecycle commands and flag
+verification here. The `shell` command opens TOOLBOX; keep a second HOST
+terminal for verification. `reset` is destructive, not routine cleanup.
+
+### TOOLBOX
+
+The isolated Linux investigation shell, opened by the controller or the portal's
+embedded terminal. Run reconnaissance and evidence commands here, not in
+PowerShell. Lab service hostnames resolve only inside the selected lab network.
+Use `lab-scope` and the portal's current instructions for allocated target addresses.
+
+### PORTAL
+
+The browser application at `http://127.0.0.1:5173/`: sign in, select the lab,
+start/resume, read tasks and hints, answer checks and submit flags. The embedded
+terminal is TOOLBOX even though it appears in PORTAL. Controller health at
+`http://127.0.0.1:3030/health` is an API, not a lesson or a target.
+
+**Level:** Intermediate
+
+**Difficulty band:** intermediate-foundations
 
 **Mode:** Guided forensic investigation
 
@@ -43,6 +68,8 @@ switching to unrelated challenges.
 ## Start the lab
 
 Read the [setup guide](../GETTING-STARTED.md) first. The commands below start in a **host terminal**.
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs start 05-linux-evidence
@@ -175,6 +202,8 @@ POST those fields to `http://172.30.55.55:8080/final`; the case is `EV-55`.
 
 **Toolbox:**
 
+**TOOLBOX — investigation**
+
 ```sh
 curl -fsS http://172.30.55.55:8080/manifest
 curl -fsS http://172.30.55.55:8080/case-55.tar -o /tmp/case-55.tar
@@ -191,6 +220,8 @@ Save the SHA-256 value and `filesystem_proof`.
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 05-linux-evidence filesystem 'RLAB{...}'
 ```
@@ -198,6 +229,8 @@ node scripts/standalone-labctl.mjs verify 05-linux-evidence filesystem 'RLAB{...
 ### 2. Correlate the access log (`logs`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 cut -d ' ' -f 1 /tmp/evidence/case-55/logs/access.log | sort | uniq -c | sort -nr
@@ -207,6 +240,8 @@ grep '10.55.0.23' /tmp/evidence/case-55/logs/access.log \
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 05-linux-evidence logs 'RLAB{...}'
 ```
@@ -215,11 +250,15 @@ node scripts/standalone-labctl.mjs verify 05-linux-evidence logs 'RLAB{...}'
 
 **Toolbox:**
 
+**TOOLBOX — investigation**
+
 ```sh
 strings /tmp/evidence/case-55/artifacts/session.bin | grep binary_proof
 ```
 
 **Host terminal — submit this stage's displayed flag:**
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 05-linux-evidence binary 'RLAB{...}'
@@ -228,6 +267,8 @@ node scripts/standalone-labctl.mjs verify 05-linux-evidence binary 'RLAB{...}'
 ### 4. Submit the case report (`final`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 curl -X POST \
@@ -241,6 +282,8 @@ curl -X POST \
 ```
 
 **Host terminal — submit this stage's displayed flag:**
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 05-linux-evidence final 'RLAB{...}'
@@ -259,6 +302,8 @@ maintain chain-of-custody records.
 
 **Host terminal — finish this session without clearing submitted progress:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs status 05-linux-evidence
 node scripts/standalone-labctl.mjs stop 05-linux-evidence
@@ -269,6 +314,8 @@ submitted progress stay the same. Files downloaded into the toolbox's /tmp do
 not survive stop; download them again when you resume.
 
 **Optional clean retry — deletes this lab's progress and creates new flags:**
+
+**HOST — destructive reset (clears this lab’s progress)**
 
 ```sh
 node scripts/standalone-labctl.mjs reset 05-linux-evidence

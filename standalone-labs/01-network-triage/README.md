@@ -1,6 +1,31 @@
 # Lab 01 — First Contact at Northstar Shipping
 
-**Level:** Complete beginner
+## Where commands run
+
+### HOST
+
+Your Windows/macOS/Linux machine, in the project directory. Run `npm`,
+`node scripts/standalone-labctl.mjs`, Docker lifecycle commands and flag
+verification here. The `shell` command opens TOOLBOX; keep a second HOST
+terminal for verification. `reset` is destructive, not routine cleanup.
+
+### TOOLBOX
+
+The isolated Linux investigation shell, opened by the controller or the portal's
+embedded terminal. Run reconnaissance and evidence commands here, not in
+PowerShell. Lab service hostnames resolve only inside the selected lab network.
+Use `lab-scope` and the portal's current instructions for allocated target addresses.
+
+### PORTAL
+
+The browser application at `http://127.0.0.1:5173/`: sign in, select the lab,
+start/resume, read tasks and hints, answer checks and submit flags. The embedded
+terminal is TOOLBOX even though it appears in PORTAL. Controller health at
+`http://127.0.0.1:3030/health` is an API, not a lesson or a target.
+
+**Level:** Beginner
+
+**Difficulty band:** beginner
 
 **Mode:** Guided investigation
 
@@ -59,6 +84,8 @@ Read the [setup guide](../GETTING-STARTED.md) first. The commands below start in
 
 From the project directory, start the range and enter its toolbox:
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs start 01-network-triage
 node scripts/standalone-labctl.mjs shell 01-network-triage
@@ -81,6 +108,8 @@ Answer these questions before submitting the flag:
 
 Save the `segment_token`; it is evidence for the final objective. Submit the
 `objective_flag` from the page:
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 01-network-triage network-baseline 'RLAB{...}'
@@ -206,6 +235,8 @@ Try the objectives and hints first. The commands below are the complete path.
 
 **Toolbox:**
 
+**TOOLBOX — investigation**
+
 ```sh
 ip -brief addr
 ip route
@@ -224,6 +255,8 @@ No default internet route is expected in this isolated network.
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 01-network-triage network-baseline 'RLAB{...}'
 ```
@@ -231,6 +264,8 @@ node scripts/standalone-labctl.mjs verify 01-network-triage network-baseline 'RL
 ### 2. Read the raw TCP beacon (`service-beacon`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 nc -w 3 triage-node 9090 </dev/null
@@ -241,6 +276,8 @@ HTTP response. Record `service_token=...` and verify the displayed flag.
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 01-network-triage service-beacon 'RLAB{...}'
 ```
@@ -248,6 +285,8 @@ node scripts/standalone-labctl.mjs verify 01-network-triage service-beacon 'RLAB
 ### 3. Read the HTTP operator console (`operator-console`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 curl -fsS http://triage-node:7070/operator
@@ -257,6 +296,8 @@ Record `operator_token=...` and verify the displayed flag.
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 01-network-triage operator-console 'RLAB{...}'
 ```
@@ -264,6 +305,8 @@ node scripts/standalone-labctl.mjs verify 01-network-triage operator-console 'RL
 ### 4. Combine the evidence (`triage-proof`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 curl -fsS 'http://triage-node:8080/final?segment=<segment-token>&beacon=<service-token>&operator=<operator-token>'
@@ -273,6 +316,8 @@ Replace each placeholder with the value you recorded, then verify the returned
 `final_flag`:
 
 **Host terminal — submit this stage's displayed flag:**
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 01-network-triage triage-proof 'RLAB{...}'
@@ -292,6 +337,8 @@ segmentation, host firewalls, and fewer diagnostic listeners.
 
 **Host terminal — finish this session without clearing submitted progress:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs status 01-network-triage
 node scripts/standalone-labctl.mjs stop 01-network-triage
@@ -302,6 +349,8 @@ submitted progress stay the same. Files downloaded into the toolbox's /tmp do
 not survive stop; download them again when you resume.
 
 **Optional clean retry — deletes this lab's progress and creates new flags:**
+
+**HOST — destructive reset (clears this lab’s progress)**
 
 ```sh
 node scripts/standalone-labctl.mjs reset 01-network-triage

@@ -37,8 +37,11 @@ distinguished from encryption, using only supplied synthetic training data.
 ## How to learn
 
 Every README gives a scenario, concepts, objectives, three hints for each flag,
-a complete solution, and defensive takeaways. Read concepts first. Try an
-objective, reveal one hint if needed, and consult the solution after an attempt.
+a complete solution, and defensive takeaways. Hints and solutions are embedded
+in that README as the single source of truth; separate `HINTS.md` and
+`SOLUTION.md` files are not required and must not duplicate the lesson. Read
+concepts first. Try an objective, reveal one hint if needed, and consult the
+solution after an attempt.
 A correct flag is a progress checkpoint; also explain what the evidence means.
 The portal groups each objective with its starting evidence, expected observation,
 hints, understanding check and submission field. Checks provide explanations and

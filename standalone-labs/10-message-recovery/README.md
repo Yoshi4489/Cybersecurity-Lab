@@ -1,6 +1,31 @@
 # Lab 10 — The Mislabelled Secret
 
-**Level:** Complete beginner · **Mode:** Guided · **Time:** 50 minutes
+## Where commands run
+
+### HOST
+
+Your Windows/macOS/Linux machine, in the project directory. Run `npm`,
+`node scripts/standalone-labctl.mjs`, Docker lifecycle commands and flag
+verification here. The `shell` command opens TOOLBOX; keep a second HOST
+terminal for verification. `reset` is destructive, not routine cleanup.
+
+### TOOLBOX
+
+The isolated Linux investigation shell, opened by the controller or the portal's
+embedded terminal. Run reconnaissance and evidence commands here, not in
+PowerShell. Lab service hostnames resolve only inside the selected lab network.
+Use `lab-scope` and the portal's current instructions for allocated target addresses.
+
+### PORTAL
+
+The browser application at `http://127.0.0.1:5173/`: sign in, select the lab,
+start/resume, read tasks and hints, answer checks and submit flags. The embedded
+terminal is TOOLBOX even though it appears in PORTAL. Controller health at
+`http://127.0.0.1:3030/health` is an API, not a lesson or a target.
+
+**Level:** Intermediate · **Mode:** Guided · **Time:** 50 minutes
+
+**Difficulty band:** intermediate-crypto-foundations
 
 ## Scenario
 
@@ -53,11 +78,15 @@ Open the portal at `http://127.0.0.1:5173/labs`, select **The Mislabelled Secret
 and click Start / resume. Read and submit flags directly in that page. From a
 host terminal in the project directory, enter the toolbox:
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs shell 10-message-recovery
 ```
 
 Alternatively, start it first using this host command:
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs start 10-message-recovery
@@ -230,6 +259,8 @@ you submit the displayed flag through the matching portal form instead.
 
 **Toolbox:**
 
+**TOOLBOX — investigation**
+
 ```sh
 curl -fsS http://message-vault:8080/brief | jq -r .payload | base64 -d | tee /tmp/base64.txt
 ```
@@ -239,6 +270,8 @@ and a token-bearing next path. Base64 decoding required no secret.
 
 **Host terminal — submit the displayed flag, not the placeholder:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 10-message-recovery base64 'RLAB{...}'
 ```
@@ -246,6 +279,8 @@ node scripts/standalone-labctl.mjs verify 10-message-recovery base64 'RLAB{...}'
 ### 2. Decode hex (`hex`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 curl -fsS "http://message-vault:8080$(sed -n 's/^next=//p' /tmp/base64.txt)" -o /tmp/hex.json
@@ -257,6 +292,8 @@ Two hex digits became one byte; the resulting bytes formed readable text.
 
 **Host terminal:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 10-message-recovery hex 'RLAB{...}'
 ```
@@ -264,6 +301,8 @@ node scripts/standalone-labctl.mjs verify 10-message-recovery hex 'RLAB{...}'
 ### 3. Reverse ROT13 (`rot13`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 curl -fsS "http://message-vault:8080$(sed -n 's/^next=//p' /tmp/hex.txt)" | jq -r .payload | tr 'A-Za-z' 'N-ZA-Mn-za-m' | tee /tmp/rot13.txt
@@ -274,6 +313,8 @@ again would scramble the letters back. There is no secret key in ROT13.
 
 **Host terminal:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 10-message-recovery rot13 'RLAB{...}'
 ```
@@ -281,6 +322,8 @@ node scripts/standalone-labctl.mjs verify 10-message-recovery rot13 'RLAB{...}'
 ### 4. Recover the synthetic password (`md5`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 curl -fsS "http://message-vault:8080$(sed -n 's/^next=//p' /tmp/rot13.txt)" -o /tmp/dictionary.json
@@ -307,12 +350,16 @@ tested five hypotheses locally. To see the newline pitfall, compare these hashes
 
 **Toolbox:**
 
+**TOOLBOX — investigation**
+
 ```sh
 printf '%s' 'paper-lantern' | md5sum
 printf '%s\n' 'paper-lantern' | md5sum
 ```
 
 **Host terminal:**
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 10-message-recovery md5 'RLAB{...}'
@@ -321,6 +368,8 @@ node scripts/standalone-labctl.mjs verify 10-message-recovery md5 'RLAB{...}'
 ### 5. Decrypt the toy cipher (`message`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 python3 - <<'PY'
@@ -342,6 +391,8 @@ of authenticity against an attacker who could replace both.
 
 **Host terminal:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 10-message-recovery message 'RLAB{...}'
 ```
@@ -362,6 +413,8 @@ the encoding-versus-integrity distinction to a larger evidence archive.
 
 Use Stop lab in the portal, or these **host terminal** commands:
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs status 10-message-recovery
 node scripts/standalone-labctl.mjs stop 10-message-recovery
@@ -371,6 +424,8 @@ On resume, flags and submitted progress stay the same. Toolbox /tmp files do not
 survive stop; repeat the acquisition steps to recreate them.
 
 **Optional clean retry — deletes this lab's progress and creates new flags:**
+
+**HOST — destructive reset (clears this lab’s progress)**
 
 ```sh
 node scripts/standalone-labctl.mjs reset 10-message-recovery

@@ -1,6 +1,31 @@
 # Lab 03 — The Ghost Service in DNS
 
-**Level:** Beginner
+## Where commands run
+
+### HOST
+
+Your Windows/macOS/Linux machine, in the project directory. Run `npm`,
+`node scripts/standalone-labctl.mjs`, Docker lifecycle commands and flag
+verification here. The `shell` command opens TOOLBOX; keep a second HOST
+terminal for verification. `reset` is destructive, not routine cleanup.
+
+### TOOLBOX
+
+The isolated Linux investigation shell, opened by the controller or the portal's
+embedded terminal. Run reconnaissance and evidence commands here, not in
+PowerShell. Lab service hostnames resolve only inside the selected lab network.
+Use `lab-scope` and the portal's current instructions for allocated target addresses.
+
+### PORTAL
+
+The browser application at `http://127.0.0.1:5173/`: sign in, select the lab,
+start/resume, read tasks and hints, answer checks and submit flags. The embedded
+terminal is TOOLBOX even though it appears in PORTAL. Controller health at
+`http://127.0.0.1:3030/health` is an API, not a lesson or a target.
+
+**Level:** Intermediate
+
+**Difficulty band:** intermediate-foundations
 
 **Mode:** Guided investigation
 
@@ -43,6 +68,8 @@ bind the usual DNS port `53`.
 ## Start the lab
 
 Read the [setup guide](../GETTING-STARTED.md) first. The commands below start in a **host terminal**.
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs start 03-dns-breadcrumbs
@@ -174,6 +201,8 @@ Request `http://172.28.3.30:8088/final?address=...&mail=...&service=...`.
 
 **Toolbox:**
 
+**TOOLBOX — investigation**
+
 ```sh
 dig @dns-lab -p 5353 entry.recon.test CNAME +short
 dig @dns-lab -p 5353 atlas.recon.test A +short
@@ -185,6 +214,8 @@ Record `address_token` from the TXT response.
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 03-dns-breadcrumbs address-trail 'RLAB{...}'
 ```
@@ -192,6 +223,8 @@ node scripts/standalone-labctl.mjs verify 03-dns-breadcrumbs address-trail 'RLAB
 ### 2. Map mail DNS (`mail-trail`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 nslookup -port=5353 -type=MX recon.test dns-lab
@@ -203,6 +236,8 @@ Record `mail_token`.
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 03-dns-breadcrumbs mail-trail 'RLAB{...}'
 ```
@@ -210,6 +245,8 @@ node scripts/standalone-labctl.mjs verify 03-dns-breadcrumbs mail-trail 'RLAB{..
 ### 3. Map and confirm the service (`service-trail`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 dig @dns-lab -p 5353 _ops._tcp.recon.test SRV +short
@@ -222,6 +259,8 @@ Record `service_token`.
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 03-dns-breadcrumbs service-trail 'RLAB{...}'
 ```
@@ -230,11 +269,15 @@ node scripts/standalone-labctl.mjs verify 03-dns-breadcrumbs service-trail 'RLAB
 
 **Toolbox:**
 
+**TOOLBOX — investigation**
+
 ```sh
 curl -fsS 'http://172.28.3.30:8088/final?address=<address-token>&mail=<mail-token>&service=<service-token>'
 ```
 
 **Host terminal — submit this stage's displayed flag:**
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 03-dns-breadcrumbs dns-proof 'RLAB{...}'
@@ -253,6 +296,8 @@ DNS views, minimize unnecessary TXT/SRV disclosure, and audit stale records.
 
 **Host terminal — finish this session without clearing submitted progress:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs status 03-dns-breadcrumbs
 node scripts/standalone-labctl.mjs stop 03-dns-breadcrumbs
@@ -263,6 +308,8 @@ submitted progress stay the same. Files downloaded into the toolbox's /tmp do
 not survive stop; download them again when you resume.
 
 **Optional clean retry — deletes this lab's progress and creates new flags:**
+
+**HOST — destructive reset (clears this lab’s progress)**
 
 ```sh
 node scripts/standalone-labctl.mjs reset 03-dns-breadcrumbs

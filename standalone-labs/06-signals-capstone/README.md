@@ -1,6 +1,31 @@
 # Lab 06 — Signals in the Noise
 
+## Where commands run
+
+### HOST
+
+Your Windows/macOS/Linux machine, in the project directory. Run `npm`,
+`node scripts/standalone-labctl.mjs`, Docker lifecycle commands and flag
+verification here. The `shell` command opens TOOLBOX; keep a second HOST
+terminal for verification. `reset` is destructive, not routine cleanup.
+
+### TOOLBOX
+
+The isolated Linux investigation shell, opened by the controller or the portal's
+embedded terminal. Run reconnaissance and evidence commands here, not in
+PowerShell. Lab service hostnames resolve only inside the selected lab network.
+Use `lab-scope` and the portal's current instructions for allocated target addresses.
+
+### PORTAL
+
+The browser application at `http://127.0.0.1:5173/`: sign in, select the lab,
+start/resume, read tasks and hints, answer checks and submit flags. The embedded
+terminal is TOOLBOX even though it appears in PORTAL. Controller health at
+`http://127.0.0.1:3030/health` is an API, not a lesson or a target.
+
 **Level:** Intermediate
+
+**Difficulty band:** intermediate-capstone
 
 **Mode:** Capstone
 
@@ -41,6 +66,8 @@ unfamiliar, revisit its earlier guided lab before continuing.
 ## Start the lab
 
 Read the [setup guide](../GETTING-STARTED.md) first. The commands below start in a **host terminal**.
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs start 06-signals-capstone
@@ -173,6 +200,8 @@ POST the three flags, `ports=8080,9090`, actor, event, hash, and `case=SG-66` to
 
 **Toolbox:**
 
+**TOOLBOX — investigation**
+
 ```sh
 dig @172.30.66.53 signals.test SOA
 nslookup -type=ns signals.test 172.30.66.53
@@ -183,6 +212,8 @@ awk '$4 == "A" || $4 == "TXT" {print}' /tmp/signals.axfr
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 06-signals-capstone dns-chain 'RLAB{...}'
 ```
@@ -190,6 +221,8 @@ node scripts/standalone-labctl.mjs verify 06-signals-capstone dns-chain 'RLAB{..
 ### 2. Map the disclosed relay (`service-map`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 nmap -sT -Pn -p- 172.30.66.90 -oN /tmp/relay-ports.nmap
@@ -201,6 +234,8 @@ Record `X-Service-Proof` and `X-Artifact-Path`.
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 06-signals-capstone service-map 'RLAB{...}'
 ```
@@ -208,6 +243,8 @@ node scripts/standalone-labctl.mjs verify 06-signals-capstone service-map 'RLAB{
 ### 3. Acquire and inspect the evidence (`http-artifact`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 curl -fsS http://172.30.66.90:8080/artifact/signals-bundle.tar -o /tmp/signals-bundle.tar
@@ -220,6 +257,8 @@ grep '^http_proof=' /tmp/signals/signals-66/manifest.txt | cut -d= -f2-
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 06-signals-capstone http-artifact 'RLAB{...}'
 ```
@@ -227,6 +266,8 @@ node scripts/standalone-labctl.mjs verify 06-signals-capstone http-artifact 'RLA
 ### 4. Correlate and report (`final`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 LOG=/tmp/signals/signals-66/logs/relay-access.log
@@ -246,6 +287,8 @@ curl -X POST \
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 06-signals-capstone final 'RLAB{...}'
 ```
@@ -261,6 +304,8 @@ application logs in one detection timeline.
 
 **Host terminal — finish this session without clearing submitted progress:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs status 06-signals-capstone
 node scripts/standalone-labctl.mjs stop 06-signals-capstone
@@ -271,6 +316,8 @@ submitted progress stay the same. Files downloaded into the toolbox's /tmp do
 not survive stop; download them again when you resume.
 
 **Optional clean retry — deletes this lab's progress and creates new flags:**
+
+**HOST — destructive reset (clears this lab’s progress)**
 
 ```sh
 node scripts/standalone-labctl.mjs reset 06-signals-capstone

@@ -1,6 +1,31 @@
 # Lab 04 — The Acquired Company DNS Leak
 
-**Level:** Beginner–intermediate
+## Where commands run
+
+### HOST
+
+Your Windows/macOS/Linux machine, in the project directory. Run `npm`,
+`node scripts/standalone-labctl.mjs`, Docker lifecycle commands and flag
+verification here. The `shell` command opens TOOLBOX; keep a second HOST
+terminal for verification. `reset` is destructive, not routine cleanup.
+
+### TOOLBOX
+
+The isolated Linux investigation shell, opened by the controller or the portal's
+embedded terminal. Run reconnaissance and evidence commands here, not in
+PowerShell. Lab service hostnames resolve only inside the selected lab network.
+Use `lab-scope` and the portal's current instructions for allocated target addresses.
+
+### PORTAL
+
+The browser application at `http://127.0.0.1:5173/`: sign in, select the lab,
+start/resume, read tasks and hints, answer checks and submit flags. The embedded
+terminal is TOOLBOX even though it appears in PORTAL. Controller health at
+`http://127.0.0.1:3030/health` is an API, not a lesson or a target.
+
+**Level:** Intermediate
+
+**Difficulty band:** intermediate-foundations
 
 **Mode:** Guided
 
@@ -39,6 +64,8 @@ identify authority → test zone transfer → inspect leaked records → reach v
 ## Start the lab
 
 Read the [setup guide](../GETTING-STARTED.md) first. The commands below start in a **host terminal**.
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs start 04-zone-transfer
@@ -172,6 +199,8 @@ The fixed metadata is `case=ZT-44` and `serial=2026081304`.
 
 **Toolbox:**
 
+**TOOLBOX — investigation**
+
 ```sh
 dig @172.30.44.53 range.test SOA
 dig @172.30.44.53 range.test NS +short
@@ -181,6 +210,8 @@ dig @172.30.44.53 _authority.range.test TXT +short
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 04-zone-transfer authority 'RLAB{...}'
 ```
@@ -188,6 +219,8 @@ node scripts/standalone-labctl.mjs verify 04-zone-transfer authority 'RLAB{...}'
 ### 2. Transfer and review the zone (`axfr`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 dig @172.30.44.53 range.test AXFR | tee /tmp/range.axfr
@@ -197,6 +230,8 @@ grep -E '^(_route|_case)\.' /tmp/range.axfr
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 04-zone-transfer axfr 'RLAB{...}'
 ```
@@ -204,6 +239,8 @@ node scripts/standalone-labctl.mjs verify 04-zone-transfer axfr 'RLAB{...}'
 ### 3. Follow the disclosed virtual host (`vhost`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 curl -i -H 'Host: ops-archive.range.test' http://172.30.44.80:8080/proof/blue-team
@@ -213,6 +250,8 @@ Record `vhost_proof`, case `ZT-44`, and serial `2026081304`.
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 04-zone-transfer vhost 'RLAB{...}'
 ```
@@ -220,6 +259,8 @@ node scripts/standalone-labctl.mjs verify 04-zone-transfer vhost 'RLAB{...}'
 ### 4. Submit the evidence chain (`final`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 curl -H 'Host: ops-archive.range.test' -X POST \
@@ -232,6 +273,8 @@ curl -H 'Host: ops-archive.range.test' -X POST \
 ```
 
 **Host terminal — submit this stage's displayed flag:**
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 04-zone-transfer final 'RLAB{...}'
@@ -250,6 +293,8 @@ as exposed.
 
 **Host terminal — finish this session without clearing submitted progress:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs status 04-zone-transfer
 node scripts/standalone-labctl.mjs stop 04-zone-transfer
@@ -260,6 +305,8 @@ submitted progress stay the same. Files downloaded into the toolbox's /tmp do
 not survive stop; download them again when you resume.
 
 **Optional clean retry — deletes this lab's progress and creates new flags:**
+
+**HOST — destructive reset (clears this lab’s progress)**
 
 ```sh
 node scripts/standalone-labctl.mjs reset 04-zone-transfer

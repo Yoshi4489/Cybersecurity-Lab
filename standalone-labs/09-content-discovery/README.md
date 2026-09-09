@@ -1,6 +1,31 @@
 # Lab 09 — Northstar Archive: Close the Breach
 
+## Where commands run
+
+### HOST
+
+Your Windows/macOS/Linux machine, in the project directory. Run `npm`,
+`node scripts/standalone-labctl.mjs`, Docker lifecycle commands and flag
+verification here. The `shell` command opens TOOLBOX; keep a second HOST
+terminal for verification. `reset` is destructive, not routine cleanup.
+
+### TOOLBOX
+
+The isolated Linux investigation shell, opened by the controller or the portal's
+embedded terminal. Run reconnaissance and evidence commands here, not in
+PowerShell. Lab service hostnames resolve only inside the selected lab network.
+Use `lab-scope` and the portal's current instructions for allocated target addresses.
+
+### PORTAL
+
+The browser application at `http://127.0.0.1:5173/`: sign in, select the lab,
+start/resume, read tasks and hints, answer checks and submit flags. The embedded
+terminal is TOOLBOX even though it appears in PORTAL. Controller health at
+`http://127.0.0.1:3030/health` is an API, not a lesson or a target.
+
 Level: Intermediate | Mode: capstone | Time: 60–75 minutes
+
+**Difficulty band:** intermediate-capstone
 
 ## Scenario
 
@@ -34,6 +59,8 @@ Recommended first: Labs 03, 05, 06, 07, and 08.
 ## Start the lab
 
 **Host terminal**, from the project directory:
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs start 09-content-discovery
@@ -169,6 +196,8 @@ The actor is `migration-bot`, the event is `EXPORT-904`, and the case is
 
 **Toolbox:**
 
+**TOOLBOX — investigation**
+
 ```sh
 curl -fsS http://web-archive:8080/
 curl -fsS http://web-archive:8080/robots.txt
@@ -179,6 +208,8 @@ Record `robots_token=index-quartz-09` and the displayed objective flag.
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 09-content-discovery robots 'RLAB{...}'
 ```
@@ -186,6 +217,8 @@ node scripts/standalone-labctl.mjs verify 09-content-discovery robots 'RLAB{...}
 ### 2. Read repository metadata (`gitleak`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 curl -fsS http://web-archive:8080/.git/config
@@ -196,6 +229,8 @@ Record `git_token=repo-ember-33`. The deployment section discloses
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 09-content-discovery gitleak 'RLAB{...}'
 ```
@@ -203,6 +238,8 @@ node scripts/standalone-labctl.mjs verify 09-content-discovery gitleak 'RLAB{...
 ### 3. Decode the leaked backup (`backup`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 curl -fsS http://web-archive:8080/config.php.bak | base64 -d | tee /tmp/ns09-config.json | jq .
@@ -213,6 +250,8 @@ Record `backup_token=stale-onyx-58` and its objective flag. The configuration na
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 09-content-discovery backup 'RLAB{...}'
 ```
@@ -220,6 +259,8 @@ node scripts/standalone-labctl.mjs verify 09-content-discovery backup 'RLAB{...}
 ### 4. Verify and correlate the export (`final`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 curl -fsS http://web-archive:8080/evidence/access.log -o /tmp/ns09-access.log
@@ -229,6 +270,8 @@ sha256sum /tmp/ns09-access.log
 
 Compare the hashes. Stop and reacquire the artifact if they differ. Inspect the
 successful export, including its actor and event path:
+
+**TOOLBOX — investigation**
 
 ```sh
 awk '$5 == 200 && $4 ~ /^\/exports\// {print $1, $4}' /tmp/ns09-access.log
@@ -248,6 +291,8 @@ The report is rejected if the denied event, wrong actor, or modified log hash is
 supplied. Record `final_flag`.
 
 **Host terminal — submit this stage's displayed flag:**
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 09-content-discovery final 'RLAB{...}'
@@ -275,6 +320,8 @@ explicitly authorized before testing any real system.
 
 **Host terminal — finish this session without clearing submitted progress:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs status 09-content-discovery
 node scripts/standalone-labctl.mjs stop 09-content-discovery
@@ -285,6 +332,8 @@ submitted progress stay the same. Files downloaded into the toolbox's /tmp do
 not survive stop; download them again when you resume.
 
 **Optional clean retry — deletes this lab's progress and creates new flags:**
+
+**HOST — destructive reset (clears this lab’s progress)**
 
 ```sh
 node scripts/standalone-labctl.mjs reset 09-content-discovery

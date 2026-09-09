@@ -1,6 +1,31 @@
 # Lab 02 — The Unmanaged Service Farm
 
-**Level:** Beginner
+## Where commands run
+
+### HOST
+
+Your Windows/macOS/Linux machine, in the project directory. Run `npm`,
+`node scripts/standalone-labctl.mjs`, Docker lifecycle commands and flag
+verification here. The `shell` command opens TOOLBOX; keep a second HOST
+terminal for verification. `reset` is destructive, not routine cleanup.
+
+### TOOLBOX
+
+The isolated Linux investigation shell, opened by the controller or the portal's
+embedded terminal. Run reconnaissance and evidence commands here, not in
+PowerShell. Lab service hostnames resolve only inside the selected lab network.
+Use `lab-scope` and the portal's current instructions for allocated target addresses.
+
+### PORTAL
+
+The browser application at `http://127.0.0.1:5173/`: sign in, select the lab,
+start/resume, read tasks and hints, answer checks and submit flags. The embedded
+terminal is TOOLBOX even though it appears in PORTAL. Controller health at
+`http://127.0.0.1:3030/health` is an API, not a lesson or a target.
+
+**Level:** Intermediate
+
+**Difficulty band:** beginner-plus
 
 **Mode:** Guided investigation
 
@@ -43,6 +68,8 @@ uses them, then inspect the application-level details.
 ## Start the lab
 
 Read the [setup guide](../GETTING-STARTED.md) first. The commands below start in a **host terminal**.
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs start 02-service-fingerprint
@@ -173,6 +200,8 @@ Send them to `http://service-farm:8000/final` as query parameters.
 
 **Toolbox:**
 
+**TOOLBOX — investigation**
+
 ```sh
 nmap -sT -Pn -p- --min-rate 500 -oA /tmp/service-farm-full service-farm
 ls -l /tmp/service-farm-full.*
@@ -184,6 +213,8 @@ Record `port_token` and verify the returned flag:
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 02-service-fingerprint full-port-map 'RLAB{...}'
 ```
@@ -191,6 +222,8 @@ node scripts/standalone-labctl.mjs verify 02-service-fingerprint full-port-map '
 ### 2. Identify the non-HTTP banner (`version-ledger`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 nmap -sT -Pn -sV -p2222,8000,8443,31337 service-farm
@@ -201,6 +234,8 @@ Record `version_token` and verify the objective flag.
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 02-service-fingerprint version-ledger 'RLAB{...}'
 ```
@@ -208,6 +243,8 @@ node scripts/standalone-labctl.mjs verify 02-service-fingerprint version-ledger 
 ### 3. Inspect HTTP metadata (`http-metadata`)
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 nmap -sT -Pn -p2222,31337 --script banner service-farm
@@ -219,6 +256,8 @@ Record `X-Lab-Metadata-Token` and verify `X-Objective-Flag`.
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 02-service-fingerprint http-metadata 'RLAB{...}'
 ```
@@ -227,11 +266,15 @@ node scripts/standalone-labctl.mjs verify 02-service-fingerprint http-metadata '
 
 **Toolbox:**
 
+**TOOLBOX — investigation**
+
 ```sh
 curl -fsS 'http://service-farm:8000/final?ports=<port-token>&version=<version-token>&metadata=<metadata-token>'
 ```
 
 **Host terminal — submit this stage's displayed flag:**
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 02-service-fingerprint fingerprint-proof 'RLAB{...}'
@@ -250,6 +293,8 @@ management services, and alert on broad connection patterns.
 
 **Host terminal — finish this session without clearing submitted progress:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs status 02-service-fingerprint
 node scripts/standalone-labctl.mjs stop 02-service-fingerprint
@@ -260,6 +305,8 @@ submitted progress stay the same. Files downloaded into the toolbox's /tmp do
 not survive stop; download them again when you resume.
 
 **Optional clean retry — deletes this lab's progress and creates new flags:**
+
+**HOST — destructive reset (clears this lab’s progress)**
 
 ```sh
 node scripts/standalone-labctl.mjs reset 02-service-fingerprint

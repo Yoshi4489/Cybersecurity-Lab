@@ -1,6 +1,31 @@
 # Lab 08 — ApertureOps: The Recovered Cache
 
+## Where commands run
+
+### HOST
+
+Your Windows/macOS/Linux machine, in the project directory. Run `npm`,
+`node scripts/standalone-labctl.mjs`, Docker lifecycle commands and flag
+verification here. The `shell` command opens TOOLBOX; keep a second HOST
+terminal for verification. `reset` is destructive, not routine cleanup.
+
+### TOOLBOX
+
+The isolated Linux investigation shell, opened by the controller or the portal's
+embedded terminal. Run reconnaissance and evidence commands here, not in
+PowerShell. Lab service hostnames resolve only inside the selected lab network.
+Use `lab-scope` and the portal's current instructions for allocated target addresses.
+
+### PORTAL
+
+The browser application at `http://127.0.0.1:5173/`: sign in, select the lab,
+start/resume, read tasks and hints, answer checks and submit flags. The embedded
+terminal is TOOLBOX even though it appears in PORTAL. Controller health at
+`http://127.0.0.1:3030/health` is an API, not a lesson or a target.
+
 Level: Intermediate | Mode: challenge | Time: 35–45 minutes
+
+**Difficulty band:** intermediate-capstone
 
 ## Scenario
 
@@ -26,6 +51,8 @@ Recommended first: Labs 05 and 07.
 Read the [setup guide](../GETTING-STARTED.md) first.
 
 **Host terminal**, in the project directory:
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs start 08-cipher-locker
@@ -163,12 +190,16 @@ The manifest wraps its contents in a single base64 layer:
 
 **Toolbox:**
 
+**TOOLBOX — investigation**
+
 ```sh
 curl -fsS http://cipher-vault:8080/manifest | jq -r .payload | base64 -d
 # manifest_token=cache-cobalt-08 + objective_flag=RLAB{...}
 ```
 
 **Host terminal — submit this stage's displayed flag:**
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 08-cipher-locker manifest 'RLAB{...}'
@@ -180,6 +211,8 @@ Download the bundle, checksum it (save the hash for the final step), extract it,
 then peel the **doubly** base64-encoded payload:
 
 **Toolbox:**
+
+**TOOLBOX — investigation**
 
 ```sh
 curl -fsS http://cipher-vault:8080/artifact/cache.tar -o /tmp/cache.tar
@@ -194,6 +227,8 @@ base64 -d /tmp/cache/cipher-08/payload.b64 | base64 -d
 
 **Host terminal — submit this stage's displayed flag:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs verify 08-cipher-locker bundle 'RLAB{...}'
 ```
@@ -205,12 +240,16 @@ non-printable bytes. Pull it out with `strings`:
 
 **Toolbox:**
 
+**TOOLBOX — investigation**
+
 ```sh
 strings /tmp/cache/cipher-08/session.bin | grep -E 'carve_token|binary_proof'
 # carve_token=locker-sable-71 + binary_proof=RLAB{...}
 ```
 
 **Host terminal — submit this stage's displayed flag:**
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 08-cipher-locker carve 'RLAB{...}'
@@ -223,6 +262,8 @@ POST the three recovered tokens plus the tar's checksum. The endpoint returns
 
 **Toolbox:**
 
+**TOOLBOX — investigation**
+
 ```sh
 curl -fsS -X POST \
   --data-urlencode 'manifest=cache-cobalt-08' \
@@ -233,6 +274,8 @@ curl -fsS -X POST \
 ```
 
 **Host terminal — submit this stage's displayed flag:**
+
+**HOST — lifecycle and verification**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 08-cipher-locker final 'RLAB{...}'
@@ -246,6 +289,8 @@ Layered encoding does not protect credentials. Hash downloads against a referenc
 
 **Host terminal — finish this session without clearing submitted progress:**
 
+**HOST — lifecycle and verification**
+
 ```sh
 node scripts/standalone-labctl.mjs status 08-cipher-locker
 node scripts/standalone-labctl.mjs stop 08-cipher-locker
@@ -256,6 +301,8 @@ submitted progress stay the same. Files downloaded into the toolbox's /tmp do
 not survive stop; download them again when you resume.
 
 **Optional clean retry — deletes this lab's progress and creates new flags:**
+
+**HOST — destructive reset (clears this lab’s progress)**
 
 ```sh
 node scripts/standalone-labctl.mjs reset 08-cipher-locker
