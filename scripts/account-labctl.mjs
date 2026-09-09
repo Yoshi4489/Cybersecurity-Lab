@@ -14,11 +14,11 @@ export async function accountCli(root, args) {
     const user = username ? accounts.db.prepare("SELECT * FROM users WHERE username=?").get(username) : accounts.db.prepare("SELECT * FROM users WHERE role='admin' ORDER BY id LIMIT 1").get();
     if (!user || user.disabled) throw new Error("Create the first administrator with npm run admin:create -- admin, or select an enabled --user.");
     const [action, labId, objective, flag, ...extra] = args;
-    if (extra.length || (action !== "verify" && (objective || flag))) throw new Error("Unexpected arguments.");
+    if (extra.length || (action !== "verify" && (objective || flag))) throw Object.assign(new Error("Unexpected or too many arguments."), { exitCode: 2 });
     const labs = new Map(loadLabs().map((lab) => [lab.id, lab]));
     const instances = createInstances(accounts, labs, root);
     if (action === "list") { for (const lab of labs.values()) console.log(`${lab.id}  ${lab.title}`); return; }
-    if (!labs.has(labId)) throw new Error("Unknown lab.");
+    if (!labs.has(labId)) throw Object.assign(new Error("Unknown lab."), { exitCode: 2 });
     if (["start", "stop", "reset", "extend", "verify"].includes(action)) {
       // Lifecycle writes go through the controller so browser and CLI share one operation queue.
       const response = await fetch(`http://127.0.0.1:${process.env.LAB_CONTROLLER_PORT ?? 3030}/api/maintenance`, { method: "POST", headers: { "Content-Type": "application/json", Origin: "http://127.0.0.1:5173", "X-Maintenance-Key": readFileSync(join(root, ".lab", "maintenance-key"), "utf8").trim() }, body: JSON.stringify({ userId: user.id, labId, action, objective, flag }) });
@@ -47,6 +47,6 @@ export async function accountCli(root, args) {
     else command.push("toolbox", "bash", "-l");
     const result = spawnSync("docker", command, { stdio: "inherit", windowsHide: true });
     process.exitCode = result.status ?? 1;
-  } catch (error) { console.error(error.message); process.exitCode = 1; }
+  } catch (error) { console.error(error.message); process.exitCode = error.exitCode ?? 1; }
   finally { accounts.db.close(); }
 }

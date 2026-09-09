@@ -358,7 +358,9 @@ function main() {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (existsSync(join(root, ".lab", "accounts.sqlite"))) {
-    const { accountCli } = await import("./account-labctl.mjs");
-    await accountCli(root, process.argv.slice(2));
+    // Finish evaluating this module before the account CLI imports its exports.
+    import("./account-labctl.mjs")
+      .then(({ accountCli }) => accountCli(root, process.argv.slice(2)))
+      .catch((error) => fail(error.message));
   } else main();
 }
