@@ -6,12 +6,14 @@ import { openAccounts } from "../controller/accounts.mjs";
 import { createInstances } from "../controller/instances.mjs";
 import { loadLabs } from "./standalone-labctl.mjs";
 import assert from "node:assert/strict";
+import { selectVerificationLabs } from "./verification-selection.mjs";
 
+const labs = loadLabs();
+const selectedLabs = selectVerificationLabs(labs, process.argv.slice(2));
 const project = fileURLToPath(new URL("../", import.meta.url));
 const root = mkdtempSync(join(tmpdir(), "reconlab-docker-check-"));
 cpSync(join(project, "standalone-labs", "_shared"), join(root, "standalone-labs", "_shared"), { recursive: true });
 const accounts = openAccounts(join(root, ".lab", "accounts.sqlite"));
-const labs = loadLabs();
 const instances = createInstances(accounts, new Map(labs.map((lab) => [lab.id, lab])), root);
 const first = accounts.createUser("verify-one", "admin").user.id;
 const second = accounts.createUser("verify-two").user.id;
@@ -19,7 +21,7 @@ async function smoke(run) {
   await instances.command(run, ["exec", "-T", ...Object.entries(JSON.parse(run.flags)).flatMap(([key, value]) => ["-e", `${key}=${value}`]), "toolbox", "sh", "/opt/lab/smoke.sh"]);
 }
 try {
-  for (const lab of labs.filter((lab) => !process.argv[2] || lab.id >= process.argv[2])) {
+  for (const lab of selectedLabs) {
     console.log(`Building and starting ${lab.id}`);
     await instances.action(first, lab.id, "start"); await instances.settle();
     let run = instances.get(first, lab.id);
