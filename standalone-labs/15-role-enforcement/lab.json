@@ -1,0 +1,22 @@
+{
+  "id": "15-role-enforcement",
+  "title": "Every Door, Every Role",
+  "summary": "Build a role-method-path authorization matrix and verify deny-by-default enforcement.",
+  "description": "ApertureOps hid admin controls in its interface but needs proof that every server route enforces policy.",
+  "difficulty": "intermediate",
+  "difficultyBand": "intermediate-foundations",
+  "minutes": 80,
+  "subnet": "172.31.15.0/24",
+  "composeFile": "docker-compose.yml",
+  "toolboxService": "toolbox",
+  "commandFamilies": ["curl", "jq", "HTTP methods"],
+  "services": [{"name":"role-api","hostname":"role-api","ports":[8080],"purpose":"Synthetic role, method, and alternate-path policy service"}],
+  "objectives": [
+    {"id":"authorization-matrix","title":"Build the authorization matrix","label":"Test every role across methods and route aliases","points":50,"flagEnv":"FLAG_L15_MATRIX","dependsOn":[]},
+    {"id":"deny-default-proof","title":"Prove deny-by-default remediation","label":"Validate centralized server-side policy controls","points":50,"flagEnv":"FLAG_L15_REMEDIATION","dependsOn":["authorization-matrix"]}
+  ],
+  "campaign": "ApertureOps: Identity and Authorization",
+  "mode": "guided",
+  "prerequisites": ["14-object-authorization"],
+  "learningOutcomes": ["Translate role requirements into a method-and-path authorization matrix", "Test alternate routes and unlisted operations rather than trusting UI visibility", "Verify centralized server-side deny-by-default policy with positive and negative cases"]
+}

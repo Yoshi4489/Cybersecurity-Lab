@@ -1,0 +1,22 @@
+{
+  "authorization-matrix": {
+    "evidence": "`POST /case` returns fictional viewer, editor, and admin identities plus the intended policy.",
+    "observation": "Fifteen fixed requests cover three roles, three primary methods, and two archive paths; vulnerable routes trust interface hiding instead.",
+    "checkpoint": {"question":"Why include both admin and ops archive paths?","choices":["Alternate paths may reach the same privileged action and need the same policy.","A different URL always implies a public action.","Only browser-visible routes require tests."],"answer":0,"explanation":"Authorization attaches to the protected action, not merely one spelling of its URL."},
+    "findingPrompt":"Summarize the role, method, and alternate-path authorization gap.",
+    "evidencePrompt":"Cite vulnerable low-role success and the complete fixed matrix.",
+    "impactPrompt":"Describe report read, edit, delete, and archive impact by role.",
+    "confidencePrompt":"Choose confidence based on complete positive and negative matrix coverage.",
+    "remediationPrompt":"Recommend one central server-side role policy for all route aliases."
+  },
+  "deny-default-proof": {
+    "evidence": "The fixed service has an explicit allow matrix and rejects every unlisted method/path combination.",
+    "observation": "Intended operations return 200; disallowed role combinations and unlisted routes return 403; unauthenticated access returns 401.",
+    "checkpoint": {"question":"What does deny by default mean here?","choices":["Unknown operations are allowed until documented.","Only explicitly allowed role-operation combinations succeed.","Admins bypass the server policy."],"answer":1,"explanation":"A missing policy entry is a denial, including for alternate or newly added routes."},
+    "findingPrompt":"State how the fixed service handles absent policy rules.",
+    "evidencePrompt":"Cite allowed, role-denied, unauthenticated, and unlisted cases.",
+    "impactPrompt":"Explain how least privilege is preserved without blocking intended work.",
+    "confidencePrompt":"Bound confidence to the tested synthetic matrix.",
+    "remediationPrompt":"Name central policy, server enforcement, alias coverage, default denial, and regression tests."
+  }
+}
