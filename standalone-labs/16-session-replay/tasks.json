@@ -1,0 +1,17 @@
+{
+  "replay-timeline": {
+    "evidence": "`POST /case` returns three isolated synthetic sessions and an explicit fixed clock. `/event` records logout or password-change state without depending on wall-clock timing.",
+    "observation": "The vulnerable resource trusts an unexpired token after account state changes; the hardened resource consults revocation and credential version state.",
+    "checkpoint": {"question":"Why is a valid signature and future expiry insufficient after logout?","choices":["Logout changes the JWT signature.","The server must consult revocation or session state that the token cannot update itself.","A browser always deletes every copied token."],"answer":1,"explanation":"A previously copied token remains cryptographically valid. Effective logout requires a server-enforced invalidation decision."}
+  },
+  "revocation-proof": {
+    "evidence": "The hardened refresh endpoint rotates each refresh token once and revokes its family when an already-used token appears again.",
+    "observation": "A positive first refresh succeeds, a negative replay fails, and the issued successor also fails after family compromise is detected.",
+    "checkpoint": {"question":"What does refresh-token reuse usually indicate?","choices":["Normal parallel login that should always succeed.","A likely copied token, so the token family should be revoked and reauthentication required.","An expired access token only."],"answer":1,"explanation":"After rotation, the old refresh token has no legitimate second use. Reuse is evidence that two parties may hold the same credential."},
+    "findingPrompt":"State which session transitions allowed replay and which hardened decisions stopped it.",
+    "evidencePrompt":"Cite the fixed clock, one before-state success, both after-state comparisons, and the refresh reuse response.",
+    "impactPrompt":"Describe application-session impact without claiming host or network compromise.",
+    "confidencePrompt":"Choose High, Medium, or Low and justify it from positive and negative HTTP results.",
+    "remediationPrompt":"Recommend logout revocation, password-version invalidation, one-use refresh rotation, and family revocation on reuse; state how each was verified."
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "16-session-replay",
+  "title": "Tokens After Goodbye",
+  "summary": "Trace access-token replay across logout and password change, then verify one-use refresh rotation.",
+  "description": "ApertureOps needs a deterministic review of session invalidation and refresh-token reuse handling.",
+  "difficulty": "intermediate",
+  "difficultyBand": "intermediate-foundations",
+  "minutes": 75,
+  "subnet": "172.31.16.0/24",
+  "composeFile": "docker-compose.yml",
+  "toolboxService": "toolbox",
+  "commandFamilies": ["curl", "jq", "HTTP authorization headers"],
+  "services": [{"name":"session-review","hostname":"session-review","ports":[8080],"purpose":"Deterministic synthetic session lifecycle service"}],
+  "objectives": [
+    {"id":"replay-timeline","title":"Build the replay timeline","label":"Compare vulnerable and hardened state transitions","points":50,"flagEnv":"FLAG_L16_TIMELINE","dependsOn":[]},
+    {"id":"revocation-proof","title":"Prove revocation and rotation","label":"Validate logout, password-change, and refresh-family controls","points":50,"flagEnv":"FLAG_L16_REMEDIATION","dependsOn":["replay-timeline"]}
+  ],
+  "campaign": "ApertureOps: Identity and Authorization",
+  "mode": "guided",
+  "prerequisites": ["15-role-enforcement"],
+  "learningOutcomes": ["Distinguish token expiry from server-side revocation", "Compare replay before and after logout and password change", "Verify one-use refresh rotation and family revocation on reuse"]
+}
