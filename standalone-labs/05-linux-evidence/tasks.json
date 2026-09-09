@@ -53,6 +53,11 @@
       ],
       "answer": 0,
       "explanation": "The report must identify the exact artifact analyzed. File names and unrelated digests are not substitutes."
-    }
+    },
+    "findingPrompt": "State the evidence-chain finding and the affected case in one sentence.",
+    "evidencePrompt": "Cite the original archive hash, dominant source, and the two static artifacts that support the finding.",
+    "impactPrompt": "Describe what the evidence demonstrates and explicitly what it does not prove.",
+    "confidencePrompt": "Choose High, Medium, or Low; justify it from corroboration and timestamp/timezone limits.",
+    "remediationPrompt": "Recommend preservation and logging controls, then state how hash comparison and timeline review verify them."
   }
 }

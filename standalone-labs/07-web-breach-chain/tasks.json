@@ -67,6 +67,11 @@
       ],
       "answer": 2,
       "explanation": "The legacy objective ID says root-proof, but the actual demonstrated boundary is application authorization."
-    }
+    },
+    "findingPrompt": "State the application trust failure and the chain that reached admin access.",
+    "evidencePrompt": "Cite the reflected markup simulation, synthetic session, unsigned role claim, and admin response.",
+    "impactPrompt": "Describe application-admin impact and explicitly exclude browser execution and operating-system root.",
+    "confidencePrompt": "Choose High, Medium, or Low and justify it from the synthetic observations.",
+    "remediationPrompt": "Name output encoding, cookie, JWT validation, and server-side authorization controls and how to retest them."
   }
 }

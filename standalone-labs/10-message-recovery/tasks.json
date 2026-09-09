@@ -67,6 +67,11 @@
       ],
       "answer": 2,
       "explanation": "Separate representation (hex), keyed transformation (toy XOR), and integrity comparison (SHA-256). This toy cipher is not secure modern encryption."
-    }
+    },
+    "findingPrompt": "State which transformations were encoding, hashing, and encryption.",
+    "evidencePrompt": "Cite the decoded exhibits, bounded MD5 candidate match, recovered plaintext, and reference digest.",
+    "impactPrompt": "Explain why MD5 password storage and repeating-key XOR fail to provide production security.",
+    "confidencePrompt": "Choose High, Medium, or Low and explain what the supplied SHA-256 reference does and does not prove.",
+    "remediationPrompt": "Recommend a password KDF and authenticated encryption, including how successful decryption and tamper rejection would be tested."
   }
 }

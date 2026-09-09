@@ -53,6 +53,11 @@
       ],
       "answer": 0,
       "explanation": "Correlate identity, resource and outcome in the actual evidence; a failed attempt does not establish a download."
-    }
+    },
+    "findingPrompt": "State the deployment exposure and successful export finding.",
+    "evidencePrompt": "Cite the public route, repository configuration, decoded backup, verified log hash, actor, and successful event.",
+    "impactPrompt": "Describe the exposed information and confirmed export boundary without assuming broader compromise.",
+    "confidencePrompt": "Choose High, Medium, or Low and distinguish confirmed retrieval from failed requests.",
+    "remediationPrompt": "Recommend artifact removal, server-side authorization, secret rotation, and a request that verifies the path is no longer exposed."
   }
 }

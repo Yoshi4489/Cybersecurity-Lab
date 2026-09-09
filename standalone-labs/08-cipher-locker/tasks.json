@@ -53,6 +53,11 @@
       ],
       "answer": 0,
       "explanation": "The digest identifies the bytes analyzed, while tokens record the evidence chain."
-    }
+    },
+    "findingPrompt": "State what the recovered cache proves about artifact exposure and trust.",
+    "evidencePrompt": "Cite the manifest, archive digest, safe static inspection, and correlated tokens.",
+    "impactPrompt": "Describe the disclosure demonstrated without treating encoding or a matching hash as authorship proof.",
+    "confidencePrompt": "Choose High, Medium, or Low and identify a limitation of strings or reference hashes.",
+    "remediationPrompt": "Recommend safe extraction and signed-artifact controls, then state how to verify them."
   }
 }

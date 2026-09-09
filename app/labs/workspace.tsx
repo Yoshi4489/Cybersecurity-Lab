@@ -9,10 +9,65 @@ import { LabTerminal } from "./terminal";
 import { createProgressRequests } from "./progress-requests";
 import "./workspace.css";
 
+type EvidenceObjective = {
+  id: string;
+  findingPrompt?: string;
+  evidencePrompt?: string;
+  impactPrompt?: string;
+  confidencePrompt?: string;
+  remediationPrompt?: string;
+};
+
+type EvidenceResponses = Partial<Record<"finding" | "evidence" | "impact" | "confidence" | "remediation", string>>;
+
+export function EvidenceReport({ labId, objective, runId, csrf, disabled }: { labId: string; objective: EvidenceObjective; runId: string; csrf: string; disabled: boolean }) {
+  const fields = [
+    ["finding", "Finding", objective.findingPrompt],
+    ["evidence", "Evidence source", objective.evidencePrompt],
+    ["impact", "Impact", objective.impactPrompt],
+    ["confidence", "Confidence", objective.confidencePrompt],
+    ["remediation", "Recommended remediation", objective.remediationPrompt],
+  ] as const;
+  const [responses, setResponses] = useState<EvidenceResponses>({});
+  const [revision, setRevision] = useState(0);
+  const [feedback, setFeedback] = useState("Loading saved evidence…");
+
+  useEffect(() => {
+    let active = true;
+    void controllerRequest<{ responses: EvidenceResponses; revision: number }>(`/api/standalone/${labId}/objectives/${objective.id}/evidence?runId=${encodeURIComponent(runId)}`)
+      .then((saved) => { if (active) { setResponses(saved.responses); setRevision(saved.revision); setFeedback(""); } })
+      .catch((error) => { if (active) setFeedback((error as Error).message); });
+    return () => { active = false; };
+  }, [labId, objective.id, runId]);
+
+  async function save(event: { preventDefault(): void }) {
+    event.preventDefault();
+    setFeedback("Saving…");
+    try {
+      const saved = await controllerRequest<{ responses: EvidenceResponses; revision: number }>(`/api/standalone/${labId}/objectives/${objective.id}/evidence`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf },
+        body: JSON.stringify({ runId, revision, responses }),
+      });
+      setResponses(saved.responses);
+      setRevision(saved.revision);
+      setFeedback("Saved for this run.");
+    } catch (error) { setFeedback((error as Error).message); }
+  }
+
+  return <form className="workspace-evidence" onSubmit={(event) => void save(event)}>
+    <h4>Evidence-quality report</h4>
+    <p>Formative practice — saved with this run and not auto-graded. The flag remains a separate checkpoint.</p>
+    {fields.filter(([, , prompt]) => prompt).map(([name, label, prompt]) => <label key={name}>{label}<span>{prompt}</span><textarea maxLength={4000} value={responses[name] ?? ""} disabled={disabled} onChange={(event) => { setResponses((current) => ({ ...current, [name]: event.target.value })); setFeedback(""); }} /></label>)}
+    <button type="submit" disabled={disabled || !csrf}>Save evidence report</button>
+    <p role="status">{feedback}</p>
+  </form>;
+}
+
 type Lab = {
   id: string; title: string; campaign: string; mode: string; minutes: number; prerequisites: string[]; subnet: string;
   learningOutcomes: string[]; scope: string; scenario: string; basics: string; objectivesText: string; solution: string; takeaway: string;
-  objectives: { id: string; title: string; points: number; dependsOn: string[]; description: string; evidence: string; observation: string; hints: { title: string; body: string }[]; checkpoint: Question }[];
+  objectives: (EvidenceObjective & { title: string; points: number; dependsOn: string[]; description: string; evidence: string; observation: string; hints: { title: string; body: string }[]; checkpoint: Question })[];
   hints: { title: string; hints: { title: string; body: string }[] }[];
 };
 type Status = { runId: string | null; completedObjectives: string[]; checks?: string[]; runtime?: string; error?: string; subnet?: string; expiresAt?: number; canExtend?: boolean; terminalAvailable?: boolean; targets?: { id: string; label: string }[] };
@@ -204,6 +259,7 @@ export function LabWorkspace({ labs }: { labs: Lab[] }) {
               <h4>Expected observation</h4><Markdown text={objective.observation} />
               <div className="workspace-task-hints"><h4>Hints for this flag</h4><p>Open one at a time; stop when you know what to try.</p>{objective.hints.map((hint) => <details key={hint.title}><summary>{hint.title}</summary><Markdown text={hint.body} /></details>)}</div>
               <Checkpoint key={understandingKey} id={understandingKey} question={objective.checkpoint} passed={understood} onPass={() => void passCheck(objective.id, objective.checkpoint.answer)} />
+              {status?.runId && objective.findingPrompt && <EvidenceReport labId={selectedId} objective={objective} runId={status.runId} csrf={csrf} disabled={operating} />}
               <form className="workspace-flag" onSubmit={(event) => { event.preventDefault(); void submit(objective.id); }}>
                 <label htmlFor={key}>Submit flag {index + 1}: {objective.title}</label>
                 {!done && <><input id={key} autoComplete="off" spellCheck={false} maxLength={200} value={flags[key] ?? ""} onChange={(event) => setFlags((current) => ({ ...current, [key]: event.target.value }))} placeholder="RLAB{...}" /><button type="submit" disabled={busy || !csrf || !status?.runId || missing.length > 0 || !understood || !flags[key]?.trim()}>Submit flag {index + 1}</button>

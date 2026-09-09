@@ -53,6 +53,11 @@
       ],
       "answer": 0,
       "explanation": "Frequency and outcome are different facts. Correlate the actor with the explicit successful event."
-    }
+    },
+    "findingPrompt": "State the incident finding and ordered event chain in one sentence.",
+    "evidencePrompt": "Cite the DNS, service, artifact, and log observations used to order the timeline.",
+    "impactPrompt": "Describe the demonstrated disclosure and successful action without attributing intent beyond the evidence.",
+    "confidencePrompt": "Choose High, Medium, or Low; identify one competing hypothesis or telemetry gap.",
+    "remediationPrompt": "Recommend one containment control and one telemetry improvement, each with a validation step."
   }
 }

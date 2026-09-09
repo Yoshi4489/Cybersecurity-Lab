@@ -47,6 +47,11 @@ export function openAccounts(path) {
     CREATE TABLE IF NOT EXISTS account_events (
       id INTEGER PRIMARY KEY, user_id INTEGER, run_id TEXT, action TEXT NOT NULL, created_at INTEGER NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS evidence_reports (
+      run_id TEXT NOT NULL REFERENCES instance_runs(id), objective_id TEXT NOT NULL,
+      responses TEXT NOT NULL, revision INTEGER NOT NULL, updated_at INTEGER NOT NULL,
+      PRIMARY KEY(run_id, objective_id)
+    );
     CREATE TABLE IF NOT EXISTS account_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
   `);
   const publicUser = (user) => user && ({ id: user.id, username: user.username, role: user.role, mustChangePassword: Boolean(user.must_change), disabled: Boolean(user.disabled) });

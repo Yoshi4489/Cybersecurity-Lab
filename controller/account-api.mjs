@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { ApiError, openAccounts, token } from "./accounts.mjs";
 import { createInstances } from "./instances.mjs";
 import { attachAccess } from "./instance-access.mjs";
+import { evidenceReport } from "./evidence-reports.mjs";
 import { parseCookies, equalSecret } from "./security.mjs";
 
 export function createAccountApi(root, labs, origins, options = {}) {
@@ -84,6 +85,12 @@ export function createAccountApi(root, labs, origins, options = {}) {
         return send(202, await instances.action(run.user_id, run.lab_id, "stop"));
       }
       throw new ApiError(404, "Admin route not found.");
+    }
+    const evidenceMatch = path.match(/^\/api\/standalone\/([a-z0-9-]+)\/objectives\/([a-z0-9-]+)\/evidence$/);
+    if (evidenceMatch) {
+      if (!["GET", "POST"].includes(method)) throw new ApiError(405, "Method not allowed.");
+      const input = method === "POST" ? await body() : { runId: url.searchParams.get("runId") };
+      return send(200, evidenceReport(accounts, labs, session.user.id, evidenceMatch[1], evidenceMatch[2], input, method === "POST"));
     }
     if (path === "/api/standalone/progress" && method === "GET") return send(200, Object.fromEntries([...labs.keys()].map((id) => [id, instances.status(session.user.id, id)])));
     const match = path.match(/^\/api\/standalone\/([a-z0-9-]+)\/(status|start|stop|reset|extend|objectives\/([a-z0-9-]+)\/(submit|check)|targets\/([a-z0-9-]+)\/launch)$/);
