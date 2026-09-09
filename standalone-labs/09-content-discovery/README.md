@@ -259,7 +259,17 @@ Public metadata can expose a deployment mistake that leads to sensitive evidence
 The decisive finding comes from correlating the decoded configuration with a
 successful export, not from merely discovering a path. Deploy only built
 artifacts, deny dotfiles and backups at the web server, authorize each export,
-and retain migration audit logs. This completes the nine-lab path.
+and retain migration audit logs. This completes the nine-lab core investigation
+path (Labs 01–09). With Lab 00 orientation and the optional Lab 10 elective,
+RECON//LAB has eleven labs in all.
+
+## Where to go next
+
+You have finished the core investigation path. To keep building skills, revisit
+any lab's full walkthrough to review the reasoning, try the optional Lab 10
+elective, and explore beginner rooms on TryHackMe, Hack The Box, or Root-Me.
+Everything in RECON//LAB is a synthetic local exercise; always confirm you are
+explicitly authorized before testing any real system.
 
 ## Stop or reset
 

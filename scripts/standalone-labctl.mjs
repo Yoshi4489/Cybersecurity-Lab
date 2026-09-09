@@ -245,7 +245,7 @@ export function verifyRun(lab, objectiveId, suppliedFlag) {
   if (!run) throw new Error(`Start ${lab.id} before verifying objectives.`);
   const missing = (objective.dependsOn ?? []).filter((id) => !run.progress.completed[id]);
   if (missing.length) throw new Error(`Complete dependencies first: ${missing.join(", ")}`);
-  if (!constantTimeEqual(suppliedFlag.trim(), run.values[objective.flagEnv])) throw new Error("Flag is not valid for this run.");
+  if (!constantTimeEqual(suppliedFlag.trim(), run.values[objective.flagEnv])) throw new Error("Flag is not valid for this run. Submit only the complete RLAB{...} value — remove any practice_flag= prefix, surrounding quotes, or spaces, and check you did not paste a token instead of the flag.");
   run.progress.completed[objectiveId] ??= { verifiedAt: new Date().toISOString() };
   atomicWrite(run.paths.progress, `${JSON.stringify(run.progress, null, 2)}\n`, 0o600);
   return run.progress;

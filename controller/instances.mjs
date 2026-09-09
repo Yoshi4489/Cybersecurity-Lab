@@ -207,7 +207,7 @@ export function createInstances(accounts, labs, root, options = {}) {
     const completed = JSON.parse(run.completed);
     if ((objective.dependsOn ?? []).some((id) => !completed[id])) throw new ApiError(422, "Complete dependencies first.");
     if (requireCheck && !JSON.parse(run.checks).includes(objectiveId)) throw new ApiError(422, "Pass the understanding check first.");
-    if (typeof supplied !== "string" || supplied.length > 200 || !equalSecret(supplied.trim(), JSON.parse(run.flags)[objective.flagEnv])) throw new ApiError(422, "Flag is not valid for this run.");
+    if (typeof supplied !== "string" || supplied.length > 200 || !equalSecret(supplied.trim(), JSON.parse(run.flags)[objective.flagEnv])) throw new ApiError(422, "Flag is not valid for this run. Submit only the complete RLAB{...} value — remove any practice_flag= prefix, surrounding quotes, or spaces, and check you did not paste a token instead of the flag.");
     completed[objectiveId] ??= { verifiedAt: new Date().toISOString() };
     db.prepare("UPDATE instance_runs SET completed=? WHERE id=?").run(JSON.stringify(completed), run.id);
     event(user, "objective_verified", run.id);

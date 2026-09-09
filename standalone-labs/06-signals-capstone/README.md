@@ -2,7 +2,7 @@
 
 **Level:** Intermediate
 
-**Mode:** Investigation capstone
+**Mode:** Capstone
 
 **Time:** 75–90 minutes
 

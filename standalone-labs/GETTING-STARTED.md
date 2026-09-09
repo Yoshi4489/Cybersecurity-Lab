@@ -1,7 +1,8 @@
 # Getting Started
 
 These labs assume you are new to the terminal and networking. You investigate
-fictional Northstar Shipping incidents on your own computer.
+fictional Northstar Shipping incidents — including a breach at ApertureOps, its
+outsourced support vendor — on your own computer.
 
 ## Install and check the tools
 
@@ -35,9 +36,9 @@ failure before starting a range.
 
 ## Read and submit in the portal
 
-Run `npm run lab` (or `npm.cmd run lab` in PowerShell), then open
-**http://127.0.0.1:5173/**. First create the administrator with
-`npm run admin:create -- admin`, sign in and change the temporary password.
+First create the administrator with `npm run admin:create -- admin`. Then run
+`npm run lab` (or `npm.cmd run lab` in PowerShell) and open
+**http://127.0.0.1:5173/**. Sign in and change the temporary password.
 Begin with Lab 00 and use Start / resume. The portal
 contains the scenario, objective descriptions, individual hints, and complete
 walkthrough, so you do not need to open a local Markdown file.
@@ -125,7 +126,7 @@ container.
 
 ## Recommended order
 
-**01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09**
+**00 → 01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09**
 
 Numeric prefixes remain stable IDs. Labs 06 and 09 are the capstones. See the
 [lab index](README.md) for the two campaigns and prerequisites.

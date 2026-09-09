@@ -18,11 +18,11 @@ Follow this order: **00 → 01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 
 | [03](03-dns-breadcrumbs/README.md) | Ghost Service in DNS | Guided | Aliases, addresses, mail and service records |
 | [04](04-zone-transfer/README.md) | Acquired Company DNS Leak | Guided | AXFR and virtual hosts |
 | [05](05-linux-evidence/README.md) | Incident EV-55 | Guided | Hashes, files, logs, printable artifacts |
-| [06](06-signals-capstone/README.md) | Signals in the Noise | Midpoint capstone | Correlate DNS, scans, artifacts and logs |
+| [06](06-signals-capstone/README.md) | Signals in the Noise | Capstone | Correlate DNS, scans, artifacts and logs |
 | [07](07-web-breach-chain/README.md) | Support Desk Incident | Challenge | Web discovery, XSS simulation, JWT trust |
 | [08](08-cipher-locker/README.md) | Recovered Cache | Challenge | Encoding, integrity and artifact analysis |
-| [09](09-content-discovery/README.md) | Close the Breach | Final capstone | Deployment leaks and export evidence |
-| [10](10-message-recovery/README.md) | The Mislabelled Secret | Guided elective | Base64, hex, ROT13, MD5 dictionary matching, toy XOR |
+| [09](09-content-discovery/README.md) | Close the Breach | Capstone | Deployment leaks and export evidence |
+| [10](10-message-recovery/README.md) | The Mislabelled Secret | Guided | Base64, hex, ROT13, MD5 dictionary matching, toy XOR |
 
 Numeric prefixes remain stable IDs. The rebuilt curriculum now follows numeric
 order; 06 and 09 are the capstones. Prerequisites are recommendations, not startup

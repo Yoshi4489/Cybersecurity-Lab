@@ -27,11 +27,17 @@ export function LabTerminal({ runId }: { runId: string }) {
         }
         if (result.type === "output") terminal.write(Uint8Array.from(atob(result.data), (char) => char.charCodeAt(0)));
       };
-      socket.onclose = (event) => { if (!disposed) setMessage(event.reason || "Terminal disconnected. Close any other terminal tab, then reconnect."); };
+      socket.onclose = (event) => {
+        if (disposed) return;
+        const reason = (event.reason || "").replace(/\.\s*$/, "");
+        if (/expired|stopped/i.test(reason)) setMessage("Your lab session ended: the lease expired or the instance stopped. Click Start / resume to continue. Toolbox /tmp files are cleared when a lab stops, so download evidence again after resuming.");
+        else if (!reason || event.code === 1006) setMessage("Terminal disconnected. If this lab is open in another browser tab, close it; otherwise click Reconnect terminal.");
+        else setMessage(`${reason}. Click Reconnect terminal, or Start / resume if the lab has stopped.`);
+      };
       const observer = new ResizeObserver(() => fit.fit()); observer.observe(container.current);
       cleanup = () => { observer.disconnect(); socket.close(); terminal.dispose(); };
     }).catch(() => { if (!disposed) setMessage("Terminal could not load. Refresh this page to retry."); });
     return () => { disposed = true; cleanup(); };
   }, [runId, attempt]);
-  return <section className="terminal-panel" aria-label="Investigation terminal"><div className="workspace-actions"><strong>Investigation toolbox</strong><button onClick={() => { setMessage("Reconnecting…"); setAttempt((value) => value + 1); }}>Reconnect terminal</button></div><p role="status">{message}</p><div className="terminal-screen" ref={container} /><p>Select output to copy with Ctrl+Shift+C; paste with Ctrl+Shift+V. Reconnecting keeps your shell while the instance is running.</p></section>;
+  return <section className="terminal-panel" aria-label="Investigation terminal"><div className="workspace-actions"><strong>Investigation toolbox</strong><button onClick={() => { setMessage("Reconnecting…"); setAttempt((value) => value + 1); }}>Reconnect terminal</button></div><p role="status">{message}</p><div className="terminal-screen" ref={container} /><p>In this toolbox terminal, copy selected text with Ctrl+Shift+C and paste with Ctrl+Shift+V (Cmd+C / Cmd+V on macOS). The flag box on this page uses the normal Ctrl+V / Cmd+V. Reconnecting keeps your shell while the instance is running.</p></section>;
 }

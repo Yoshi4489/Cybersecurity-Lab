@@ -138,7 +138,43 @@ export function LabWorkspace({ labs }: { labs: Lab[] }) {
   }
   return <main className="standalone-workspace">
     <header className="workspace-header"><Link href="/">RECON//LAB</Link><span>AUTHORIZED TRAINING ENVIRONMENT</span><Link href="/legacy">Legacy modules</Link></header>
-    <div className="workspace-intro"><p className="eyebrow green">BEGINNER INVESTIGATIONS</p><h1>Follow the evidence. Close the case.</h1><p>{labs.length} investigations, with scenarios, tool briefings, per-flag hints, and complete walkthroughs right here.</p></div>
+    <div className="workspace-intro"><p className="eyebrow green">BEGINNER INVESTIGATIONS</p><h1>Follow the evidence. Close the case.</h1><p>{labs.length} investigations, with scenarios, tool briefings, per-flag hints, and complete walkthroughs right here.</p>
+      <details className="workspace-help">
+        <summary>New here? Terminals, key terms, quick fixes, and what comes next</summary>
+        <div className="workspace-help-grid">
+          <section>
+            <h3>Two terminals, different jobs</h3>
+            <p><strong>Host terminal</strong> — your own computer, in the project folder; it starts, stops, and checks labs.</p>
+            <p><strong>Toolbox terminal</strong> — the panel further down, inside the lab&rsquo;s Linux container; run investigation commands there. A hostname such as <code>triage-node</code> only resolves inside its lab network.</p>
+            <p>Copy from the toolbox with <code>Ctrl+Shift+C</code> and paste into it with <code>Ctrl+Shift+V</code> (<code>Cmd</code> on macOS). The flag boxes on this page use the normal <code>Ctrl+V</code> / <code>Cmd+V</code>.</p>
+          </section>
+          <section>
+            <h3>Key terms</h3>
+            <ul>
+              <li><strong>Command</strong> — a program you type, such as <code>pwd</code> or <code>cat</code>.</li>
+              <li><strong>Port</strong> — a numbered doorway for a network service.</li>
+              <li><strong>DNS</strong> — maps names to network addresses.</li>
+              <li><strong>Hash</strong> — a one-way fingerprint; not encryption.</li>
+              <li><strong>Encoding</strong> — a reversible form such as Base64 or hex.</li>
+              <li><strong>Flag</strong> — a generated <code>{"RLAB{…}"}</code> value that confirms an objective.</li>
+            </ul>
+          </section>
+          <section>
+            <h3>If something looks stuck</h3>
+            <ul>
+              <li>Docker error — start Docker Desktop, wait for its engine, then Reconnect.</li>
+              <li>Hostname not found — use the toolbox terminal of the running lab, not the host.</li>
+              <li>Flag rejected — submit only the <code>{"RLAB{…}"}</code> value: no <code>practice_flag=</code> prefix, quotes, or spaces, and not a token.</li>
+              <li>Terminal closed — click <strong>Start / resume</strong>; toolbox <code>/tmp</code> files are cleared when a lab stops.</li>
+            </ul>
+          </section>
+          <section>
+            <h3>When you finish</h3>
+            <p>You will have practiced the terminal, networking, DNS, Linux evidence, a web incident, and encoding. To keep going, try beginner rooms on TryHackMe, Hack The Box, or Root-Me, and revisit any lab&rsquo;s full walkthrough to review the reasoning. Everything here is a synthetic local exercise — always get explicit authorization before testing a real system.</p>
+          </section>
+        </div>
+      </details>
+    </div>
     <div className="workspace-layout">
       <nav className="workspace-nav" aria-label="Current curriculum">{labs.map((lab) => <button key={lab.id} disabled={busy} aria-current={selectedId === lab.id ? "page" : undefined} onClick={() => selectLab(lab.id)}><small>{lab.id.slice(0, 2)} / {lab.mode}</small><strong>{lab.title}</strong><span>{progress[lab.id]?.completedObjectives.length ?? 0}/{lab.objectives.length} flags</span></button>)}</nav>
       <article className="workspace-lesson" key={selectedId}>

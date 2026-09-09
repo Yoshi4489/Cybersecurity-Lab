@@ -291,7 +291,7 @@ const server = createServer(async (request, response) => {
       const expected = run.proofs[objective.flagKey];
       if (!equalSecret(body.flag ?? "", expected)) {
         recordEvent(labId, "flag_rejected", objectiveId);
-        return json(response, 422, { correct: false, error: "Flag ยังไม่ถูกต้อง" }, cors);
+        return json(response, 422, { correct: false, error: "Flag is not valid for this run. Submit only the complete RLAB{...} value — remove any practice_flag= prefix, surrounding quotes, or spaces, and check you did not paste a token instead of the flag." }, cors);
       }
       const progress = currentProgress;
       if (!progress.completedObjectives.includes(objectiveId)) progress.completedObjectives.push(objectiveId);

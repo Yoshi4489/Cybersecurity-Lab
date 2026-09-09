@@ -9,7 +9,7 @@ not a production multi-user service.
 
 ## Start here
 
-New to the project? Read the [Beginner’s Guide](BEGINNER-GUIDE.md) first. It
+New to the project? Read the [Beginner’s Guide](ABOUT.md) first. It
 explains the purpose of the lab, the learning path, and what to expect in a
 session without assuming prior security knowledge.
 
@@ -30,8 +30,9 @@ npm.ps1. Open **http://127.0.0.1:5173/**. The current curriculum is the home pag
 
 Begin with **Lab 00 — Your First Shift: Terminal Practice**. Click **Start / resume
 lab** after signing in and changing your temporary password. The investigation
-terminal opens inside the portal. Use Administration to create learner accounts. The portal contains the lesson and solution; you do not
-need to open local Markdown files.
+terminal opens inside the portal. Use Administration to create learner accounts. The portal contains the lesson, hints, and
+full solution, so you can finish a lab without opening any local files — though the Beginner’s Guide and each lab’s README
+stay available if you prefer to read offline or want the glossary and troubleshooting together.
 
 For detailed setup help, see [Getting started](standalone-labs/GETTING-STARTED.md).
 For migration, admin controls, leases and configuration, see [Local instances](docs/LOCAL-INSTANCES.md).
@@ -44,7 +45,7 @@ connected investigations, and a message-recovery elective.
 - **00:** prompts, commands, arguments, files, pipes and copying practice flags.
 - **01–05:** networks, service identification, DNS and Linux evidence.
 - **06:** infrastructure investigation capstone.
-- **07–09:** the ApertureOps web incident, recovered artifacts and final case.
+- **07–09:** the ApertureOps web incident — ApertureOps is Northstar's outsourced support vendor — with recovered artifacts and final case.
 - **10:** optional Base64, hex, ROT13, MD5 candidate matching and toy XOR, after 01.
 
 [Curriculum details](standalone-labs/README.md) describe skills and recommended

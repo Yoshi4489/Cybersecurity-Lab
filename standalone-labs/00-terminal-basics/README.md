@@ -31,11 +31,12 @@ behavior; here `-l` asks for a detailed listing.
 - `printf '%s\n' 'hello trainee'` prints the quoted words as one argument.
   Try it now in the toolbox; expect one line: `hello trainee`.
 
-To copy output, select just the text you need and use your terminal's Copy menu
-or Ctrl+Shift+C (Cmd+C on macOS). Ctrl+C without Shift usually interrupts a
-running command; it is not the copy shortcut in many terminals. Paste with the
-portal field's Paste menu or Ctrl+V / Cmd+V. Do not include `practice_flag=`,
-the prompt, or surrounding quotes in your flag submission.
+Two places accept paste, with different shortcuts. In the toolbox terminal, copy
+selected text with Ctrl+Shift+C and paste with Ctrl+Shift+V (Cmd+C / Cmd+V on
+macOS); plain Ctrl+C there usually interrupts a running command rather than
+copying. In the portal's flag box, paste with the field's Paste menu or the
+normal Ctrl+V / Cmd+V. Do not include `practice_flag=`, the prompt, or
+surrounding quotes in your flag submission.
 
 ## Start the lab
 

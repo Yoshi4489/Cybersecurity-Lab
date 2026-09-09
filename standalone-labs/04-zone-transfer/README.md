@@ -2,7 +2,7 @@
 
 **Level:** Beginner–intermediate
 
-**Mode:** Guided challenge
+**Mode:** Guided
 
 **Time:** 40–50 minutes
 
