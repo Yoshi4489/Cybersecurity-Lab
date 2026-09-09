@@ -1,0 +1,17 @@
+{
+  "fixation-evidence": {
+    "evidence": "`POST /case` supplies a synthetic pre-authentication ID; `/vulnerable/login` echoes it in `Set-Cookie` without security attributes.",
+    "observation": "The same caller-known ID reaches an authenticated session, demonstrating fixation rather than guessing or theft.",
+    "checkpoint": {"question":"Why is accepting the pre-login ID unsafe?","choices":["Cookie values must always be readable JavaScript.","Someone who knows or sets that ID before login can retain it after authentication.","SameSite encrypts session IDs."],"answer":1,"explanation":"Authentication must create a fresh unpredictable identifier so a pre-authentication value cannot become an authenticated session."}
+  },
+  "session-lifecycle": {
+    "evidence": "`/fixed/login` issues a different ID with Secure, HttpOnly, and SameSite=Strict; fixed session probes and logout show server-side state changes.",
+    "observation": "The supplied ID fails, the rotated ID succeeds, and that rotated ID fails after logout while the clearing cookie has Max-Age=0.",
+    "checkpoint": {"question":"What is complete remediation evidence?","choices":["The cookie has a long random value.","All sessions are rejected.","A new valid login works while the old and logged-out identifiers fail, with appropriate cookie attributes."],"answer":2,"explanation":"Negative and positive validation proves both fail-closed behavior and preserved legitimate use."},
+    "findingPrompt":"State the session fixation and cookie-hardening finding in one sentence.",
+    "evidencePrompt":"Cite the vulnerable Set-Cookie header, unchanged identifier, rotated identifier, and status-code probes.",
+    "impactPrompt":"Explain how a known session ID could affect the synthetic account without claiming host compromise.",
+    "confidencePrompt":"Choose High, Medium, or Low and justify it from the observed request sequence.",
+    "remediationPrompt":"Recommend cookie attributes, rotation on authentication, and server-side logout invalidation, including negative and positive tests."
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "12-cookie-session-security",
+  "title": "The Session That Stayed",
+  "summary": "Observe cookie attributes and session fixation, then prove rotation and logout invalidation.",
+  "description": "A synthetic account service preserves a caller-chosen session ID. Compare it with a fixed session lifecycle and collect remediation evidence.",
+  "difficulty": "intermediate",
+  "difficultyBand": "intermediate-foundations",
+  "minutes": 60,
+  "subnet": "172.31.12.0/24",
+  "composeFile": "docker-compose.yml",
+  "toolboxService": "toolbox",
+  "commandFamilies": ["curl", "jq", "shell variables"],
+  "services": [{"name":"session-review","hostname":"session-review","ports":[8080],"purpose":"Synthetic cookie and server-side session lifecycle service"}],
+  "objectives": [
+    {"id":"fixation-evidence","title":"Confirm the fixation condition","label":"Compare the supplied session ID and vulnerable login cookie","points":50,"flagEnv":"FLAG_L12_FIXATION","dependsOn":[]},
+    {"id":"session-lifecycle","title":"Prove the repaired lifecycle","label":"Verify cookie attributes, login rotation, and logout invalidation","points":50,"flagEnv":"FLAG_L12_LIFECYCLE","dependsOn":["fixation-evidence"]}
+  ],
+  "campaign": "ApertureOps: Identity and Authorization",
+  "mode": "guided",
+  "prerequisites": ["11-jwt-validation"],
+  "learningOutcomes": ["Explain what Secure, HttpOnly, and SameSite control", "Recognize session fixation and rotate identifiers on authentication", "Invalidate server-side sessions and expire cookies on logout", "Use positive and negative requests to validate remediation"]
+}
