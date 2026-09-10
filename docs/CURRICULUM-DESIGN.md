@@ -1,6 +1,6 @@
 # Curriculum design record
 
-The audience is a complete beginner using clear English. The current 11-lab path
+The audience is a complete beginner using clear English. The current 18-lab path
 starts at Lab 00, with account progress and embedded terminals on one computer.
 Lab 10 adds a guided message-recovery elective after Lab 01. Scenarios, objectives,
 hints, checks, and flag submission are integrated at `/labs`; eighteen older

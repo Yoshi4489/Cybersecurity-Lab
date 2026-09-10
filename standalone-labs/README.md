@@ -1,6 +1,6 @@
 # Northstar Shipping: Beginner Security Labs
 
-Twelve local labs teach you how evidence leads to the next
+Eighteen local labs teach you how evidence leads to the next
 question and the next command. Start with the [setup guide](GETTING-STARTED.md).
 Read the lessons and submit flags in the default portal at `/` (`/labs` also works).
 Returning learners can access the eighteen original modules under **Legacy** at
@@ -9,8 +9,8 @@ Returning learners can access the eighteen original modules under **Legacy** at
 ## Learning path
 
 Follow the core order: **00 → 01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09**.
-Lab 10 is an elective after Lab 01; Lab 11 is the first identity-validation
-follow-up after Lab 07.
+Lab 10 is an elective after Lab 01. The identity and authorization branch follows
+Lab 07 in order: **11 → 12 → 13 → 14 → 15 → 16 → 17**.
 
 | Lab | Investigation | Mode | You learn |
 | --- | --- | --- | --- |
@@ -26,12 +26,18 @@ follow-up after Lab 07.
 | [09](09-content-discovery/README.md) | Close the Breach | Capstone | Deployment leaks and export evidence |
 | [10](10-message-recovery/README.md) | The Mislabelled Secret | Guided | Base64, hex, ROT13, MD5 dictionary matching, toy XOR |
 | [11](11-jwt-validation/README.md) | Claims Under Oath | Guided | JWT signature, claims, key rotation, authorization, remediation |
+| [12](12-cookie-session-security/README.md) | The Session That Stayed | Guided | Cookie attributes, session fixation, rotation, logout invalidation |
+| [13](13-csrf-request-integrity/README.md) | A Preference, Not Permission | Guided | Session-bound CSRF tokens, Origin validation, request integrity |
+| [14](14-object-authorization/README.md) | Ticket Boundaries | Guided | Object ownership checks for reads and writes |
+| [15](15-role-enforcement/README.md) | Every Door, Every Role | Guided | Role-method-path matrices and deny-by-default policy |
+| [16](16-session-replay/README.md) | Tokens After Goodbye | Guided | Logout, password-change revocation, refresh rotation and replay |
+| [17](17-authorization-capstone/README.md) | One Request, Five Boundaries | Capstone | Evidence correlation and layered authorization remediation |
 
 Numeric prefixes remain stable IDs. The rebuilt curriculum now follows numeric
-order; 06 and 09 are the capstones. Prerequisites are recommendations, not startup
+order; 06, 09, and 17 are capstones. Prerequisites are recommendations, not startup
 locks. Labs 01–06 form Northstar's infrastructure review; 07–09 form the
-ApertureOps incident campaign. Each lab includes its own evidence so earlier
-targets can be stopped.
+ApertureOps incident campaign; and 11–17 form the identity and authorization
+branch. Each lab includes its own evidence so earlier targets can be stopped.
 
 Lab 10 is an optional message-recovery foundations branch available after Lab 01;
 you do not need to finish the capstones first. Encoding and hashing are explicitly

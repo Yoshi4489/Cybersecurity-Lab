@@ -306,7 +306,8 @@ successful export, not from merely discovering a path. Deploy only built
 artifacts, deny dotfiles and backups at the web server, authorize each export,
 and retain migration audit logs. This completes the nine-lab core investigation
 path (Labs 01–09). With Lab 00 orientation, the optional Lab 10 elective, and
-Lab 11 identity-validation follow-up, RECON//LAB has twelve labs in all.
+the Labs 11–17 identity and authorization branch, RECON//LAB has eighteen labs
+in all.
 
 ## Where to go next
 

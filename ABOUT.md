@@ -57,7 +57,7 @@ need them.
 
 ## The learning path
 
-The recommended current path contains twelve small investigations:
+The recommended current path contains eighteen small investigations:
 
 | Lab | Plain-English purpose |
 | --- | --- |
@@ -73,6 +73,12 @@ The recommended current path contains twelve small investigations:
 | 09 — Close the Breach | Correlate deployment leaks, an exposed backup, and export evidence. |
 | 10 — The Mislabelled Secret | Optional practice with Base64, hex, ROT13, MD5 candidate matching, and toy XOR. |
 | 11 — Claims Under Oath | Verify JWT signatures, claims, key rotation, and server-side authorization after Lab 07. |
+| 12 — The Session That Stayed | Compare cookie attributes, session fixation, ID rotation, and logout invalidation. |
+| 13 — A Preference, Not Permission | Protect a harmless state change with session-bound CSRF tokens and Origin checks. |
+| 14 — Ticket Boundaries | Enforce object ownership for both reads and writes. |
+| 15 — Every Door, Every Role | Test role policy across methods, routes, and aliases. |
+| 16 — Tokens After Goodbye | Trace replay after logout and password change, then test refresh rotation. |
+| 17 — One Request, Five Boundaries | Correlate branch evidence and prove layered remediation in a capstone. |
 
 Lab 10 is an optional branch after Lab 01. You do not have to finish every
 capstone before trying it.
@@ -153,7 +159,7 @@ RECON//LAB is not a real penetration-testing target, a public competition
 platform, or a guarantee that a learner has mastered security. It is a guided
 practice course. Its flags are progress markers, not secrets from the owner of
 the computer. The older eighteen-module portal is retained under **Legacy** for
-returning learners; new learners should use the twelve-lab current curriculum.
+returning learners; new learners should use the eighteen-lab current curriculum.
 
 ## Where to read next
 

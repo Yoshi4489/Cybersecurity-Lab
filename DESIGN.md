@@ -8,8 +8,8 @@ instances. It is not designed for public hosting or adversarial competition.
 
 ## Deployment models
 
-- **Current curriculum:** the default portal presents twelve investigations,
-  Labs 00–11. Each learner starts a private Compose project, with generated flags,
+- **Current curriculum:** the default portal presents eighteen investigations,
+  Labs 00–17. Each learner starts a private Compose project, with generated flags,
   a dynamically allocated subnet, an embedded toolbox terminal, and account-owned
   progress. There is one active instance per account and two per host by default.
   A 60-minute lease can be extended once by 30 minutes. Stopping preserves progress;
