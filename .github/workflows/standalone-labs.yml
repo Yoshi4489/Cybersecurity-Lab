@@ -91,6 +91,13 @@ jobs:
           - 08-cipher-locker
           - 09-content-discovery
           - 10-message-recovery
+          - 11-jwt-validation
+          - 12-cookie-session-security
+          - 13-csrf-request-integrity
+          - 14-object-authorization
+          - 15-role-enforcement
+          - 16-session-replay
+          - 17-authorization-capstone
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
