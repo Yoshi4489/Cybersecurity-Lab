@@ -2,11 +2,13 @@
   "incident-correlation": {
     "evidence": "`POST /case` lists gateway, auth, application, browser, and scanner evidence. Join request ID, JWT `jti`, session cookie, actor, object, role, and CSRF fields; one scanner event is unrelated.",
     "observation": "The related sources describe one analyst session crossing object and request boundaries. The decoy has a different actor, session, path, and purpose.",
+    "verificationCommand": "node scripts/standalone-labctl.mjs verify 17-authorization-capstone incident-correlation 'RLAB{...}'",
     "checkpoint": {"question":"Why should `noise-900` be excluded?","choices":["All 404 responses are harmless.","Its actor, session, path, and scheduled-probe context do not join the incident identifiers.","Scanner logs can never be evidence."],"answer":1,"explanation":"Exclusion is evidence-based: several independent identifiers conflict with the incident chain. Its source type alone does not make it irrelevant."}
   },
   "layered-control-proof": {
     "evidence": "The hardened routes separately check JWT integrity, cookie binding, CSRF, object ownership, role, and duplicate request IDs.",
     "observation": "The owner-account positive request succeeds while each mismatched boundary fails for a distinct reason; a first transfer succeeds and its duplicate fails.",
+    "verificationCommand": "node scripts/standalone-labctl.mjs verify 17-authorization-capstone layered-control-proof 'RLAB{...}'",
     "checkpoint": {"question":"Why is one accepted owner request required in the proof?","choices":["It proves the JWT text is secret.","It shows controls preserve intended access rather than blocking every request.","It makes negative tests unnecessary."],"answer":1,"explanation":"Availability is part of control validation. Positive and negative cases together show that authorization is selective."},
     "findingPrompt":"State the incident chain and name each crossed or attempted trust boundary.",
     "evidencePrompt":"Cite at least three joined source events, the excluded decoy evidence, and every positive/negative control response.",

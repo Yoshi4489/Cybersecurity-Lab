@@ -66,7 +66,7 @@ Submit the seven response reasons and six controls to `/controls` with the corre
 
 ## Hints
 
-### incident-correlation
+### Flag 1 — incident-correlation
 <details>
 <summary>Hint 1 — begin with request IDs</summary>
 
@@ -86,7 +86,7 @@ Compare `noise-900` by actor, session, path, and stated purpose. Several mismatc
 
 </details>
 
-### layered-control-proof
+### Flag 2 — layered-control-proof
 <details>
 <summary>Hint 1 — keep three credentials separate</summary>
 

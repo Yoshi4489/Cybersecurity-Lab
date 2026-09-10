@@ -49,7 +49,7 @@ Submit the exact six observations to `/timeline`, then submit all four remediati
 
 ## Hints
 
-### replay-timeline
+### Flag 1 — replay-timeline
 <details>
 <summary>Hint 1 — preserve each token</summary>
 
@@ -69,7 +69,7 @@ Save the first hardened refresh response. Its `refresh_token` is the successor t
 
 </details>
 
-### revocation-proof
+### Flag 2 — revocation-proof
 <details>
 <summary>Hint 1 — exact observations</summary>
 
