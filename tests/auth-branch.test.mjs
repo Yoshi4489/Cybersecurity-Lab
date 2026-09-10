@@ -20,7 +20,17 @@ test("authorization branch is sequential, distinct, and ends in a capstone", () 
   for (let index = 1; index < labs.length; index += 1) {
     assert.deepEqual(labs[index].prerequisites, [labs[index - 1].id], `${labs[index].id} should follow the prior branch lab`);
   }
-  assert.ok(labs.slice(0, -1).every((lab) => lab.difficultyBand === "intermediate-foundations"));
+  assert.deepEqual(
+    labs.slice(0, 6).map((lab) => lab.difficultyBand),
+    [
+      "intermediate-foundations",
+      "intermediate-foundations",
+      "intermediate-foundations",
+      "intermediate-capstone",
+      "intermediate-capstone",
+      "intermediate-capstone",
+    ],
+  );
   assert.equal(labs.at(-1).difficultyBand, "intermediate-capstone");
   assert.equal(labs.at(-1).mode, "capstone");
 });

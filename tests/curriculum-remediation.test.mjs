@@ -8,7 +8,9 @@ import { loadLabs } from "../scripts/standalone-labctl.mjs";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (path) => readFileSync(resolve(root, path), "utf8");
 // Lab 07 has its own remediation owner and regression suite.
-const ids = readdirSync(resolve(root, "standalone-labs")).filter((id) => /^(?:0[0-6]|0[89]|10)-/.test(id)).sort();
+const allIds = readdirSync(resolve(root, "standalone-labs")).filter((id) => /^\d\d-/.test(id)).sort();
+const ids = allIds.filter((id) => /^(?:0[0-6]|0[89]|10)-/.test(id));
+const commandIds = allIds.filter((id) => !id.startsWith("07-"));
 const bandFor = (id) => {
   const number = Number(id.slice(0, 2));
   return number < 2 ? "beginner" : number === 2 ? "beginner-plus" : number < 6 ? "intermediate-foundations" : number < 10 ? "intermediate-capstone" : "intermediate-crypto-foundations";
@@ -51,7 +53,7 @@ function assertCommandLocations(text, file) {
 }
 
 test("documentation labels actual lifecycle and investigation command blocks by environment", () => {
-  for (const file of [...ids.map((id) => `standalone-labs/${id}/README.md`), "standalone-labs/GETTING-STARTED.md", "README.md", "ABOUT.md"]) {
+  for (const file of [...commandIds.map((id) => `standalone-labs/${id}/README.md`), "standalone-labs/GETTING-STARTED.md", "README.md", "ABOUT.md"]) {
     assertCommandLocations(read(file), file);
   }
 });

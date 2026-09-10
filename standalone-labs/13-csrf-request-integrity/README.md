@@ -148,9 +148,9 @@ Stop removes containers; submitted progress stay the same and flags stay the sam
 node scripts/standalone-labctl.mjs stop 13-csrf-request-integrity
 ```
 
-**HOST — destructive reset**
-
 Reset deletes this lab's progress and creates new flags.
+
+**HOST — destructive reset**
 
 ```sh
 node scripts/standalone-labctl.mjs reset 13-csrf-request-integrity

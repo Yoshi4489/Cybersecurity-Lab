@@ -16,7 +16,7 @@ The browser application at `http://127.0.0.1:5173/`. Save the Finding / Evidence
 
 **Level:** Intermediate · **Mode:** Guided · **Time:** 80 minutes
 
-**Difficulty band:** intermediate-foundations
+**Difficulty band:** intermediate-capstone
 
 ## Scenario
 
@@ -109,16 +109,39 @@ curl -sS -X DELETE -H "X-Lab-Token: $viewer" http://role-api:8080/vulnerable/rep
 curl -sS -X POST -H 'Content-Type: application/json' -H "X-Lab-Token: $viewer" -d '{}' http://role-api:8080/vulnerable/admin/reports/quarterly/archive
 ```
 
-Use each token against the five fixed operations. The complete matrix is:
-
-```json
-{"viewer:get_primary":200,"viewer:put_primary":403,"viewer:delete_primary":403,"viewer:post_admin_path":403,"viewer:post_ops_alias":403,"editor:get_primary":200,"editor:put_primary":200,"editor:delete_primary":403,"editor:post_admin_path":403,"editor:post_ops_alias":403,"admin:get_primary":200,"admin:put_primary":200,"admin:delete_primary":200,"admin:post_admin_path":200,"admin:post_ops_alias":200}
-```
-
-**TOOLBOX — submit matrix and remediation controls**
+**TOOLBOX — execute the complete role, method, and path matrix**
 
 ```sh
-results='{"viewer:get_primary":200,"viewer:put_primary":403,"viewer:delete_primary":403,"viewer:post_admin_path":403,"viewer:post_ops_alias":403,"editor:get_primary":200,"editor:put_primary":200,"editor:delete_primary":403,"editor:post_admin_path":403,"editor:post_ops_alias":403,"admin:get_primary":200,"admin:put_primary":200,"admin:delete_primary":200,"admin:post_admin_path":200,"admin:post_ops_alias":200}'
+status() { curl -sS -o /tmp/role-response.json -w '%{http_code}' -X "$1" -H "X-Lab-Token: $2" -H 'Content-Type: application/json' -d '{}' "$3"; }
+results='{}'
+for role in viewer editor admin; do
+  token=$(jq -r --arg role "$role" '.roles[$role].token' /tmp/case.json)
+  while IFS='|' read -r name method route; do
+    code=$(status "$method" "$token" "http://role-api:8080$route")
+    key="$role:$name"
+    printf '%-28s %s\n' "$key" "$code"
+    results=$(printf '%s' "$results" | jq -c --arg key "$key" --argjson code "$code" '. + {($key):$code}')
+  done <<'OPERATIONS'
+get_primary|GET|/fixed/reports/quarterly
+put_primary|PUT|/fixed/reports/quarterly
+delete_primary|DELETE|/fixed/reports/quarterly
+post_admin_path|POST|/fixed/admin/reports/quarterly/archive
+post_ops_alias|POST|/fixed/ops/reports/quarterly/archive
+OPERATIONS
+done
+
+admin=$(jq -r .roles.admin.token /tmp/case.json)
+unauthenticated=$(curl -sS -o /tmp/role-response.json -w '%{http_code}' http://role-api:8080/fixed/reports/quarterly)
+unlisted=$(status GET "$admin" http://role-api:8080/fixed/unlisted/quarterly)
+printf 'unauthenticated=%s unlisted=%s\n' "$unauthenticated" "$unlisted"
+test "$unauthenticated" = 401
+test "$unlisted" = 403
+printf '%s\n' "$results" | jq .
+```
+
+**TOOLBOX — submit the derived matrix and remediation controls**
+
+```sh
 matrix=$(jq -cn --arg case_id "$case_id" --argjson results "$results" '{case_id:$case_id,results:$results}' | curl -sS -X POST -H 'Content-Type: application/json' --data-binary @- http://role-api:8080/reports/matrix)
 printf '%s\n' "$matrix" | jq .
 matrix_token=$(printf '%s' "$matrix" | jq -r .matrix_token)
@@ -130,6 +153,8 @@ jq -cn --arg case_id "$case_id" --arg matrix_token "$matrix_token" '{case_id:$ca
 ```sh
 node scripts/standalone-labctl.mjs verify 15-role-enforcement authorization-matrix 'RLAB{...}'
 ```
+
+**HOST — submit the deny-by-default proof flag**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 15-role-enforcement deny-default-proof 'RLAB{...}'

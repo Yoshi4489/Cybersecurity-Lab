@@ -28,19 +28,20 @@ ApertureOps detected account-record access that may connect to an old analyst se
 
 ## Start the lab
 
-**HOST**
+**HOST — start the lab and enter its toolbox**
 ```sh
 node scripts/standalone-labctl.mjs start 17-authorization-capstone
 node scripts/standalone-labctl.mjs shell 17-authorization-capstone
 ```
 
-**TOOLBOX**
+**TOOLBOX — collect the synthetic evidence bundle**
 ```sh
 curl -sS -X POST -H 'Content-Type: application/json' -d '{}' http://authz-review:8080/case > /tmp/case.json
 case_id=$(jq -r .case_id /tmp/case.json)
 jq .evidence_sources /tmp/case.json
 for source in $(jq -r '.evidence_sources[]' /tmp/case.json); do
-  curl -sS "http://authz-review:8080/evidence/$source?case_id=$case_id" | jq .
+  curl -sS "http://authz-review:8080/evidence/$source?case_id=$case_id" > "/tmp/$source"
+  jq . "/tmp/$source"
 done
 ```
 
@@ -108,38 +109,55 @@ Send the same non-empty `X-Request-ID` twice to `/hardened/transfer`; the first 
 
 ## Solution
 
-The correlation is:
-```json
-{"actor":"analyst-17","session_id":"sid-17","jwt_jti":"jwt-17","bola_object":"acct-9002","role":"analyst","csrf_request":"req-403","replay_request":"req-402","excluded_decoy":"noise-900"}
-```
+**TOOLBOX — derive and submit the correlation from saved sources**
 
-**TOOLBOX — submit correlation**
 ```sh
-correlation='{"actor":"analyst-17","session_id":"sid-17","jwt_jti":"jwt-17","bola_object":"acct-9002","role":"analyst","csrf_request":"req-403","replay_request":"req-402","excluded_decoy":"noise-900"}'
+incident_request=$(jq -r '.events[] | select(.decision=="legacy-owner-check-missing") | .request_id' /tmp/app-audit.json)
+actor=$(jq -r --arg request "$incident_request" '.events[] | select(.request_id==$request) | .actor' /tmp/auth-audit.json)
+session_id=$(jq -r --arg request "$incident_request" '.events[] | select(.request_id==$request) | .session_id' /tmp/auth-audit.json)
+jwt_jti=$(jq -r --arg request "$incident_request" '.events[] | select(.request_id==$request) | .jti' /tmp/auth-audit.json)
+bola_object=$(jq -r --arg request "$incident_request" '.events[] | select(.request_id==$request) | .requested_object' /tmp/app-audit.json)
+role=$(jq -r --arg request "$incident_request" '.events[] | select(.request_id==$request) | .role' /tmp/auth-audit.json)
+csrf_request=$(jq -r '.events[] | select(.csrf==null) | .request_id' /tmp/browser-trace.json)
+replay_request=$(jq -r '.events[] | select(has("duplicate_of")) | .request_id' /tmp/gateway.log)
+excluded_decoy=$(jq -r '.events[] | select(.actor=="health-scanner") | .request_id' /tmp/scanner-decoy.log)
+correlation=$(jq -cn \
+  --arg actor "$actor" --arg session_id "$session_id" --arg jwt_jti "$jwt_jti" \
+  --arg bola_object "$bola_object" --arg role "$role" --arg csrf_request "$csrf_request" \
+  --arg replay_request "$replay_request" --arg excluded_decoy "$excluded_decoy" \
+  '{actor:$actor,session_id:$session_id,jwt_jti:$jwt_jti,bola_object:$bola_object,role:$role,csrf_request:$csrf_request,replay_request:$replay_request,excluded_decoy:$excluded_decoy}')
+printf '%s\n' "$correlation" | jq .
 correlated=$(jq -cn --arg case_id "$case_id" --argjson correlation "$correlation" '{case_id:$case_id,correlation:$correlation}' | curl -sS -X POST -H 'Content-Type: application/json' --data-binary @- http://authz-review:8080/correlate)
+printf '%s\n' "$correlated" | jq .
 correlation_token=$(printf '%s' "$correlated" | jq -r .correlation_token)
 ```
 
-**TOOLBOX — prepare credentials and run representative probes**
+**TOOLBOX — execute all seven positive and negative probes**
+
 ```sh
 access=$(jq -r .credentials.access_token /tmp/case.json)
 session=$(jq -r .credentials.session_cookie /tmp/case.json)
+decoy_session=$(jq -r .credentials.decoy_cookie /tmp/case.json)
 csrf=$(jq -r .credentials.csrf_token /tmp/case.json)
-auth=(-H "Authorization: Bearer $access" -H "Cookie: session=$session")
-curl -sS "${auth[@]}" http://authz-review:8080/hardened/accounts/acct-1001
-curl -sS "${auth[@]}" http://authz-review:8080/hardened/accounts/acct-9002
-curl -sS -X POST "${auth[@]}" -H "X-CSRF-Token: $csrf" -H 'Content-Type: application/json' -d '{}' http://authz-review:8080/hardened/admin/export
-curl -sS -X POST "${auth[@]}" -H 'Content-Type: application/json' -d '{}' http://authz-review:8080/hardened/profile
-curl -sS -X POST "${auth[@]}" -H "X-CSRF-Token: $csrf" -H 'X-Request-ID: proof-17' -H 'Content-Type: application/json' -d '{"amount":5}' http://authz-review:8080/hardened/transfer
-# Repeat the final command unchanged to observe replay-detected.
+tampered="${access}x"
+
+jwt=$(curl -sS -H "Authorization: Bearer $tampered" -H "Cookie: session=$session" http://authz-review:8080/hardened/accounts/acct-1001 | jq -r .reason)
+owner_access=$(curl -sS -H "Authorization: Bearer $access" -H "Cookie: session=$session" http://authz-review:8080/hardened/accounts/acct-1001 | jq -r .reason)
+bola=$(curl -sS -H "Authorization: Bearer $access" -H "Cookie: session=$session" http://authz-review:8080/hardened/accounts/acct-9002 | jq -r .reason)
+role_result=$(curl -sS -X POST -H "Authorization: Bearer $access" -H "Cookie: session=$session" -H "X-CSRF-Token: $csrf" -H 'Content-Type: application/json' -d '{}' http://authz-review:8080/hardened/admin/export | jq -r .reason)
+csrf_result=$(curl -sS -X POST -H "Authorization: Bearer $access" -H "Cookie: session=$session" -H 'Content-Type: application/json' -d '{}' http://authz-review:8080/hardened/profile | jq -r .reason)
+mismatched_cookie=$(curl -sS -H "Authorization: Bearer $access" -H "Cookie: session=$decoy_session" http://authz-review:8080/hardened/accounts/acct-1001 | jq -r .reason)
+first_transfer=$(curl -sS -X POST -H "Authorization: Bearer $access" -H "Cookie: session=$session" -H "X-CSRF-Token: $csrf" -H 'X-Request-ID: proof-17' -H 'Content-Type: application/json' -d '{"amount":5}' http://authz-review:8080/hardened/transfer | jq -r .reason)
+duplicate=$(curl -sS -X POST -H "Authorization: Bearer $access" -H "Cookie: session=$session" -H "X-CSRF-Token: $csrf" -H 'X-Request-ID: proof-17' -H 'Content-Type: application/json' -d '{"amount":5}' http://authz-review:8080/hardened/transfer | jq -r .reason)
+printf 'jwt=%s owner=%s bola=%s role=%s csrf=%s mismatched-cookie=%s first=%s duplicate=%s\n' "$jwt" "$owner_access" "$bola" "$role_result" "$csrf_result" "$mismatched_cookie" "$first_transfer" "$duplicate"
 ```
 
-Also request the owner route once with `Cookie: session=sid-noise` to prove binding rejection.
+**TOOLBOX — derive and submit the control proof**
 
-**TOOLBOX — submit the control proof**
 ```sh
-results='{"jwt":"jwt-invalid","owner_access":"accepted","bola":"object-owner-mismatch","role":"role-denied","csrf":"csrf-invalid","cookie_binding":"session-binding-mismatch","replay":"replay-detected"}'
-controls='{"verify_jwt":true,"bind_cookie_session":true,"enforce_csrf":true,"authorize_object_owner":true,"enforce_role_server_side":true,"reject_duplicate_request_id":true}'
+results=$(jq -cn --arg jwt "$jwt" --arg owner "$owner_access" --arg bola "$bola" --arg role "$role_result" --arg csrf "$csrf_result" --arg cookie "$mismatched_cookie" --arg replay "$duplicate" '{jwt:$jwt,owner_access:$owner,bola:$bola,role:$role,csrf:$csrf,cookie_binding:$cookie,replay:$replay}')
+controls=$(jq -cn '{verify_jwt:true,bind_cookie_session:true,enforce_csrf:true,authorize_object_owner:true,enforce_role_server_side:true,reject_duplicate_request_id:true}')
+printf '%s\n' "$results" | jq .
 jq -cn --arg case_id "$case_id" --arg correlation_token "$correlation_token" --argjson results "$results" --argjson controls "$controls" '{case_id:$case_id,correlation_token:$correlation_token,results:$results,controls:$controls}' | curl -sS -X POST -H 'Content-Type: application/json' --data-binary @- http://authz-review:8080/controls
 ```
 

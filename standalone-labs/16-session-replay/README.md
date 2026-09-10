@@ -12,7 +12,7 @@ The isolated Linux shell. Run `curl` and `jq` here. `session-review` exists only
 Use `http://127.0.0.1:5173/` to read task cards, save the final evidence report, and submit flags.
 
 **Level:** Intermediate · **Mode:** Guided · **Time:** 75 minutes
-**Difficulty band:** intermediate-foundations
+**Difficulty band:** intermediate-capstone
 
 ## Scenario
 
@@ -24,7 +24,7 @@ A signed access token can remain cryptographically valid until expiry while the 
 
 ## Start the lab
 
-**HOST**
+**HOST — start the lab and enter its toolbox**
 ```sh
 node scripts/standalone-labctl.mjs start 16-session-replay
 node scripts/standalone-labctl.mjs shell 16-session-replay
@@ -91,21 +91,53 @@ All four values are JSON booleans: `revoke_session_on_logout`, `invalidate_sessi
 
 ## Solution
 
-**TOOLBOX — logout comparison**
+**TOOLBOX — execute every lifecycle transition and capture each reason**
+
 ```sh
 logout_token=$(jq -r .sessions.logout.access_token /tmp/case.json)
-curl -sS -H "Authorization: Bearer $logout_token" "http://session-review:8080/resource?case_id=$case_id&mode=hardened&scenario=logout"
-jq -cn --arg case_id "$case_id" '{case_id:$case_id,scenario:"logout",action:"logout"}' | curl -sS -X POST -H 'Content-Type: application/json' --data-binary @- http://session-review:8080/event
-curl -sS -H "Authorization: Bearer $logout_token" "http://session-review:8080/resource?case_id=$case_id&mode=vulnerable&scenario=logout"
-curl -sS -H "Authorization: Bearer $logout_token" "http://session-review:8080/resource?case_id=$case_id&mode=hardened&scenario=logout"
+password_token=$(jq -r .sessions.password.access_token /tmp/case.json)
+weak_refresh_token=$(jq -r .sessions.rotation.weak_refresh_token /tmp/case.json)
+refresh_token=$(jq -r .sessions.rotation.refresh_token /tmp/case.json)
+resource_reason() {
+  curl -sS -H "Authorization: Bearer $1" "http://session-review:8080/resource?case_id=$case_id&mode=$2&scenario=$3" | jq -r .reason
+}
+record_event() {
+  jq -cn --arg case_id "$case_id" --arg scenario "$1" --arg action "$2" '{case_id:$case_id,scenario:$scenario,action:$action}' | curl -sS -X POST -H 'Content-Type: application/json' --data-binary @- http://session-review:8080/event | jq -r .reason
+}
+
+before_logout=$(resource_reason "$logout_token" hardened logout)
+record_event logout logout
+logout_vulnerable=$(resource_reason "$logout_token" vulnerable logout)
+logout_hardened=$(resource_reason "$logout_token" hardened logout)
+
+before_password=$(resource_reason "$password_token" hardened password)
+record_event password password-change
+password_vulnerable=$(resource_reason "$password_token" vulnerable password)
+password_hardened=$(resource_reason "$password_token" hardened password)
+
+weak_first=$(jq -cn --arg case_id "$case_id" --arg token "$weak_refresh_token" '{case_id:$case_id,refresh_token:$token}' | curl -sS -X POST -H 'Content-Type: application/json' --data-binary @- 'http://session-review:8080/refresh?mode=vulnerable' | jq -r .reason)
+refresh_vulnerable_reuse=$(jq -cn --arg case_id "$case_id" --arg token "$weak_refresh_token" '{case_id:$case_id,refresh_token:$token}' | curl -sS -X POST -H 'Content-Type: application/json' --data-binary @- 'http://session-review:8080/refresh?mode=vulnerable' | jq -r .reason)
+strong_first=$(jq -cn --arg case_id "$case_id" --arg token "$refresh_token" '{case_id:$case_id,refresh_token:$token}' | curl -sS -X POST -H 'Content-Type: application/json' --data-binary @- 'http://session-review:8080/refresh?mode=hardened')
+successor=$(printf '%s' "$strong_first" | jq -r .refresh_token)
+refresh_hardened_reuse=$(jq -cn --arg case_id "$case_id" --arg token "$refresh_token" '{case_id:$case_id,refresh_token:$token}' | curl -sS -X POST -H 'Content-Type: application/json' --data-binary @- 'http://session-review:8080/refresh?mode=hardened' | jq -r .reason)
+successor_after_reuse=$(jq -cn --arg case_id "$case_id" --arg token "$successor" '{case_id:$case_id,refresh_token:$token}' | curl -sS -X POST -H 'Content-Type: application/json' --data-binary @- 'http://session-review:8080/refresh?mode=hardened' | jq -r .reason)
+
+printf 'before logout=%s; after vulnerable=%s hardened=%s\n' "$before_logout" "$logout_vulnerable" "$logout_hardened"
+printf 'before password-change=%s; after vulnerable=%s hardened=%s\n' "$before_password" "$password_vulnerable" "$password_hardened"
+printf 'weak first=%s reuse=%s; strong reuse=%s successor=%s\n' "$weak_first" "$refresh_vulnerable_reuse" "$refresh_hardened_reuse" "$successor_after_reuse"
 ```
 
-Repeat with `.sessions.password.access_token`, scenario `password`, and action `password-change`. Exercise `/refresh?mode=vulnerable` twice with `weak_refresh_token`. Exercise `/refresh?mode=hardened` first and again with the original `refresh_token`, then once with the successor.
+**TOOLBOX — derive the timeline submission from captured responses**
 
-**TOOLBOX — submit evidence and controls**
 ```sh
-observations='{"logout_vulnerable":"accepted","logout_hardened":"session-revoked","password_vulnerable":"accepted","password_hardened":"credential-version-stale","refresh_vulnerable_reuse":"accepted","refresh_hardened_reuse":"refresh-replayed-family-revoked"}'
+observations=$(jq -cn \
+  --arg a "$logout_vulnerable" --arg b "$logout_hardened" \
+  --arg c "$password_vulnerable" --arg d "$password_hardened" \
+  --arg e "$refresh_vulnerable_reuse" --arg f "$refresh_hardened_reuse" \
+  '{logout_vulnerable:$a,logout_hardened:$b,password_vulnerable:$c,password_hardened:$d,refresh_vulnerable_reuse:$e,refresh_hardened_reuse:$f}')
+printf '%s\n' "$observations" | jq .
 timeline=$(jq -cn --arg case_id "$case_id" --argjson observations "$observations" '{case_id:$case_id,observations:$observations}' | curl -sS -X POST -H 'Content-Type: application/json' --data-binary @- http://session-review:8080/timeline)
+printf '%s\n' "$timeline" | jq .
 timeline_token=$(printf '%s' "$timeline" | jq -r .timeline_token)
 jq -cn --arg case_id "$case_id" --arg timeline_token "$timeline_token" '{case_id:$case_id,timeline_token:$timeline_token,controls:{revoke_session_on_logout:true,invalidate_sessions_on_password_change:true,rotate_refresh_once:true,revoke_family_on_reuse:true}}' | curl -sS -X POST -H 'Content-Type: application/json' --data-binary @- http://session-review:8080/remediation
 ```

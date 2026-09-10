@@ -4,7 +4,7 @@
   "summary": "Prove and remediate broken object-level authorization across reads and writes.",
   "description": "ApertureOps needs evidence that ticket IDs never substitute for server-side ownership checks.",
   "difficulty": "intermediate",
-  "difficultyBand": "intermediate-foundations",
+  "difficultyBand": "intermediate-capstone",
   "minutes": 70,
   "subnet": "172.31.14.0/24",
   "composeFile": "docker-compose.yml",

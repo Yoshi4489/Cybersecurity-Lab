@@ -4,7 +4,7 @@
   "summary": "Trace access-token replay across logout and password change, then verify one-use refresh rotation.",
   "description": "ApertureOps needs a deterministic review of session invalidation and refresh-token reuse handling.",
   "difficulty": "intermediate",
-  "difficultyBand": "intermediate-foundations",
+  "difficultyBand": "intermediate-capstone",
   "minutes": 75,
   "subnet": "172.31.16.0/24",
   "composeFile": "docker-compose.yml",

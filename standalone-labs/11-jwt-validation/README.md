@@ -108,16 +108,24 @@ token=$(jq -r .fixtures.valid /tmp/case.json)
 curl -sS -H "X-Case-ID: $case_id" -H "Authorization: Bearer $token" http://jwt-review:8080/fixed
 ```
 
-Repeat the request for all fixture names. The complete result is:
-
-```json
-{"valid":"accepted","alg_none":"algorithm","bad_signature":"signature","expired":"expiry","wrong_issuer":"issuer","wrong_audience":"audience","old_key":"key-retired","wrong_role":"authorization","tampered_role":"signature"}
-```
-
-**TOOLBOX — submit the matrix and remediation controls**
+**TOOLBOX — execute every fixture and derive the result map**
 
 ```sh
-results='{"valid":"accepted","alg_none":"algorithm","bad_signature":"signature","expired":"expiry","wrong_issuer":"issuer","wrong_audience":"audience","old_key":"key-retired","wrong_role":"authorization","tampered_role":"signature"}'
+results='{}'
+for name in $(jq -r '.fixtures | keys[]' /tmp/case.json); do
+  token=$(jq -r --arg name "$name" '.fixtures[$name]' /tmp/case.json)
+  reason=$(curl -sS -H "X-Case-ID: $case_id" -H "Authorization: Bearer $token" http://jwt-review:8080/fixed | jq -r .reason)
+  printf '%-16s %s\n' "$name" "$reason"
+  results=$(printf '%s' "$results" | jq -c --arg name "$name" --arg reason "$reason" '. + {($name):$reason}')
+done
+printf '%s\n' "$results" | jq .
+```
+
+The loop must produce one `accepted` control and a distinct rejection reason for every invalid fixture. Do not copy the expected map into the submission.
+
+**TOOLBOX — submit the derived matrix and verify remediation controls**
+
+```sh
 matrix=$(jq -cn --arg case_id "$case_id" --argjson results "$results" '{case_id:$case_id,results:$results}' | curl -sS -X POST -H 'Content-Type: application/json' --data-binary @- http://jwt-review:8080/matrix)
 printf '%s\n' "$matrix"
 matrix_token=$(printf '%s' "$matrix" | jq -r .matrix_token)
@@ -129,6 +137,8 @@ jq -cn --arg case_id "$case_id" --arg matrix_token "$matrix_token" '{case_id:$ca
 ```sh
 node scripts/standalone-labctl.mjs verify 11-jwt-validation validation-matrix 'RLAB{...}'
 ```
+
+**HOST — submit the second generated flag**
 
 ```sh
 node scripts/standalone-labctl.mjs verify 11-jwt-validation remediation-proof 'RLAB{...}'

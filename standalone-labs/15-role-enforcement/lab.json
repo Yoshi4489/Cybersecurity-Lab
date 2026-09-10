@@ -4,7 +4,7 @@
   "summary": "Build a role-method-path authorization matrix and verify deny-by-default enforcement.",
   "description": "ApertureOps hid admin controls in its interface but needs proof that every server route enforces policy.",
   "difficulty": "intermediate",
-  "difficultyBand": "intermediate-foundations",
+  "difficultyBand": "intermediate-capstone",
   "minutes": 80,
   "subnet": "172.31.15.0/24",
   "composeFile": "docker-compose.yml",
