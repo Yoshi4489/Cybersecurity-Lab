@@ -13,6 +13,7 @@ const packageJson = JSON.parse(packageText);
 const forbiddenScaffolding = /cloudflare|\bd1\b|drizzle|wrangler/i;
 
 test("local-only architecture excludes hosted persistence and deployment scaffolding", () => {
+  assert.match(viteConfig, /ignored:\s*\[[^\]]*\.lab[^\]]*\]/s, "Vite must not watch mutable instance state");
   const packageSurface = JSON.stringify({
     scripts: packageJson.scripts,
     dependencies: packageJson.dependencies,
