@@ -11,7 +11,7 @@ Use the isolated shell for `curl`, `jq`, and correlation notes. `authz-review` i
 ### PORTAL
 Use `http://127.0.0.1:5173/` for task cards, the final evidence report, and flag submission.
 
-**Level:** Intermediate · **Mode:** Capstone · **Time:** 100 minutes  
+**Level:** Intermediate · **Mode:** Capstone · **Time:** 100 minutes
 **Difficulty band:** intermediate-capstone
 
 ## Scenario

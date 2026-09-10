@@ -11,7 +11,7 @@ The isolated Linux shell. Run `curl` and `jq` here. `session-review` exists only
 ### PORTAL
 Use `http://127.0.0.1:5173/` to read task cards, save the final evidence report, and submit flags.
 
-**Level:** Intermediate · **Mode:** Guided · **Time:** 75 minutes  
+**Level:** Intermediate · **Mode:** Guided · **Time:** 75 minutes
 **Difficulty band:** intermediate-foundations
 
 ## Scenario

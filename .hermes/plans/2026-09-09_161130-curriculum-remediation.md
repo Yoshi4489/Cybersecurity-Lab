@@ -486,4 +486,3 @@ Expected full-suite result: Node test runner reports all tests passing, `npm run
 - **Challenge-mode leakage:** Exact endpoint hints are useful in guided mode but reduce challenge value. Add mode-aware hint disclosure only after the basic documentation and blocker fixes are stable.
 - **Open question:** Confirm whether the portal can persist arbitrary task-response fields without schema changes. Inspect `app/`, `controller/`, and `data/` before choosing between extending the existing check payload and adding a new evidence-response endpoint.
 - **Open question:** Confirm whether `difficultyBand` is rendered or ignored by current curriculum code before changing the accepted manifest schema. If it is ignored, keep the rubric in docs and use existing `difficulty` values to avoid unnecessary product work.
-
